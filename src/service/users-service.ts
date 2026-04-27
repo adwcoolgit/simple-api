@@ -60,3 +60,20 @@ export async function loginUser(input: LoginUserInput) {
 
   return { token };
 }
+
+export async function getCurrentUser(token: string) {
+  const [session] = await db.select().from(sessions).where(eq(sessions.token, token));
+  
+  if (!session) {
+    throw new Error('Unauthorized');
+  }
+
+  const [user] = await db.select().from(users).where(eq(users.id, session.userId));
+  
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  const { password, ...userWithoutPassword } = user;
+  return userWithoutPassword;
+}
