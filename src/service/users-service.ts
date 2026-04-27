@@ -19,11 +19,20 @@ export async function registerUser(input: RegisterUserInput) {
   if (!input.name || input.name.trim().length === 0) {
     throw new Error('Name is required');
   }
+  if (input.name.length > 255) {
+    throw new Error('Nama terlalu panjang, maksimal 255 karakter');
+  }
   if (!input.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
     throw new Error('Valid email is required');
   }
+  if (input.email.length > 255) {
+    throw new Error('Email terlalu panjang, maksimal 255 karakter');
+  }
   if (!input.password || input.password.length < 8) {
     throw new Error('Password must be at least 8 characters');
+  }
+  if (input.password.length > 255) {
+    throw new Error('Password terlalu panjang, maksimal 255 karakter');
   }
 
   try {
@@ -48,12 +57,22 @@ export async function registerUser(input: RegisterUserInput) {
 
     const { password, ...userWithoutPassword } = newUser;
     return userWithoutPassword;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration error:', error);
+
+    // Handle database constraint violation
+    if (error?.message?.includes('varchar') ||
+        error?.message?.includes('length') ||
+        error?.code === 'ER_DATA_TOO_LONG' ||
+        error?.message?.includes('Data too long')) {
+      throw new Error('Input terlalu panjang, maksimal 255 karakter');
+    }
+
     if (error instanceof Error && error.message.includes('Email sudah terdaftar')) {
       throw error;
     }
-    throw new Error('Failed to register user');
+
+    throw new Error('Gagal mendaftarkan user');
   }
 }
 
