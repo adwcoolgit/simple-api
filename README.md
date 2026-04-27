@@ -29,7 +29,7 @@ A modern REST API built with Bun, Elysia, Drizzle ORM, and MySQL for user authen
 
 ### 1. Clone and Install
 
-`ash
+`bash
 git clone <repository-url>
 cd simple-api
 bun install
@@ -39,7 +39,7 @@ bun install
 
 Copy the example environment file:
 
-`ash
+`bash
 cp .env.example .env
 `
 
@@ -61,7 +61,7 @@ PORT=3000
 
 Create the database and run migrations:
 
-`ash
+`bash
 # Create database (if not exists)
 mysql -u root -p -e " CREATE DATABASE IF NOT EXISTS simple_api\
 
@@ -72,7 +72,7 @@ bun run db:migrate
 
 ### 4. Start Development Server
 
-`ash
+`bash
 bun run dev
 `
 
@@ -122,7 +122,7 @@ Authorization: Bearer <uuid-token>
 
 ## ?? Development Scripts
 
-`ash
+`bash
 bun run dev # Start development server
 bun run db:generate # Generate database migrations
 bun run db:migrate # Run database migrations
