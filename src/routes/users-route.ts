@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { registerUser, loginUser, getCurrentUser } from '../service/users-service';
+import { registerUser, loginUser, getCurrentUser, logoutUser } from '../service/users-service';
 import { db } from '../db';
 import { users } from '../db/schema';
 
@@ -56,7 +56,7 @@ export const usersRoute = new Elysia()
   })
   .get('/api/users/current', async ({ set, headers }: any) => {
     const authHeader = headers['authorization'] || headers['Authorization'];
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       set.status = 401;
       return { error: 'Unauthorized' };
@@ -67,6 +67,24 @@ export const usersRoute = new Elysia()
     try {
       const user = await getCurrentUser(token);
       return { data: user };
+    } catch (err: any) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+  })
+  .delete('/api/users/logout', async ({ set, headers }: any) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
+    try {
+      await logoutUser(token);
+      return { data: 'OK' };
     } catch (err: any) {
       set.status = 401;
       return { error: 'Unauthorized' };
