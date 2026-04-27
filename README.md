@@ -14,7 +14,7 @@ Fitur utama:
 - Validasi input komprehensif dan penanganan error
 - Operasi database yang aman tipe dengan Drizzle ORM
 
-## ?? Fitur
+## A Fitur
 
 - **Registrasi Pengguna** - Pendaftaran pengguna aman dengan validasi email
 - **Login Pengguna** - Token sesi dengan UUID
@@ -23,7 +23,7 @@ Fitur utama:
 - **Migrasi Database** - Drizzle ORM dengan MySQL
 - **TypeScript** - Keamanan tipe penuh di seluruh aplikasi
 
-## 🏗️ Struktur Proyek
+## B Struktur Proyek
 
 ```
 simple-api/
@@ -53,7 +53,7 @@ simple-api/
 - **Tabel Database**: snake_case (misalnya `user_sessions`)
 - **Endpoint API**: RESTful dengan resource kebab-case
 
-## ??? Teknologi yang Digunakan
+## C Teknologi yang Digunakan
 
 - **Runtime:** [Bun](https://bun.sh/) - Runtime JavaScript yang cepat
 - **Framework:** [Elysia](https://elysiajs.com/) - Framework web modern
@@ -104,7 +104,7 @@ CREATE TABLE sessions (
 - **users**: Menyimpan informasi akun pengguna dengan kendala email unik
 - **sessions**: Menyimpan token autentikasi yang terhubung dengan pengguna (berbasis UUID)
 
-## ?? Prasyarat
+## D Prasyarat
 
 - [Bun](https://bun.sh/docs/installation) terinstal
 - Server MySQL 8.0+ berjalan
@@ -172,7 +172,7 @@ bun test
 
 Semua 35 tes harus lulus, mengkonfirmasi fungsionalitas API.
 
-## 🔌 Endpoint API yang Tersedia
+## E Endpoint API yang Tersedia
 
 Semua endpoint API diawali dengan `/api` dan mengembalikan respons JSON.
 
@@ -262,7 +262,7 @@ Semua endpoint mengembalikan respons error terstruktur:
 ```
 Kode status umum: `400` (Bad Request), `401` (Unauthorized), `409` (Conflict), `422` (Validation Error)
 
-## 🚀 Menjalankan Aplikasi
+## F Menjalankan Aplikasi
 
 ### Mode Pengembangan
 ```bash
@@ -276,7 +276,7 @@ bun run start
 ```
 Menjalankan aplikasi dalam mode produksi (NODE_ENV=production)
 
-## 🧪 Menguji Aplikasi
+## G Menguji Aplikasi
 
 Proyek ini menyertakan tes unit komprehensif untuk semua endpoint API.
 
@@ -295,7 +295,7 @@ Menjalankan semua tes unit menggunakan test runner bawaan Bun. Tes mencakup:
 - **GET /api/users/current** - Dapatkan pengguna saat ini (8 skenario)
 - **DELETE /api/users/logout** - Logout pengguna (8 skenario)
 
-## 🛠️ Script Pengembangan
+## H Script Pengembangan
 
 ```bash
 bun run dev              # Jalankan server pengembangan
@@ -306,7 +306,7 @@ bun run db:studio        # Buka Drizzle Studio untuk manajemen database
 bun test                 # Jalankan tes unit
 ```
 
-## ?? Fitur Keamanan
+## I Fitur Keamanan
 
 - **Hashing Password:** bcrypt dengan 12 ronde
 - **Token Sesi:** Berbasis UUID (bukan JWT)
@@ -314,7 +314,7 @@ bun test                 # Jalankan tes unit
 - **Proteksi SQL Injection:** Query terparameterisasi Drizzle ORM
 - **Tidak Ada Kebocoran Password:** Password tidak pernah dikembalikan dalam respons
 
-## ?? Ucapan Terima Kasih
+## J Ucapan Terima Kasih
 
 - [Bun](https://bun.sh/) - Runtime JavaScript yang cepat
 - [Elysia](https://elysiajs.com/) - Framework web elegan
