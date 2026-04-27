@@ -2,7 +2,7 @@
 
 Sebuah REST API modern yang dibangun dengan Bun, Elysia, Drizzle ORM, dan MySQL untuk autentikasi dan manajemen pengguna.
 
-## 📋 Gambaran Aplikasi
+## Gambaran Aplikasi
 
 Aplikasi ini menyediakan sistem autentikasi pengguna yang lengkap dengan registrasi, login, manajemen sesi, dan logout. Ini berfungsi sebagai API backend untuk aplikasi web/mobile yang memerlukan akun pengguna yang aman. API menggunakan token sesi berbasis UUID daripada JWT tradisional untuk kesederhanaan dan keamanan.
 
