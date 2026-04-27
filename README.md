@@ -1,146 +1,323 @@
 # Simple API
 
-A modern REST API built with Bun, Elysia, Drizzle ORM, and MySQL for user authentication and management.
+Sebuah REST API modern yang dibangun dengan Bun, Elysia, Drizzle ORM, dan MySQL untuk autentikasi dan manajemen pengguna.
 
-## ?? Features
+## A. Gambaran Aplikasi
 
-- **User Registration** - Secure user signup with email validation
-- **User Login** - JWT-like session tokens with UUID  
-- **Current User** - Get authenticated user information
-- **User Logout** - Secure session termination
-- **Database Migrations** - Drizzle ORM with MySQL
-- **TypeScript** - Full type safety throughout the application
+Aplikasi ini menyediakan sistem autentikasi pengguna yang lengkap dengan registrasi, login, manajemen sesi, dan logout. Ini berfungsi sebagai API backend untuk aplikasi web/mobile yang memerlukan akun pengguna yang aman. API menggunakan token sesi berbasis UUID daripada JWT tradisional untuk kesederhanaan dan keamanan.
 
-## ??? Tech Stack
+Fitur utama:
+- Registrasi pengguna dengan validasi email
+- Login aman dengan hashing password bcrypt
+- Autentikasi berbasis sesi dengan token UUID
+- Route terlindungi untuk pengguna terautentikasi
+- Validasi input komprehensif dan penanganan error
+- Operasi database yang aman tipe dengan Drizzle ORM
 
-- **Runtime:** [Bun](https://bun.sh/) - Fast JavaScript runtime
-- **Framework:** [Elysia](https://elysiajs.com/) - Modern web framework
-- **ORM:** [Drizzle](https://orm.drizzle.team/) - Type-safe SQL queries
+## B. Fitur
+
+- **Registrasi Pengguna** - Pendaftaran pengguna aman dengan validasi email
+- **Login Pengguna** - Token sesi dengan UUID
+- **Pengguna Saat Ini** - Dapatkan informasi pengguna terautentikasi
+- **Logout Pengguna** - Penghentian sesi aman
+- **Migrasi Database** - Drizzle ORM dengan MySQL
+- **TypeScript** - Keamanan tipe penuh di seluruh aplikasi
+
+## C. Struktur Proyek
+
+```
+simple-api/
+├── src/
+│   ├── db/
+│   │   ├── index.ts      # Pengaturan koneksi database
+│   │   └── schema.ts     # Definisi tabel database
+│   ├── routes/
+│   │   ├── auth-middleware.ts  # Middleware autentikasi
+│   │   ├── index.ts      # Indeks route
+│   │   └── users-route.ts # Route API terkait pengguna
+│   ├── service/
+│   │   └── users-service.ts # Logika bisnis pengguna
+│   └── index.ts          # Titik masuk aplikasi
+├── tests/
+│   └── users.test.ts     # Tes unit komprehensif
+├── package.json
+├── README.md
+└── .env                  # Variabel lingkungan (tidak di-commit)
+```
+
+### Konvensi Penamaan
+
+- **File**: kebab-case (misalnya `users-route.ts`, `auth-middleware.ts`)
+- **Variabel/Fungsi**: camelCase
+- **Kelas/Tipe**: PascalCase
+- **Tabel Database**: snake_case (misalnya `user_sessions`)
+- **Endpoint API**: RESTful dengan resource kebab-case
+
+## D. Teknologi yang Digunakan
+
+- **Runtime:** [Bun](https://bun.sh/) - Runtime JavaScript yang cepat
+- **Framework:** [Elysia](https://elysiajs.com/) - Framework web modern
+- **ORM:** [Drizzle](https://orm.drizzle.team/) - Query SQL yang aman tipe
 - **Database:** MySQL 8.0+
-- **Authentication:** bcrypt + UUID sessions
-- **Language:** TypeScript
+- **Autentikasi:** bcrypt + sesi UUID
+- **Bahasa:** TypeScript
 
-## ?? Prerequisites
+## E. Library yang Digunakan
 
-- [Bun](https://bun.sh/docs/installation) installed
-- MySQL 8.0+ server running
+### Dependensi Utama
+- **[Elysia](https://elysiajs.com/)** - Framework web untuk membangun API
+- **[Drizzle ORM](https://orm.drizzle.team/)** - Builder query SQL yang aman tipe
+- **[mysql2](https://github.com/sidorares/node-mysql2)** - Driver database MySQL
+- **[bcryptjs](https://github.com/dcodeIO/bcrypt.js)** - Library hashing password
 
-## ?? Quick Start
+### Dependensi Pengembangan
+- **[@types/bcryptjs](https://github.com/DefinitelyTyped/DefinitelyTyped)** - Tipe TypeScript untuk bcryptjs
+- **[@types/bun](https://github.com/oven-sh/bun)** - Tipe TypeScript untuk runtime Bun
+- **[drizzle-kit](https://orm.drizzle.team/kit)** - Alat migrasi dan studio database
 
-### 1. Clone and Install
+## F. Skema Database
 
-`bash
+Aplikasi menggunakan dua tabel utama:
+
+### Tabel Users
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Tabel Sessions
+```sql
+CREATE TABLE sessions (
+  id SERIAL PRIMARY KEY,
+  token VARCHAR(255) NOT NULL,
+  user_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+- **users**: Menyimpan informasi akun pengguna dengan kendala email unik
+- **sessions**: Menyimpan token autentikasi yang terhubung dengan pengguna (berbasis UUID)
+
+## G. Prasyarat
+
+- [Bun](https://bun.sh/docs/installation) terinstal
+- Server MySQL 8.0+ berjalan
+
+## H. Mulai Cepat
+
+### 1. Clone dan Install
+
+```bash
 git clone <repository-url>
 cd simple-api
 bun install
-`
+```
 
-### 2. Environment Setup
+### 2. Pengaturan Lingkungan
 
-Copy the example environment file:
+Salin file environment contoh:
 
-`bash
+```bash
 cp .env.example .env
-`
+```
 
-Edit .env with your database credentials:
+Edit .env dengan kredensial database Anda:
 
-`env
-# Database Configuration
+```env
+# Konfigurasi Database
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=simple_api
-DB_USER=your_mysql_user
-DB_PASSWORD=your_secure_password
+DB_USER=user_mysql_anda
+DB_PASSWORD=password_aman_anda
 
-# Server Configuration
+# Konfigurasi Server
 PORT=3000
-`
+```
 
-### 3. Database Setup
+### 3. Pengaturan Database
 
-Create the database and run migrations:
+Buat database dan jalankan migrasi:
 
-`bash
-# Create database (if not exists)
-mysql -u root -p -e " CREATE DATABASE IF NOT EXISTS simple_api\
+```bash
+# Buat database (jika belum ada)
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS simple_api"
 
-# Generate and run migrations
+# Generate dan jalankan migrasi
 bun run db:generate
 bun run db:migrate
-`
+```
 
-### 4. Start Development Server
+### 4. Jalankan Server Pengembangan
 
-`bash
+```bash
 bun run dev
-`
+```
 
-The API will be available at http://localhost:3000
+API akan tersedia di `http://localhost:3000`
 
-## ?? API Endpoints
+### 5. Jalankan Tes (Opsional)
+
+Verifikasi semuanya berfungsi dengan menjalankan suite tes:
+
+```bash
+bun test
+```
+
+Semua 35 tes harus lulus, mengkonfirmasi fungsionalitas API.
+
+## I. Endpoint API yang Tersedia
+
+Semua endpoint API diawali dengan `/api` dan mengembalikan respons JSON.
 
 ### Health Check
-`http
+```http
 GET /health
-`
+```
+**Respons:** `200 OK` dengan status server dasar
 
-### User Registration
-`http
+### Registrasi Pengguna
+```http
 POST /api/users
 Content-Type: application/json
 
 {
- \name\: \John Doe\,
- \email\: \john@example.com\, 
- \password\: \securepassword123\
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword123"
 }
-`
+```
+**Validasi:**
+- `name`: Wajib, maks 255 karakter
+- `email`: Wajib, format email valid, maks 255 karakter
+- `password`: Wajib, min 8 karakter, maks 255 karakter
 
-### User Login
-`http
+**Respons Sukses (200):**
+```json
+{
+  "data": "Success"
+}
+```
+
+### Login Pengguna
+```http
 POST /api/users/login
 Content-Type: application/json
 
 {
- \email\: \john@example.com\,
- \password\: \securepassword123\
+  "email": "john@example.com",
+  "password": "securepassword123"
 }
-`
+```
+**Respons Sukses (200):**
+```json
+{
+  "data": {
+    "token": "uuid-string-here"
+  }
+}
+```
 
-### Get Current User
-`http
+### Dapatkan Pengguna Saat Ini
+```http
 GET /api/users/current
 Authorization: Bearer <uuid-token>
-`
+```
+**Respons Sukses (200):**
+```json
+{
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "created_at": "2026-04-27T07:22:33.000Z"
+  }
+}
+```
 
-### User Logout
-`http
+### Logout Pengguna
+```http
 DELETE /api/users/logout
 Authorization: Bearer <uuid-token>
-`
+```
+**Respons Sukses (200):**
+```json
+{
+  "data": "OK"
+}
+```
 
-## ?? Development Scripts
+### Respons Error
+Semua endpoint mengembalikan respons error terstruktur:
+```json
+{
+  "error": "Pesan error dalam bahasa Indonesia"
+}
+```
+Kode status umum: `400` (Bad Request), `401` (Unauthorized), `409` (Conflict), `422` (Validation Error)
 
-`bash
-bun run dev # Start development server
-bun run db:generate # Generate database migrations
-bun run db:migrate # Run database migrations
-bun run db:studio # Open Drizzle Studio
-`
+## J. Menjalankan Aplikasi
 
-## ?? Security Features
+### Mode Pengembangan
+```bash
+bun run dev
+```
+Memulai server pengembangan dengan hot reload di `http://localhost:3000`
 
-- **Password Hashing:** bcrypt with 12 rounds
-- **Session Tokens:** UUID-based (not JWT)
-- **Input Validation:** Elysia schema validation
-- **SQL Injection Protection:** Drizzle ORM parameterized queries
-- **No Password Leakage:** Passwords never returned in responses
+### Mode Produksi
+```bash
+bun run start
+```
+Menjalankan aplikasi dalam mode produksi (NODE_ENV=production)
 
-## ?? Acknowledgments
+## K. Menguji Aplikasi
 
-- [Bun](https://bun.sh/) - Fast JavaScript runtime
-- [Elysia](https://elysiajs.com/) - Elegant web framework 
-- [Drizzle](https://orm.drizzle.team/) - Type-safe ORM
-- [bcryptjs](https://github.com/dcodeIO/bcrypt.js) - Password hashing
+Proyek ini menyertakan tes unit komprehensif untuk semua endpoint API.
+
+### Jalankan Tes
+```bash
+bun test
+```
+Menjalankan semua tes unit menggunakan test runner bawaan Bun. Tes mencakup:
+- 35 skenario tes yang mencakup semua API pengguna
+- Pembersihan database antar tes
+- Validasi edge case dan penanganan error
+
+### Cakupan Tes
+- **POST /api/users** - Registrasi pengguna (10 skenario)
+- **POST /api/users/login** - Login pengguna (9 skenario)
+- **GET /api/users/current** - Dapatkan pengguna saat ini (8 skenario)
+- **DELETE /api/users/logout** - Logout pengguna (8 skenario)
+
+## L. Script Pengembangan
+
+```bash
+bun run dev              # Jalankan server pengembangan
+bun run start            # Jalankan server produksi
+bun run db:generate      # Generate migrasi database
+bun run db:migrate       # Jalankan migrasi database
+bun run db:studio        # Buka Drizzle Studio untuk manajemen database
+bun test                 # Jalankan tes unit
+```
+
+## M. Fitur Keamanan
+
+- **Hashing Password:** bcrypt dengan 12 ronde
+- **Token Sesi:** Berbasis UUID (bukan JWT)
+- **Validasi Input:** Validasi schema Elysia
+- **Proteksi SQL Injection:** Query terparameterisasi Drizzle ORM
+- **Tidak Ada Kebocoran Password:** Password tidak pernah dikembalikan dalam respons
+
+## N. Ucapan Terima Kasih
+
+- [Bun](https://bun.sh/) - Runtime JavaScript yang cepat
+- [Elysia](https://elysiajs.com/) - Framework web elegan
+- [Drizzle](https://orm.drizzle.team/) - ORM yang aman tipe
+- [bcryptjs](https://github.com/dcodeIO/bcrypt.js) - Hashing password
 
