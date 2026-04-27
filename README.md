@@ -62,7 +62,7 @@ simple-api/
 - **Autentikasi:** bcrypt + sesi UUID
 - **Bahasa:** TypeScript
 
-## 📚 Library yang Digunakan
+## D Library yang Digunakan
 
 ### Dependensi Utama
 - **[Elysia](https://elysiajs.com/)** - Framework web untuk membangun API
@@ -75,7 +75,7 @@ simple-api/
 - **[@types/bun](https://github.com/oven-sh/bun)** - Tipe TypeScript untuk runtime Bun
 - **[drizzle-kit](https://orm.drizzle.team/kit)** - Alat migrasi dan studio database
 
-## 🗄️ Skema Database
+## E Skema Database
 
 Aplikasi menggunakan dua tabel utama:
 
@@ -104,7 +104,7 @@ CREATE TABLE sessions (
 - **users**: Menyimpan informasi akun pengguna dengan kendala email unik
 - **sessions**: Menyimpan token autentikasi yang terhubung dengan pengguna (berbasis UUID)
 
-## D Prasyarat
+## F Prasyarat
 
 - [Bun](https://bun.sh/docs/installation) terinstal
 - Server MySQL 8.0+ berjalan
@@ -172,7 +172,7 @@ bun test
 
 Semua 35 tes harus lulus, mengkonfirmasi fungsionalitas API.
 
-## E Endpoint API yang Tersedia
+## G Endpoint API yang Tersedia
 
 Semua endpoint API diawali dengan `/api` dan mengembalikan respons JSON.
 
@@ -262,7 +262,7 @@ Semua endpoint mengembalikan respons error terstruktur:
 ```
 Kode status umum: `400` (Bad Request), `401` (Unauthorized), `409` (Conflict), `422` (Validation Error)
 
-## F Menjalankan Aplikasi
+## I Menjalankan Aplikasi
 
 ### Mode Pengembangan
 ```bash
@@ -295,7 +295,7 @@ Menjalankan semua tes unit menggunakan test runner bawaan Bun. Tes mencakup:
 - **GET /api/users/current** - Dapatkan pengguna saat ini (8 skenario)
 - **DELETE /api/users/logout** - Logout pengguna (8 skenario)
 
-## H Script Pengembangan
+## J Script Pengembangan
 
 ```bash
 bun run dev              # Jalankan server pengembangan
@@ -306,7 +306,7 @@ bun run db:studio        # Buka Drizzle Studio untuk manajemen database
 bun test                 # Jalankan tes unit
 ```
 
-## I Fitur Keamanan
+## K Fitur Keamanan
 
 - **Hashing Password:** bcrypt dengan 12 ronde
 - **Token Sesi:** Berbasis UUID (bukan JWT)
@@ -314,7 +314,7 @@ bun test                 # Jalankan tes unit
 - **Proteksi SQL Injection:** Query terparameterisasi Drizzle ORM
 - **Tidak Ada Kebocoran Password:** Password tidak pernah dikembalikan dalam respons
 
-## J Ucapan Terima Kasih
+## L Ucapan Terima Kasih
 
 - [Bun](https://bun.sh/) - Runtime JavaScript yang cepat
 - [Elysia](https://elysiajs.com/) - Framework web elegan
