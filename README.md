@@ -2,7 +2,7 @@
 
 Sebuah REST API modern yang dibangun dengan Bun, Elysia, Drizzle ORM, dan MySQL untuk autentikasi dan manajemen pengguna.
 
-## Gambaran Aplikasi
+## A. Gambaran Aplikasi
 
 Aplikasi ini menyediakan sistem autentikasi pengguna yang lengkap dengan registrasi, login, manajemen sesi, dan logout. Ini berfungsi sebagai API backend untuk aplikasi web/mobile yang memerlukan akun pengguna yang aman. API menggunakan token sesi berbasis UUID daripada JWT tradisional untuk kesederhanaan dan keamanan.
 
@@ -14,7 +14,7 @@ Fitur utama:
 - Validasi input komprehensif dan penanganan error
 - Operasi database yang aman tipe dengan Drizzle ORM
 
-## A Fitur
+## B. Fitur
 
 - **Registrasi Pengguna** - Pendaftaran pengguna aman dengan validasi email
 - **Login Pengguna** - Token sesi dengan UUID
@@ -23,7 +23,7 @@ Fitur utama:
 - **Migrasi Database** - Drizzle ORM dengan MySQL
 - **TypeScript** - Keamanan tipe penuh di seluruh aplikasi
 
-## B Struktur Proyek
+## C. Struktur Proyek
 
 ```
 simple-api/
@@ -53,7 +53,7 @@ simple-api/
 - **Tabel Database**: snake_case (misalnya `user_sessions`)
 - **Endpoint API**: RESTful dengan resource kebab-case
 
-## C Teknologi yang Digunakan
+## D. Teknologi yang Digunakan
 
 - **Runtime:** [Bun](https://bun.sh/) - Runtime JavaScript yang cepat
 - **Framework:** [Elysia](https://elysiajs.com/) - Framework web modern
@@ -62,7 +62,7 @@ simple-api/
 - **Autentikasi:** bcrypt + sesi UUID
 - **Bahasa:** TypeScript
 
-## D Library yang Digunakan
+## E. Library yang Digunakan
 
 ### Dependensi Utama
 - **[Elysia](https://elysiajs.com/)** - Framework web untuk membangun API
@@ -75,7 +75,7 @@ simple-api/
 - **[@types/bun](https://github.com/oven-sh/bun)** - Tipe TypeScript untuk runtime Bun
 - **[drizzle-kit](https://orm.drizzle.team/kit)** - Alat migrasi dan studio database
 
-## E Skema Database
+## F. Skema Database
 
 Aplikasi menggunakan dua tabel utama:
 
@@ -104,12 +104,12 @@ CREATE TABLE sessions (
 - **users**: Menyimpan informasi akun pengguna dengan kendala email unik
 - **sessions**: Menyimpan token autentikasi yang terhubung dengan pengguna (berbasis UUID)
 
-## F Prasyarat
+## G. Prasyarat
 
 - [Bun](https://bun.sh/docs/installation) terinstal
 - Server MySQL 8.0+ berjalan
 
-## ?? Mulai Cepat
+## H. Mulai Cepat
 
 ### 1. Clone dan Install
 
@@ -172,7 +172,7 @@ bun test
 
 Semua 35 tes harus lulus, mengkonfirmasi fungsionalitas API.
 
-## G Endpoint API yang Tersedia
+## I. Endpoint API yang Tersedia
 
 Semua endpoint API diawali dengan `/api` dan mengembalikan respons JSON.
 
@@ -262,7 +262,7 @@ Semua endpoint mengembalikan respons error terstruktur:
 ```
 Kode status umum: `400` (Bad Request), `401` (Unauthorized), `409` (Conflict), `422` (Validation Error)
 
-## I Menjalankan Aplikasi
+## J. Menjalankan Aplikasi
 
 ### Mode Pengembangan
 ```bash
@@ -276,7 +276,7 @@ bun run start
 ```
 Menjalankan aplikasi dalam mode produksi (NODE_ENV=production)
 
-## G Menguji Aplikasi
+## K. Menguji Aplikasi
 
 Proyek ini menyertakan tes unit komprehensif untuk semua endpoint API.
 
@@ -295,7 +295,7 @@ Menjalankan semua tes unit menggunakan test runner bawaan Bun. Tes mencakup:
 - **GET /api/users/current** - Dapatkan pengguna saat ini (8 skenario)
 - **DELETE /api/users/logout** - Logout pengguna (8 skenario)
 
-## J Script Pengembangan
+## L. Script Pengembangan
 
 ```bash
 bun run dev              # Jalankan server pengembangan
@@ -306,7 +306,7 @@ bun run db:studio        # Buka Drizzle Studio untuk manajemen database
 bun test                 # Jalankan tes unit
 ```
 
-## K Fitur Keamanan
+## M. Fitur Keamanan
 
 - **Hashing Password:** bcrypt dengan 12 ronde
 - **Token Sesi:** Berbasis UUID (bukan JWT)
@@ -314,7 +314,7 @@ bun test                 # Jalankan tes unit
 - **Proteksi SQL Injection:** Query terparameterisasi Drizzle ORM
 - **Tidak Ada Kebocoran Password:** Password tidak pernah dikembalikan dalam respons
 
-## L Ucapan Terima Kasih
+## N. Ucapan Terima Kasih
 
 - [Bun](https://bun.sh/) - Runtime JavaScript yang cepat
 - [Elysia](https://elysiajs.com/) - Framework web elegan
