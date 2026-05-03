@@ -1,5 +1,7 @@
 # Simple API
 
+![CI](https://github.com/adwcoolgit/simple-api/workflows/CI/badge.svg)
+
 Sebuah REST API modern yang dibangun dengan Bun, Elysia, Drizzle ORM, dan MySQL untuk autentikasi dan manajemen pengguna.
 
 ## A. Gambaran Aplikasi

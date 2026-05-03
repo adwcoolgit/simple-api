@@ -1,7 +1,8 @@
 import { users, sessions } from '../db/schema';
-import { db } from '../db';
+import { db, dbRead } from '../db';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { redis } from '../cache/redis';
 
 export interface RegisterUserInput {
   name: string;
@@ -36,7 +37,7 @@ export async function registerUser(input: RegisterUserInput) {
   }
 
   try {
-    const existingUser = await db.select().from(users).where(eq(users.email, input.email)).limit(1);
+    const existingUser = await dbRead.select().from(users).where(eq(users.email, input.email)).limit(1);
     if (existingUser.length > 0) {
       throw new Error('Email sudah terdaftar');
     }
@@ -49,7 +50,7 @@ export async function registerUser(input: RegisterUserInput) {
       password: hashedPassword,
     });
 
-    const [newUser] = await db.select().from(users).where(eq(users.email, input.email));
+    const [newUser] = await dbRead.select().from(users).where(eq(users.email, input.email));
 
     if (!newUser) {
       throw new Error('Failed to create user');
@@ -86,7 +87,7 @@ export async function loginUser(input: LoginUserInput) {
   }
 
   try {
-    const [user] = await db.select().from(users).where(eq(users.email, input.email));
+    const [user] = await dbRead.select().from(users).where(eq(users.email, input.email));
 
     if (!user) {
       throw new Error('Email atau password salah');
@@ -105,6 +106,14 @@ export async function loginUser(input: LoginUserInput) {
       userId: Number(user.id),
     });
 
+    // Cache token -> user_id in Redis with TTL 1 hour
+    try {
+      await redis.set(token, String(user.id), 'EX', 3600);
+    } catch (err) {
+      // Redis unavailable, continue with DB only
+      console.warn('Failed to cache session in Redis:', err);
+    }
+
     return { token };
   } catch (error) {
     console.error('Login error:', error);
@@ -113,13 +122,40 @@ export async function loginUser(input: LoginUserInput) {
 }
 export async function getCurrentUser(token: string) {
   try {
-    const [session] = await db.select().from(sessions).where(eq(sessions.token, token));
+    let userId: number | null = null;
 
-    if (!session) {
-      throw new Error('Unauthorized');
+    // Try Redis cache first
+    try {
+      const cachedUserId = await redis.get(token);
+      if (cachedUserId) {
+        userId = parseInt(cachedUserId);
+      }
+    } catch (err) {
+      // Redis unavailable, will fallback to DB
+      console.warn('Redis unavailable, falling back to DB:', err);
     }
 
-    const [user] = await db.select().from(users).where(eq(users.id, session.userId));
+    if (!userId) {
+      // Cache miss or Redis error, query DB
+      const [session] = await dbRead.select().from(sessions).where(eq(sessions.token, token));
+
+      if (!session) {
+        throw new Error('Unauthorized');
+      }
+
+      userId = session.userId;
+
+      // Cache the result in Redis
+      try {
+        await redis.set(token, String(userId), 'EX', 3600);
+      } catch (err) {
+        // Redis unavailable, continue
+        console.warn('Failed to cache session in Redis:', err);
+      }
+    }
+
+    // Get user data
+    const [user] = await dbRead.select().from(users).where(eq(users.id, userId));
 
     if (!user) {
       throw new Error('Unauthorized');
@@ -135,13 +171,21 @@ export async function getCurrentUser(token: string) {
 
 export async function logoutUser(token: string) {
   try {
-    const [session] = await db.select().from(sessions).where(eq(sessions.token, token));
+    const [session] = await dbRead.select().from(sessions).where(eq(sessions.token, token));
 
     if (!session) {
       throw new Error('Unauthorized');
     }
 
     await db.delete(sessions).where(eq(sessions.token, token));
+
+    // Invalidate cache
+    try {
+      await redis.del(token);
+    } catch (err) {
+      // Redis unavailable, continue
+      console.warn('Failed to invalidate session cache in Redis:', err);
+    }
   } catch (error) {
     console.error('Logout error:', error);
     throw new Error('Unauthorized');
