@@ -1,124 +1,131 @@
 import { Elysia, t } from 'elysia';
-import { registerUser, loginUser, getCurrentUser, logoutUser } from '../service/users-service';
+import {
+  registerUser,
+  loginUser,
+  getCurrentUser,
+  logoutUser,
+} from '../service/users-service';
 import { bearerAuth } from './auth-middleware';
+import { rateLimit } from '../middleware/rate-limit';
 import { db } from '../db';
 import { users } from '../db/schema';
 
-export const usersRoute = new Elysia({ tags: ['Users'] })
-  .post('/api/users', async ({ body, set }: any) => {
-    try {
-      const user = await registerUser(body);
-      return { data: 'Success' };
-    } catch (err: any) {
-      if (err.message === 'Email sudah terdaftar') {
-        set.status = 409;
-        return { error: 'Email sudah terdaftar' };
-      }
-      throw err;
-    }
-  }, {
-    body: t.Object({
-      name: t.String({ maxLength: 255 }),
-      email: t.String({ format: 'email', maxLength: 255 }),
-      password: t.String({ minLength: 8, maxLength: 255 }),
-    }),
-    detail: {
-      summary: 'Register a new user',
-      responses: {
-        200: {
-          description: 'User registered successfully',
-          content: {
-            'application/json': {
-              example: {
-                data: 'Success'
-              }
-            }
-          }
-        },
-        409: {
-          description: 'Email already registered',
-          content: {
-            'application/json': {
-              example: {
-                error: 'Email sudah terdaftar'
-              }
-            }
-          }
-        },
-        422: {
-          description: 'Validation error',
-          content: {
-            'application/json': {
-              example: {
-                error: 'Validation failed'
-              }
-            }
-          }
+const registerRoute = new Elysia()
+  .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for registration
+  .post(
+    '/api/users',
+    async ({ body, set }: any) => {
+      try {
+        const user = await registerUser(body);
+        return { data: 'Success' };
+      } catch (err: any) {
+        if (err.message === 'Email sudah terdaftar') {
+          set.status = 409;
+          return { error: 'Email sudah terdaftar' };
         }
+        throw err;
       }
     },
-  })
-  .post('/api/users/login', async ({ body, set }: any) => {
-    try {
-      const result = await loginUser(body);
-      return { data: result };
-    } catch (err: any) {
-      if (err.message === 'Email atau password salah') {
-        set.status = 401;
-        return { error: 'Email atau password salah' };
-      }
-      throw err;
+    {
+      body: t.Object({
+        name: t.String({ maxLength: 255 }),
+        email: t.String({ format: 'email', maxLength: 255 }),
+        password: t.String({ minLength: 8, maxLength: 255 }),
+      }),
+      detail: {
+        summary: 'Register a new user',
+      },
     }
-  }, {
-    body: t.Object({
-      email: t.String({ format: 'email', maxLength: 255 }),
-      password: t.String({ maxLength: 255 }),
-    }),
-    detail: {
-      summary: 'Login with email and password',
-      responses: {
-        200: {
-          description: 'Login successful',
-          content: {
-            'application/json': {
-              example: {
-                data: {
-                  token: 'uuid-token-string-here'
-                }
-              }
-            }
-          }
-        },
-        401: {
-          description: 'Invalid email or password',
-          content: {
-            'application/json': {
-              example: {
-                error: 'Email atau password salah'
-              }
-            }
-          }
-        },
-        422: {
-          description: 'Validation error',
-          content: {
-            'application/json': {
-              example: {
-                error: 'Validation failed'
-              }
-            }
-          }
+  );
+
+const loginRoute = new Elysia()
+  .use(rateLimit({ windowMs: 60000, max: 5 })) // 5 requests per minute for login
+  .post(
+    '/api/users/login',
+    async ({ body, set }: any) => {
+      try {
+        const result = await loginUser(body);
+        return { data: result };
+      } catch (err: any) {
+        if (err.message === 'Email atau password salah') {
+          set.status = 401;
+          return { error: 'Email atau password salah' };
         }
+        throw err;
       }
     },
-  })
+    {
+      body: t.Object({
+        email: t.String({ format: 'email', maxLength: 255 }),
+        password: t.String({ maxLength: 255 }),
+      }),
+      detail: {
+        summary: 'Login with email and password',
+      },
+    }
+  );
+
+const listUsersRoute = new Elysia().get('/api/users', async () => {
+  const allUsers = await db.select().from(users);
+  return {
+    users: allUsers.map((u: any) => {
+      const { password, ...rest } = u;
+      return rest;
+    }),
+  };
+});
+
+const currentUserRoute = new Elysia()
+  .use(rateLimit({ windowMs: 60000, max: 60 })) // 60 requests per minute for current user
+  .get('/api/users/current', bearerAuth(getCurrentUser));
+
+const logoutRoute = new Elysia()
+  .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for logout
+  .delete('/api/users/logout', bearerAuth(logoutUser));
+
+export const usersRoute = registerRoute
+  .use(loginRoute)
+  .use(listUsersRoute)
+  .use(currentUserRoute)
+  .use(logoutRoute)
+  .use(rateLimit({ windowMs: 60000, max: 5 })) // 5 requests per minute for login
+  .post(
+    '/api/users/login',
+    async ({ body, set }: any) => {
+      try {
+        const result = await loginUser(body);
+        return { data: result };
+      } catch (err: any) {
+        if (err.message === 'Email atau password salah') {
+          set.status = 401;
+          return { error: 'Email atau password salah' };
+        }
+        throw err;
+      }
+    },
+    {
+      body: t.Object({
+        email: t.String({ format: 'email', maxLength: 255 }),
+        password: t.String({ maxLength: 255 }),
+      }),
+      detail: {
+        summary: 'Login with email and password',
+      },
+    }
+  )
+  .use(rateLimit({ windowMs: 60000, max: 60 })) // 60 requests per minute for current user
+  .get('/api/users/current', bearerAuth(getCurrentUser))
+  .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for logout
+  .delete('/api/users/logout', bearerAuth(logoutUser));
+
+export const usersRouteWithoutRateLimit = new Elysia()
   .get('/api/users', async () => {
     const allUsers = await db.select().from(users);
     return {
       users: allUsers.map((u: any) => {
         const { password, ...rest } = u;
         return rest;
-      })
+      }),
     };
   }, {
     detail: {

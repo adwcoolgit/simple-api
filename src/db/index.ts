@@ -13,3 +13,6 @@ const connection = mysql.createPool({
 });
 
 export const db = drizzle(connection);
+
+// Read replica - falls back to primary if not configured
+export { dbRead } from './replica';

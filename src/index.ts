@@ -2,7 +2,13 @@ import { Elysia } from 'elysia';
 import { openapi } from '@elysiajs/openapi';
 import { routes } from './routes';
 import { usersRoute } from './routes/users-route';
+import { loggerMiddleware } from './middleware/logger';
 
+const app = new Elysia()
+  .use(loggerMiddleware)
+  .use(routes)
+  .use(usersRoute)
+  .listen(Bun.env.PORT || 3000);
 try {
   const app = new Elysia()
   .use(openapi({
