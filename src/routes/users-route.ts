@@ -127,6 +127,94 @@ export const usersRouteWithoutRateLimit = new Elysia()
         return rest;
       }),
     };
+  }, {
+    detail: {
+      summary: 'Get all users (admin endpoint)',
+      responses: {
+        200: {
+          description: 'List of all users',
+          content: {
+            'application/json': {
+              example: {
+                users: [
+                  {
+                    id: 1,
+                    name: 'John Doe',
+                    email: 'john@example.com',
+                    created_at: '2026-04-27T07:22:33.000Z'
+                  },
+                  {
+                    id: 2,
+                    name: 'Jane Smith',
+                    email: 'jane@example.com',
+                    created_at: '2026-04-27T08:15:22.000Z'
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
   })
-  .get('/api/users/current', bearerAuth(getCurrentUser))
-  .delete('/api/users/logout', bearerAuth(logoutUser));
+  .get('/api/users/current', bearerAuth(getCurrentUser), {
+    detail: {
+      summary: 'Get current authenticated user',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Current user data',
+          content: {
+            'application/json': {
+              example: {
+                data: {
+                  id: 1,
+                  name: 'John Doe',
+                  email: 'john@example.com',
+                  created_at: '2026-04-27T07:22:33.000Z'
+                }
+              }
+            }
+          }
+        },
+        401: {
+          description: 'Unauthorized - invalid or missing token',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Unauthorized'
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+  .delete('/api/users/logout', bearerAuth(logoutUser), {
+    detail: {
+      summary: 'Logout and delete session',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Logout successful',
+          content: {
+            'application/json': {
+              example: {
+                data: 'OK'
+              }
+            }
+          }
+        },
+        401: {
+          description: 'Unauthorized - invalid or missing token',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Unauthorized'
+              }
+            }
+          }
+        }
+      }
+    }
+  });
