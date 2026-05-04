@@ -15,6 +15,12 @@ export interface LoginUserInput {
   password: string;
 }
 
+export interface UpdateUserInput {
+  name?: string;
+  email?: string;
+  password?: string;
+}
+
 export async function registerUser(input: RegisterUserInput) {
   // Input validation
   if (!input.name || input.name.trim().length === 0) {
@@ -189,5 +195,74 @@ export async function logoutUser(token: string) {
   } catch (error) {
     console.error('Logout error:', error);
     throw new Error('Unauthorized');
+  }
+}
+
+export async function updateUser(userId: number, input: UpdateUserInput) {
+  // Input validation
+  if (input.name !== undefined) {
+    if (!input.name || input.name.trim().length === 0) {
+      throw new Error('Name is required');
+    }
+    if (input.name.length > 255) {
+      throw new Error('Nama terlalu panjang, maksimal 255 karakter');
+    }
+  }
+  if (input.email !== undefined) {
+    if (!input.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
+      throw new Error('Valid email is required');
+    }
+    if (input.email.length > 255) {
+      throw new Error('Email terlalu panjang, maksimal 255 karakter');
+    }
+
+    // Check if email is already used by another user
+    const existingUser = await dbRead.select().from(users).where(eq(users.email, input.email)).limit(1);
+    if (existingUser.length > 0 && existingUser[0]?.id !== userId) {
+      throw new Error('Email sudah digunakan');
+    }
+  }
+  if (input.password !== undefined) {
+    if (!input.password || input.password.length < 8) {
+      throw new Error('Password must be at least 8 characters');
+    }
+    if (input.password.length > 255) {
+      throw new Error('Password terlalu panjang, maksimal 255 karakter');
+    }
+  }
+
+  try {
+    const updateData: any = {};
+
+    if (input.name !== undefined) {
+      updateData.name = input.name;
+    }
+    if (input.email !== undefined) {
+      updateData.email = input.email;
+    }
+    if (input.password !== undefined) {
+      updateData.password = await bcrypt.hash(input.password, 12);
+    }
+
+    // Perform partial update
+    await db.update(users).set(updateData).where(eq(users.id, userId));
+
+    return 'OK';
+  } catch (error: any) {
+    console.error('Update user error:', error);
+
+    // Handle database constraint violation
+    if (error?.message?.includes('varchar') ||
+        error?.message?.includes('length') ||
+        error?.code === 'ER_DATA_TOO_LONG' ||
+        error?.message?.includes('Data too long')) {
+      throw new Error('Input terlalu panjang, maksimal 255 karakter');
+    }
+
+    if (error instanceof Error && error.message.includes('Email sudah digunakan')) {
+      throw error;
+    }
+
+    throw new Error('Gagal memperbarui user');
   }
 }

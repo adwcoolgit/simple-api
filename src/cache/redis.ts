@@ -1,14 +1,11 @@
 import Redis from 'ioredis';
 
+// Create Redis connection with basic configuration
 const redis = new Redis({
   host: Bun.env.REDIS_HOST || 'localhost',
   port: parseInt(Bun.env.REDIS_PORT || '6379'),
   password: Bun.env.REDIS_PASSWORD || undefined,
-  lazyConnect: true, // Don't connect immediately
-  retryDelayOnFailover: 100, // Faster retry
-  maxRetriesPerRequest: 3, // Fail faster
-  connectTimeout: 1000, // 1 second timeout
-  commandTimeout: 500, // 0.5 second command timeout
+  lazyConnect: true,
 });
 
 // Handle connection errors gracefully
