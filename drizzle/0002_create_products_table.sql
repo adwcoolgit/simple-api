@@ -1,9 +1,7 @@
--- WARNING: This migration will DROP existing products table and recreate it
--- Make sure to backup data before running in production!
+-- Create products table with new schema (product_id and product_name)
+-- Uses IF NOT EXISTS to avoid conflicts
 
-DROP TABLE IF EXISTS `products`;
---> statement-breakpoint
-CREATE TABLE `products` (
+CREATE TABLE IF NOT EXISTS `products` (
     `product_id` bigint AUTO_INCREMENT PRIMARY KEY NOT NULL,
     `product_name` varchar(255) NOT NULL,
     `description` varchar(255),
