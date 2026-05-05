@@ -6,7 +6,7 @@ import {
   updateProduct,
   deleteProduct,
 } from '../service/products-service';
-import { bearerAuth } from './auth-middleware';
+import { bearerAuth, getUserIdFromToken } from './auth-middleware';
 import { rateLimit } from '../middleware/rate-limit';
 
 const createProductHandler = new Elysia()
@@ -21,7 +21,12 @@ const createProductHandler = new Elysia()
         return { error: 'Unauthorized' };
       }
 
+      const token = authHeader.substring(7);
+
       try {
+        // Validate token
+        await getUserIdFromToken(token);
+
         const product = await createProduct({
           pluName: body.plu_name,
           description: body.description,
@@ -101,7 +106,12 @@ const getProductsHandler = new Elysia()
         return { error: 'Unauthorized' };
       }
 
+      const token = authHeader.substring(7);
+
       try {
+        // Validate token
+        await getUserIdFromToken(token);
+
         const filters = {
           page: query.page ? Number(query.page) : undefined,
           limit: query.limit ? Number(query.limit) : undefined,
@@ -184,7 +194,12 @@ const getProductByPluNoHandler = new Elysia()
         return { error: 'Unauthorized' };
       }
 
+      const token = authHeader.substring(7);
+
       try {
+        // Validate token
+        await getUserIdFromToken(token);
+
         const product = await getProductByPluNo(Number(params.pluNo));
         return { data: product };
       } catch (err: any) {
@@ -263,6 +278,8 @@ const updateProductHandler = new Elysia()
         return { error: 'Unauthorized' };
       }
 
+      const token = authHeader.substring(7);
+
       // Check if at least one field is provided
       if (!body.plu_name && !body.description && body.category_id === undefined && body.department_id === undefined && body.is_active === undefined) {
         set.status = 422;
@@ -270,6 +287,8 @@ const updateProductHandler = new Elysia()
       }
 
       try {
+        // Validate token
+        await getUserIdFromToken(token);
         const updatedProduct = await updateProduct(Number(params.pluNo), {
           pluName: body.plu_name,
           description: body.description,
@@ -365,7 +384,12 @@ const deleteProductHandler = new Elysia()
         return { error: 'Unauthorized' };
       }
 
+      const token = authHeader.substring(7);
+
       try {
+        // Validate token
+        await getUserIdFromToken(token);
+
         const result = await deleteProduct(Number(params.pluNo));
         return { data: result };
       } catch (err: any) {
