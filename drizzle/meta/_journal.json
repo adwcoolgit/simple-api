@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1777990700000,
-      "tag": "0001_drop_products_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1777990800000,
-      "tag": "0002_create_products_table",
+      "when": 1778020959971,
+      "tag": "0001_true_lightspeed",
       "breakpoints": true
     }
   ]
