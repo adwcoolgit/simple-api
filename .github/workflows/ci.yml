@@ -44,6 +44,11 @@ jobs:
         DB_NAME: simple_api_test
         DB_USER: root
         DB_PASSWORD: rootpassword
+        
+    - name: Reset database
+      run: |
+        mysql -h 127.0.0.1 -u root -prootpassword -e "DROP DATABASE IF EXISTS simple_api_test;"
+        mysql -h 127.0.0.1 -u root -prootpassword -e "CREATE DATABASE simple_api_test;"
 
     - name: Run database migrations
       run: bun run db:migrate
