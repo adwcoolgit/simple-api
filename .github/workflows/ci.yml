@@ -35,6 +35,11 @@ jobs:
 
     - name: Install dependencies
       run: bun install
+        
+    - name: Reset database
+      run: |
+        mysql -h 127.0.0.1 -u root -proot -e "DROP DATABASE IF EXISTS simple_api_test;"
+        mysql -h 127.0.0.1 -u root -proot -e "CREATE DATABASE simple_api_test;"
 
     - name: Generate database migrations
       run: bun run db:generate
