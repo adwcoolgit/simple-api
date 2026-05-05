@@ -1,10 +1,8 @@
 -- WARNING: This migration will DROP existing products table and recreate it
 -- Make sure to backup data before running in production!
 
--- Drop existing table (will lose data - backup first!)
 DROP TABLE IF EXISTS `products`;
 
--- Create products table with new schema (product_id and product_name)
 CREATE TABLE `products` (
     `product_id` bigint AUTO_INCREMENT NOT NULL,
     `product_name` varchar(255) NOT NULL,
