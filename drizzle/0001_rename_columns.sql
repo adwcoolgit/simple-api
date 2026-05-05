@@ -1,5 +1,8 @@
-DROP TABLE IF EXISTS `products`;
+-- WARNING: This migration will DROP existing products table and recreate it
+-- Make sure to backup data before running in production!
 
+DROP TABLE IF EXISTS `products`;
+--> statement-breakpoint
 CREATE TABLE `products` (
     `product_id` bigint AUTO_INCREMENT PRIMARY KEY NOT NULL,
     `product_name` varchar(255) NOT NULL,
