@@ -1,17 +1,36 @@
-import { mysqlTable, serial, varchar, timestamp, int } from 'drizzle-orm/mysql-core';
+import {
+  mysqlTable,
+  int,
+  bigint,
+  smallint,
+  varchar,
+  timestamp,
+  boolean,
+} from 'drizzle-orm/mysql-core';
 
 export const sessions = mysqlTable('sessions', {
-  id: serial('id').primaryKey(),
+  id: int('id').autoincrement().primaryKey(),
   token: varchar('token', { length: 255 }).notNull(),
   userId: int('user_id').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 export const users = mysqlTable('users', {
-  id: serial('id').primaryKey(),
+  id: int('id').autoincrement().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+});
+
+export const products = mysqlTable('products', {
+  pluNo: bigint('plu_no', { mode: 'number' }).autoincrement().primaryKey(),
+  pluName: varchar('plu_name', { length: 255 }).notNull(),
+  description: varchar('description', { length: 255 }),
+  categoryId: bigint('category_id', { mode: 'number' }),
+  departmentId: smallint('department_id'),
+  isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
 });
