@@ -20,7 +20,7 @@ let testUserId: number;
 
 beforeEach(async () => {
   // Quick cleanup - only delete test products
-  await db.delete(products).where(sql`${products.pluName} like 'Test%'`);
+  await db.delete(products).where(sql`${products.productName} like 'Test%'`);
 
   // Check if test user and token already exist
   const existingUser = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
@@ -96,50 +96,50 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
 describe('POST /api/products — Buat Product Baru', () => {
   it('1. Semua field valid', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
-      plu_name: 'Indomie Goreng',
+      product_name: 'Indomie Goreng',
       description: 'Mie instan rasa goreng',
       category_id: "1",
       department_id: 2,
       is_active: true,
     });
     expect(res.status).toBe(201);
-    expect(res.json.data).toHaveProperty('pluNo');
-    expect(res.json.data.pluName).toBe('Indomie Goreng');
+    expect(res.json.data).toHaveProperty('productId');
+    expect(res.json.data.productName).toBe('Indomie Goreng');
     expect(res.json.data.description).toBe('Mie instan rasa goreng');
     expect(res.json.data.categoryId).toBe(1);
     expect(res.json.data.departmentId).toBe(2);
     expect(res.json.data.isActive).toBe(true);
   });
 
-  it('2. Hanya `plu_name` (field lain opsional tidak dikirim)', async () => {
+  it('2. Hanya `product_name` (field lain opsional tidak dikirim)', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
-      plu_name: 'Test Product Only Name',
+      product_name: 'Test Product Only Name',
     });
     expect(res.status).toBe(201);
-    expect(res.json.data.pluName).toBe('Test Product Only Name');
+    expect(res.json.data.productName).toBe('Test Product Only Name');
     expect(res.json.data.description).toBeNull();
     expect(res.json.data.categoryId).toBeNull();
     expect(res.json.data.departmentId).toBeNull();
     expect(res.json.data.isActive).toBe(true);
   });
 
-  it('3. `plu_name` tidak dikirim', async () => {
+  it('3. `product_name` tidak dikirim', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
       description: 'Test Description',
     });
     expect(res.status).toBe(422);
   });
 
-  it('4. `plu_name` string kosong', async () => {
+  it('4. `product_name` string kosong', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
-      plu_name: '',
+      product_name: '',
     });
     expect(res.status).toBe(422);
   });
 
   it('5. Tanpa header Authorization', async () => {
     const res = await makeRequest('POST', '/api/products', {
-      plu_name: 'Test Product',
+      product_name: 'Test Product',
     });
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
@@ -149,7 +149,7 @@ describe('POST /api/products — Buat Product Baru', () => {
     // In test environment, authentication is skipped for faster tests
     // So invalid tokens still work in test environment
     const res = await makeRequest('POST', '/api/products', {
-      plu_name: 'Test Product',
+      product_name: 'Test Product',
     }, {
       'Authorization': 'Bearer invalid-token',
     });
@@ -157,7 +157,7 @@ describe('POST /api/products — Buat Product Baru', () => {
     if (process.env.NODE_ENV === 'test') {
       // In test environment, authentication is skipped
       expect(res.status).toBe(201);
-      expect(res.json.data).toHaveProperty('pluNo');
+      expect(res.json.data).toHaveProperty('productId');
     } else {
       // In production, should get 401
       expect(res.status).toBe(401);
@@ -167,7 +167,7 @@ describe('POST /api/products — Buat Product Baru', () => {
 
   it('7. `is_active` tidak dikirim → default `true` di DB', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
-      plu_name: 'Test Product Default Active',
+      product_name: 'Test Product Default Active',
     });
     expect(res.status).toBe(201);
     expect(res.json.data.isActive).toBe(true);
@@ -178,9 +178,9 @@ describe('GET /api/products — List Semua Product', () => {
   beforeEach(async () => {
     // Create test products
     await db.insert(products).values([
-      { pluName: 'Test Product 1', description: 'Desc 1', categoryId: 1, departmentId: 1, isActive: true },
-      { pluName: 'Test Product 2', description: 'Desc 2', categoryId: 1, departmentId: 2, isActive: false },
-      { pluName: 'Test Product 3', description: 'Desc 3', categoryId: 2, departmentId: 1, isActive: true },
+      { productName: 'Test Product 1', description: 'Desc 1', categoryId: 1, departmentId: 1, isActive: true },
+      { productName: 'Test Product 2', description: 'Desc 2', categoryId: 1, departmentId: 2, isActive: false },
+      { productName: 'Test Product 3', description: 'Desc 3', categoryId: 2, departmentId: 1, isActive: true },
     ]);
   });
 
@@ -248,66 +248,66 @@ describe('GET /api/products — List Semua Product', () => {
   });
 });
 
-describe('GET /api/products/:pluNo — Detail Product', () => {
-  let testPluNo: number;
+describe('GET /api/products/:productId — Detail Product', () => {
+  let testProductId: number;
 
   beforeEach(async () => {
     const [product] = await db.insert(products).values({
-      pluName: 'Test Detail Product',
+      productName: 'Test Detail Product',
       description: 'Test Description',
       isActive: true,
     }).$returningId();
-    testPluNo = product!.pluNo;
+    testProductId = product!.productId;
   });
 
-  it('17. `pluNo` valid dan ada', async () => {
-    const res = await makeAuthRequest('GET', `/api/products/${testPluNo}`);
+  it('17. `productId` valid dan ada', async () => {
+    const res = await makeAuthRequest('GET', `/api/products/${testProductId}`);
     expect(res.status).toBe(200);
-    expect(res.json.data.pluNo).toBe(testPluNo);
-    expect(res.json.data.pluName).toBe('Test Detail Product');
+    expect(res.json.data.productId).toBe(testProductId);
+    expect(res.json.data.productName).toBe('Test Detail Product');
   });
 
-  it('18. `pluNo` tidak ada di DB', async () => {
+  it('18. `productId` tidak ada di DB', async () => {
     const res = await makeAuthRequest('GET', '/api/products/99999');
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
   });
 
-  it('19. `pluNo` bukan angka', async () => {
+  it('19. `productId` bukan angka', async () => {
     const res = await makeAuthRequest('GET', '/api/products/abc');
     expect(res.status).toBe(422);
   });
 
   it('20. Tanpa header Authorization', async () => {
-    const res = await makeRequest('GET', `/api/products/${testPluNo}`);
+    const res = await makeRequest('GET', `/api/products/${testProductId}`);
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 });
 
-describe('PATCH /api/products/:pluNo — Update Product', () => {
-  let testPluNo: number;
+describe('PATCH /api/products/:productId — Update Product', () => {
+  let testProductId: number;
 
   beforeEach(async () => {
     const [product] = await db.insert(products).values({
-      pluName: 'Test Update Product',
+      productName: 'Test Update Product',
       description: 'Original Description',
       isActive: true,
     }).$returningId();
-    testPluNo = product!.pluNo;
+    testProductId = product!.productId;
   });
 
-  it('21. Update `plu_name` saja', async () => {
-    const res = await makeAuthRequest('PATCH', `/api/products/${testPluNo}`, {
-      plu_name: 'Updated Product Name',
+  it('21. Update `product_name` saja', async () => {
+    const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
+      product_name: 'Updated Product Name',
     });
     expect(res.status).toBe(200);
-    expect(res.json.data.pluName).toBe('Updated Product Name');
+    expect(res.json.data.productName).toBe('Updated Product Name');
     expect(res.json.data.description).toBe('Original Description');
   });
 
   it('22. Update `description` saja', async () => {
-    const res = await makeAuthRequest('PATCH', `/api/products/${testPluNo}`, {
+    const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
       description: 'Updated Description',
     });
     expect(res.status).toBe(200);
@@ -315,7 +315,7 @@ describe('PATCH /api/products/:pluNo — Update Product', () => {
   });
 
   it('23. Update `is_active` dari `true` ke `false`', async () => {
-    const res = await makeAuthRequest('PATCH', `/api/products/${testPluNo}`, {
+    const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
       is_active: false,
     });
     expect(res.status).toBe(200);
@@ -323,117 +323,117 @@ describe('PATCH /api/products/:pluNo — Update Product', () => {
   });
 
   it('24. Update semua field sekaligus', async () => {
-    const res = await makeAuthRequest('PATCH', `/api/products/${testPluNo}`, {
-      plu_name: 'Fully Updated Product',
+    const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
+      product_name: 'Fully Updated Product',
       description: 'Fully Updated Description',
       category_id: "5",
       department_id: 3,
       is_active: false,
     });
     expect(res.status).toBe(200);
-    expect(res.json.data.pluName).toBe('Fully Updated Product');
+    expect(res.json.data.productName).toBe('Fully Updated Product');
     expect(res.json.data.description).toBe('Fully Updated Description');
     expect(res.json.data.categoryId).toBe(5);
     expect(res.json.data.departmentId).toBe(3);
     expect(res.json.data.isActive).toBe(false);
   });
 
-  it('25. `plu_no` tidak ada di DB', async () => {
+  it('25. `productId` tidak ada di DB', async () => {
     const res = await makeAuthRequest('PATCH', '/api/products/99999', {
-      plu_name: 'Nonexistent Product',
+      product_name: 'Nonexistent Product',
     });
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
   });
 
   it('26. Body kosong', async () => {
-    const res = await makeAuthRequest('PATCH', `/api/products/${testPluNo}`, {});
+    const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {});
     expect(res.status).toBe(422);
     expect(res.json).toEqual({ error: 'At least one field must be provided' });
   });
 
-  it('27. `plu_no` bukan angka', async () => {
+  it('27. `productId` bukan angka', async () => {
     const res = await makeAuthRequest('PATCH', '/api/products/abc', {
-      plu_name: 'Invalid PLU',
+      product_name: 'Invalid Product ID',
     });
     expect(res.status).toBe(422);
   });
 
   it('28. Tanpa header Authorization', async () => {
-    const res = await makeRequest('PATCH', `/api/products/${testPluNo}`, {
-      plu_name: 'Unauthorized Update',
+    const res = await makeRequest('PATCH', `/api/products/${testProductId}`, {
+      product_name: 'Unauthorized Update',
     });
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
   it('29. `updated_at` berubah setelah update', async () => {
-    const beforeUpdate = await db.select({ updatedAt: products.updatedAt }).from(products).where(eq(products.pluNo, testPluNo));
+    const beforeUpdate = await db.select({ updatedAt: products.updatedAt }).from(products).where(eq(products.productId, testProductId));
     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-    await makeAuthRequest('PATCH', `/api/products/${testPluNo}`, {
-      plu_name: 'Updated for Timestamp',
+    await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
+      product_name: 'Updated for Timestamp',
     });
-    const afterUpdate = await db.select({ updatedAt: products.updatedAt }).from(products).where(eq(products.pluNo, testPluNo));
+    const afterUpdate = await db.select({ updatedAt: products.updatedAt }).from(products).where(eq(products.productId, testProductId));
     expect(new Date(afterUpdate[0]!.updatedAt).getTime()).toBeGreaterThan(new Date(beforeUpdate[0]!.updatedAt).getTime());
   });
 });
 
-describe('DELETE /api/products/:pluNo — Soft Delete Product', () => {
-  let testPluNo: number;
+describe('DELETE /api/products/:productId — Soft Delete Product', () => {
+  let testProductId: number;
 
   beforeEach(async () => {
     const [product] = await db.insert(products).values({
-      pluName: 'Test Delete Product',
+      productName: 'Test Delete Product',
       description: 'Test Description',
       isActive: true,
     }).$returningId();
-    testPluNo = product!.pluNo;
+    testProductId = product!.productId;
   });
 
-  it('30. `pluNo` valid', async () => {
-    const res = await makeAuthRequest('DELETE', `/api/products/${testPluNo}`);
+  it('30. `productId` valid', async () => {
+    const res = await makeAuthRequest('DELETE', `/api/products/${testProductId}`);
     expect(res.status).toBe(200);
     expect(res.json).toEqual({ data: 'OK' });
   });
 
   it('31. Setelah delete, record masih ada di DB', async () => {
-    await makeAuthRequest('DELETE', `/api/products/${testPluNo}`);
-    const product = await db.select().from(products).where(eq(products.pluNo, testPluNo));
+    await makeAuthRequest('DELETE', `/api/products/${testProductId}`);
+    const product = await db.select().from(products).where(eq(products.productId, testProductId));
     expect(product.length).toBe(1);
     expect(product[0]!.isActive).toBe(false);
   });
 
   it('32. Setelah delete, GET product tersebut tergantung filter `is_active`', async () => {
-    await makeAuthRequest('DELETE', `/api/products/${testPluNo}`);
+    await makeAuthRequest('DELETE', `/api/products/${testProductId}`);
     const allRes = await makeAuthRequest('GET', '/api/products');
     const activeRes = await makeAuthRequest('GET', '/api/products?is_active=true');
     const inactiveRes = await makeAuthRequest('GET', '/api/products?is_active=false');
 
-    expect(allRes.json.data.some((p: any) => p.pluNo === testPluNo)).toBe(true);
-    expect(activeRes.json.data.some((p: any) => p.pluNo === testPluNo)).toBe(false);
-    expect(inactiveRes.json.data.some((p: any) => p.pluNo === testPluNo)).toBe(true);
+    expect(allRes.json.data.some((p: any) => p.productId === testProductId)).toBe(true);
+    expect(activeRes.json.data.some((p: any) => p.productId === testProductId)).toBe(false);
+    expect(inactiveRes.json.data.some((p: any) => p.productId === testProductId)).toBe(true);
   });
 
-  it('33. Delete dua kali pada `pluNo` yang sama', async () => {
-    const res1 = await makeAuthRequest('DELETE', `/api/products/${testPluNo}`);
-    const res2 = await makeAuthRequest('DELETE', `/api/products/${testPluNo}`);
+  it('33. Delete dua kali pada `productId` yang sama', async () => {
+    const res1 = await makeAuthRequest('DELETE', `/api/products/${testProductId}`);
+    const res2 = await makeAuthRequest('DELETE', `/api/products/${testProductId}`);
     expect(res1.status).toBe(200);
     expect(res2.status).toBe(200);
   });
 
-  it('34. `pluNo` tidak ada di DB', async () => {
+  it('34. `productId` tidak ada di DB', async () => {
     const res = await makeAuthRequest('DELETE', '/api/products/99999');
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
   });
 
-  it('35. `pluNo` bukan angka', async () => {
+  it('35. `productId` bukan angka', async () => {
     const res = await makeAuthRequest('DELETE', '/api/products/abc');
     expect(res.status).toBe(422);
   });
 
   it('36. Tanpa header Authorization', async () => {
-    const res = await makeRequest('DELETE', `/api/products/${testPluNo}`);
+    const res = await makeRequest('DELETE', `/api/products/${testProductId}`);
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });

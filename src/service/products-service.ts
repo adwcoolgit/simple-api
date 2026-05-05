@@ -3,7 +3,7 @@ import { db, dbRead } from '../db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 
 export interface CreateProductInput {
-  pluName: string;
+  productName: string;
   description?: string;
   categoryId?: number;
   departmentId?: number;
@@ -11,7 +11,7 @@ export interface CreateProductInput {
 }
 
 export interface UpdateProductInput {
-  pluName?: string;
+  productName?: string;
   description?: string;
   categoryId?: number;
   departmentId?: number;
@@ -34,11 +34,11 @@ export interface ProductsPaginationMeta {
 
 export async function createProduct(input: CreateProductInput) {
   // Input validation
-  if (!input.pluName || input.pluName.trim().length === 0) {
-    throw new Error('plu_name is required');
+  if (!input.productName || input.productName.trim().length === 0) {
+    throw new Error('product_name is required');
   }
-  if (input.pluName.length > 255) {
-    throw new Error('plu_name terlalu panjang, maksimal 255 karakter');
+  if (input.productName.length > 255) {
+    throw new Error('product_name terlalu panjang, maksimal 255 karakter');
   }
   if (input.description && input.description.length > 255) {
     throw new Error('description terlalu panjang, maksimal 255 karakter');
@@ -46,7 +46,7 @@ export async function createProduct(input: CreateProductInput) {
 
   try {
     const [newProduct] = await db.insert(products).values({
-      pluName: input.pluName,
+      productName: input.productName,
       description: input.description,
       categoryId: input.categoryId,
       departmentId: input.departmentId,
@@ -61,7 +61,7 @@ export async function createProduct(input: CreateProductInput) {
     const [createdProduct] = await dbRead
       .select()
       .from(products)
-      .where(eq(products.pluNo, newProduct.pluNo));
+      .where(eq(products.productId, newProduct.productId));
 
     if (!createdProduct) {
       throw new Error('Failed to retrieve created product');
@@ -136,12 +136,12 @@ export async function getProducts(filters: GetProductsFilters = {}) {
   }
 }
 
-export async function getProductByPluNo(pluNo: number) {
+export async function getProductByProductId(productId: number) {
   try {
     const [product] = await dbRead
       .select()
       .from(products)
-      .where(eq(products.pluNo, pluNo));
+      .where(eq(products.productId, productId));
 
     if (!product) {
       throw new Error('Product tidak ditemukan');
@@ -153,7 +153,7 @@ export async function getProductByPluNo(pluNo: number) {
 
     return product;
   } catch (error: any) {
-    console.error('Get product by PLU error:', error);
+    console.error('Get product by product ID error:', error);
 
     if (error instanceof Error && error.message === 'Product tidak ditemukan') {
       throw error;
@@ -163,14 +163,14 @@ export async function getProductByPluNo(pluNo: number) {
   }
 }
 
-export async function updateProduct(pluNo: number, input: UpdateProductInput) {
+export async function updateProduct(productId: number, input: UpdateProductInput) {
   // Input validation
-  if (input.pluName !== undefined) {
-    if (!input.pluName || input.pluName.trim().length === 0) {
-      throw new Error('plu_name is required');
+  if (input.productName !== undefined) {
+    if (!input.productName || input.productName.trim().length === 0) {
+      throw new Error('product_name is required');
     }
-    if (input.pluName.length > 255) {
-      throw new Error('plu_name terlalu panjang, maksimal 255 karakter');
+    if (input.productName.length > 255) {
+      throw new Error('product_name terlalu panjang, maksimal 255 karakter');
     }
   }
   if (input.description !== undefined && input.description.length > 255) {
@@ -182,7 +182,7 @@ export async function updateProduct(pluNo: number, input: UpdateProductInput) {
     const [existingProduct] = await dbRead
       .select()
       .from(products)
-      .where(eq(products.pluNo, pluNo));
+      .where(eq(products.productId, productId));
 
     if (!existingProduct) {
       throw new Error('Product tidak ditemukan');
@@ -191,8 +191,8 @@ export async function updateProduct(pluNo: number, input: UpdateProductInput) {
     // Prepare update data
     const updateData: any = {};
 
-    if (input.pluName !== undefined) {
-      updateData.pluName = input.pluName;
+    if (input.productName !== undefined) {
+      updateData.productName = input.productName;
     }
     if (input.description !== undefined) {
       updateData.description = input.description;
@@ -208,13 +208,13 @@ export async function updateProduct(pluNo: number, input: UpdateProductInput) {
     }
 
     // Perform partial update
-    await db.update(products).set(updateData).where(eq(products.pluNo, pluNo));
+    await db.update(products).set(updateData).where(eq(products.productId, productId));
 
     // Return updated product
     const [updatedProduct] = await dbRead
       .select()
       .from(products)
-      .where(eq(products.pluNo, pluNo));
+      .where(eq(products.productId, productId));
 
     if (!updatedProduct) {
       throw new Error('Failed to retrieve updated product');
@@ -242,13 +242,13 @@ export async function updateProduct(pluNo: number, input: UpdateProductInput) {
   }
 }
 
-export async function deleteProduct(pluNo: number) {
+export async function deleteProduct(productId: number) {
   try {
     // Check if product exists
     const [existingProduct] = await dbRead
       .select()
       .from(products)
-      .where(eq(products.pluNo, pluNo));
+      .where(eq(products.productId, productId));
 
     if (!existingProduct) {
       throw new Error('Product tidak ditemukan');
@@ -257,7 +257,7 @@ export async function deleteProduct(pluNo: number) {
     // Soft delete - set is_active to false
     await db.update(products).set({
       isActive: false,
-    }).where(eq(products.pluNo, pluNo));
+    }).where(eq(products.productId, productId));
 
     return 'OK';
   } catch (error: any) {
