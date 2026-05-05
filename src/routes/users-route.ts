@@ -92,23 +92,23 @@ const logoutRoute = new Elysia()
           content: {
             'application/json': {
               example: {
-                data: 'OK'
-              }
-            }
-          }
+                data: 'OK',
+              },
+            },
+          },
         },
         401: {
           description: 'Unauthorized - invalid or missing token',
           content: {
             'application/json': {
               example: {
-                error: 'Unauthorized'
-              }
-            }
-          }
-        }
-      }
-    }
+                error: 'Unauthorized',
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
 const updateRoute = new Elysia()
@@ -163,33 +163,33 @@ const updateRoute = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  data: 'OK'
-                }
-              }
-            }
+                  data: 'OK',
+                },
+              },
+            },
           },
           401: {
             description: 'Unauthorized - invalid or missing token',
             content: {
               'application/json': {
                 example: {
-                  error: 'Unauthorized'
-                }
-              }
-            }
+                  error: 'Unauthorized',
+                },
+              },
+            },
           },
           409: {
             description: 'Email already used by another user',
             content: {
               'application/json': {
                 example: {
-                  error: 'Email sudah digunakan'
-                }
-              }
-            }
-          }
-        }
-      }
+                  error: 'Email sudah digunakan',
+                },
+              },
+            },
+          },
+        },
+      },
     }
   );
 

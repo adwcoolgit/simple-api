@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { swagger } from '@elysiajs/swagger';
 import { routes } from './routes';
 import { usersRoute } from './routes/users-route';
+import { productsRoute } from './routes/products-route';
 import { loggerMiddleware } from './middleware/logger';
 
 const app = new Elysia()
@@ -11,6 +12,7 @@ const app = new Elysia()
   }))
   .use(routes)
   .use(usersRoute)
+  .use(productsRoute)
   .get('/test', () => ({ message: 'Test endpoint' }), {
     detail: {
       summary: 'Test endpoint for Swagger',
