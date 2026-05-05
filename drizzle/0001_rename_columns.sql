@@ -1,6 +1,3 @@
--- WARNING: This migration will DROP existing products table and recreate it
--- Make sure to backup data before running in production!
-
 DROP TABLE IF EXISTS `products`;
 
 CREATE TABLE `products` (
