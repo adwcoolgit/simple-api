@@ -39,7 +39,10 @@ export const getUserIdFromToken = async (token: string): Promise<number> => {
       }
     } catch (err) {
       // Redis unavailable, will fallback to DB
-      console.warn('Redis unavailable, falling back to DB:', err);
+      // Skip Redis errors in test environment
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn('Redis unavailable, falling back to DB:', err);
+      }
     }
 
     if (!userId) {
@@ -56,8 +59,10 @@ export const getUserIdFromToken = async (token: string): Promise<number> => {
       try {
         await redis.set(token, String(userId), 'EX', 3600);
       } catch (err) {
-        // Redis unavailable, continue
-        console.warn('Failed to cache session in Redis:', err);
+        // Redis unavailable, skip in test environment
+        if (process.env.NODE_ENV !== 'test') {
+          console.warn('Failed to cache session in Redis:', err);
+        }
       }
     }
 
