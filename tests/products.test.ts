@@ -25,10 +25,10 @@ beforeEach(async () => {
   // Check if test user and token already exist
   const existingUser = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
   if (existingUser.length > 0) {
-    testUserId = existingUser[0].id;
+    testUserId = existingUser[0]!.id;
     const existingSession = await db.select().from(sessions).where(eq(sessions.userId, testUserId)).limit(1);
     if (existingSession.length > 0) {
-      authToken = existingSession[0].token;
+      authToken = existingSession[0]!.token;
       return; // Skip setup if already exists
     }
   }
