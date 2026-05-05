@@ -184,7 +184,7 @@ describe('GET /api/products — List Semua Product', () => {
   });
 
   it('9. List saat tidak ada data', async () => {
-    await db.delete(products).where(sql`${products.pluName} like 'Test%'`);
+    await db.delete(products).where(sql`1=1`); // Delete all products
     const res = await makeAuthRequest('GET', '/api/products');
     expect(res.status).toBe(200);
     expect(res.json.data).toEqual([]);
@@ -356,7 +356,7 @@ describe('PATCH /api/products/:pluNo — Update Product', () => {
 
   it('29. `updated_at` berubah setelah update', async () => {
     const beforeUpdate = await db.select({ updatedAt: products.updatedAt }).from(products).where(eq(products.pluNo, testPluNo));
-    await new Promise(resolve => setTimeout(resolve, 100)); // Wait a bit
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
     await makeAuthRequest('PATCH', `/api/products/${testPluNo}`, {
       plu_name: 'Updated for Timestamp',
     });

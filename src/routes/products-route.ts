@@ -41,7 +41,7 @@ const createProductHandler = new Elysia()
     },
     {
       body: t.Object({
-        plu_name: t.String({ maxLength: 255 }),
+        plu_name: t.String({ minLength: 1, maxLength: 255 }),
         description: t.Optional(t.String({ maxLength: 255 })),
         category_id: t.Optional(t.String()),
         department_id: t.Optional(t.Number()),

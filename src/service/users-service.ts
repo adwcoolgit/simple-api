@@ -43,7 +43,11 @@ export async function registerUser(input: RegisterUserInput) {
   }
 
   try {
-    const existingUser = await dbRead.select().from(users).where(eq(users.email, input.email)).limit(1);
+    const existingUser = await dbRead
+      .select()
+      .from(users)
+      .where(eq(users.email, input.email))
+      .limit(1);
     if (existingUser.length > 0) {
       throw new Error('Email sudah terdaftar');
     }
@@ -56,7 +60,10 @@ export async function registerUser(input: RegisterUserInput) {
       password: hashedPassword,
     });
 
-    const [newUser] = await dbRead.select().from(users).where(eq(users.email, input.email));
+    const [newUser] = await dbRead
+      .select()
+      .from(users)
+      .where(eq(users.email, input.email));
 
     if (!newUser) {
       throw new Error('Failed to create user');
@@ -68,14 +75,19 @@ export async function registerUser(input: RegisterUserInput) {
     console.error('Registration error:', error);
 
     // Handle database constraint violation
-    if (error?.message?.includes('varchar') ||
-        error?.message?.includes('length') ||
-        error?.code === 'ER_DATA_TOO_LONG' ||
-        error?.message?.includes('Data too long')) {
+    if (
+      error?.message?.includes('varchar') ||
+      error?.message?.includes('length') ||
+      error?.code === 'ER_DATA_TOO_LONG' ||
+      error?.message?.includes('Data too long')
+    ) {
       throw new Error('Input terlalu panjang, maksimal 255 karakter');
     }
 
-    if (error instanceof Error && error.message.includes('Email sudah terdaftar')) {
+    if (
+      error instanceof Error &&
+      error.message.includes('Email sudah terdaftar')
+    ) {
       throw error;
     }
 
@@ -93,7 +105,10 @@ export async function loginUser(input: LoginUserInput) {
   }
 
   try {
-    const [user] = await dbRead.select().from(users).where(eq(users.email, input.email));
+    const [user] = await dbRead
+      .select()
+      .from(users)
+      .where(eq(users.email, input.email));
 
     if (!user) {
       throw new Error('Email atau password salah');
@@ -143,7 +158,10 @@ export async function getCurrentUser(token: string) {
 
     if (!userId) {
       // Cache miss or Redis error, query DB
-      const [session] = await dbRead.select().from(sessions).where(eq(sessions.token, token));
+      const [session] = await dbRead
+        .select()
+        .from(sessions)
+        .where(eq(sessions.token, token));
 
       if (!session) {
         throw new Error('Unauthorized');
@@ -161,7 +179,10 @@ export async function getCurrentUser(token: string) {
     }
 
     // Get user data
-    const [user] = await dbRead.select().from(users).where(eq(users.id, userId));
+    const [user] = await dbRead
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
 
     if (!user) {
       throw new Error('Unauthorized');
@@ -177,7 +198,10 @@ export async function getCurrentUser(token: string) {
 
 export async function logoutUser(token: string) {
   try {
-    const [session] = await dbRead.select().from(sessions).where(eq(sessions.token, token));
+    const [session] = await dbRead
+      .select()
+      .from(sessions)
+      .where(eq(sessions.token, token));
 
     if (!session) {
       throw new Error('Unauthorized');
@@ -217,7 +241,11 @@ export async function updateUser(userId: number, input: UpdateUserInput) {
     }
 
     // Check if email is already used by another user
-    const existingUser = await dbRead.select().from(users).where(eq(users.email, input.email)).limit(1);
+    const existingUser = await dbRead
+      .select()
+      .from(users)
+      .where(eq(users.email, input.email))
+      .limit(1);
     if (existingUser.length > 0 && existingUser[0]?.id !== userId) {
       throw new Error('Email sudah digunakan');
     }
@@ -252,14 +280,19 @@ export async function updateUser(userId: number, input: UpdateUserInput) {
     console.error('Update user error:', error);
 
     // Handle database constraint violation
-    if (error?.message?.includes('varchar') ||
-        error?.message?.includes('length') ||
-        error?.code === 'ER_DATA_TOO_LONG' ||
-        error?.message?.includes('Data too long')) {
+    if (
+      error?.message?.includes('varchar') ||
+      error?.message?.includes('length') ||
+      error?.code === 'ER_DATA_TOO_LONG' ||
+      error?.message?.includes('Data too long')
+    ) {
       throw new Error('Input terlalu panjang, maksimal 255 karakter');
     }
 
-    if (error instanceof Error && error.message.includes('Email sudah digunakan')) {
+    if (
+      error instanceof Error &&
+      error.message.includes('Email sudah digunakan')
+    ) {
       throw error;
     }
 
