@@ -25,8 +25,8 @@ export const users = mysqlTable('users', {
 });
 
 export const products = mysqlTable('products', {
-  pluNo: bigint('plu_no', { mode: 'number' }).autoincrement().primaryKey(),
-  pluName: varchar('plu_name', { length: 255 }).notNull(),
+  productId: bigint('product_id', { mode: 'number' }).autoincrement().primaryKey(),
+  productName: varchar('product_name', { length: 255 }).notNull(),
   description: varchar('description', { length: 255 }),
   categoryId: bigint('category_id', { mode: 'number' }),
   departmentId: smallint('department_id'),

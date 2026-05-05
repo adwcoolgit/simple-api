@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import {
   createProduct,
   getProducts,
-  getProductByPluNo,
+  getProductByProductId,
   updateProduct,
   deleteProduct,
 } from '../service/products-service';
@@ -30,7 +30,7 @@ const createProductHandler = new Elysia()
         }
 
         const product = await createProduct({
-          pluName: body.plu_name,
+          productName: body.product_name,
           description: body.description,
           categoryId: body.category_id ? parseInt(body.category_id) : undefined,
           departmentId: body.department_id,
@@ -48,7 +48,7 @@ const createProductHandler = new Elysia()
     },
     {
       body: t.Object({
-        plu_name: t.String({ minLength: 1, maxLength: 255 }),
+        product_name: t.String({ minLength: 1, maxLength: 255 }),
         description: t.Optional(t.String({ maxLength: 255 })),
         category_id: t.Optional(t.String()),
         department_id: t.Optional(t.Number()),
@@ -65,8 +65,8 @@ const createProductHandler = new Elysia()
               'application/json': {
                 example: {
                   data: {
-                    plu_no: 1,
-                    plu_name: 'Indomie Goreng',
+                    product_id: 1,
+                    product_name: 'Indomie Goreng',
                     description: 'Mie instan rasa goreng',
                     category_id: 1,
                     department_id: 2,
@@ -152,8 +152,8 @@ const getProductsHandler = new Elysia()
                 example: {
                   data: [
                     {
-                      plu_no: 1,
-                      plu_name: 'Indomie Goreng',
+                      product_id: 1,
+                      product_name: 'Indomie Goreng',
                       description: 'Mie instan rasa goreng',
                       category_id: 1,
                       department_id: 2,
@@ -186,10 +186,10 @@ const getProductsHandler = new Elysia()
     }
   );
 
-const getProductByPluNoHandler = new Elysia()
+const getProductByProductIdHandler = new Elysia()
   .use(rateLimit({ windowMs: 60000, max: 60 }))
   .get(
-    '/api/products/:pluNo',
+    '/api/products/:productId',
     async ({ params, set, headers }: any) => {
       const authHeader = headers['authorization'] || headers['Authorization'];
 
@@ -206,7 +206,7 @@ const getProductByPluNoHandler = new Elysia()
           await getUserIdFromToken(token);
         }
 
-        const product = await getProductByPluNo(Number(params.pluNo));
+        const product = await getProductByProductId(Number(params.productId));
         return { data: product };
       } catch (err: any) {
         if (err.message === 'Product tidak ditemukan') {
@@ -218,10 +218,10 @@ const getProductByPluNoHandler = new Elysia()
     },
     {
       params: t.Object({
-        pluNo: t.Number(),
+        productId: t.Number(),
       }),
       detail: {
-        summary: 'Get product details by PLU number',
+        summary: 'Get product details by product ID',
         tags: ['Products'],
         security: [{ bearerAuth: [] }],
         responses: {
@@ -231,8 +231,8 @@ const getProductByPluNoHandler = new Elysia()
               'application/json': {
                 example: {
                   data: {
-                    plu_no: 1,
-                    plu_name: 'Indomie Goreng',
+                    product_id: 1,
+                    product_name: 'Indomie Goreng',
                     description: 'Mie instan rasa goreng',
                     category_id: 1,
                     department_id: 2,
@@ -265,7 +265,7 @@ const getProductByPluNoHandler = new Elysia()
             },
           },
           422: {
-            description: 'Invalid PLU number',
+            description: 'Invalid product ID',
           },
         },
       },
@@ -275,7 +275,7 @@ const getProductByPluNoHandler = new Elysia()
 const updateProductHandler = new Elysia()
   .use(rateLimit({ windowMs: 60000, max: 30 }))
   .patch(
-    '/api/products/:pluNo',
+    '/api/products/:productId',
     async ({ params, body, set, headers }: any) => {
       const authHeader = headers['authorization'] || headers['Authorization'];
 
@@ -287,7 +287,7 @@ const updateProductHandler = new Elysia()
       const token = authHeader.substring(7);
 
       // Check if at least one field is provided
-      if (!body.plu_name && !body.description && body.category_id === undefined && body.department_id === undefined && body.is_active === undefined) {
+      if (!body.product_name && !body.description && body.category_id === undefined && body.department_id === undefined && body.is_active === undefined) {
         set.status = 422;
         return { error: 'At least one field must be provided' };
       }
@@ -298,8 +298,8 @@ const updateProductHandler = new Elysia()
           await getUserIdFromToken(token);
         }
 
-        const updatedProduct = await updateProduct(Number(params.pluNo), {
-          pluName: body.plu_name,
+        const updatedProduct = await updateProduct(Number(params.productId), {
+          productName: body.product_name,
           description: body.description,
           categoryId: body.category_id !== undefined ? parseInt(body.category_id) : undefined,
           departmentId: body.department_id,
@@ -320,17 +320,17 @@ const updateProductHandler = new Elysia()
     },
     {
       params: t.Object({
-        pluNo: t.Number(),
+        productId: t.Number(),
       }),
       body: t.Object({
-        plu_name: t.Optional(t.String({ maxLength: 255 })),
+        product_name: t.Optional(t.String({ maxLength: 255 })),
         description: t.Optional(t.String({ maxLength: 255 })),
         category_id: t.Optional(t.String()),
         department_id: t.Optional(t.Number()),
         is_active: t.Optional(t.Boolean()),
       }),
       detail: {
-        summary: 'Update product by PLU number',
+        summary: 'Update product by product ID',
         tags: ['Products'],
         security: [{ bearerAuth: [] }],
         responses: {
@@ -340,8 +340,8 @@ const updateProductHandler = new Elysia()
               'application/json': {
                 example: {
                   data: {
-                    plu_no: 1,
-                    plu_name: 'Indomie Goreng Special',
+                    product_id: 1,
+                    product_name: 'Indomie Goreng Special',
                     description: 'Edisi terbaru',
                     category_id: 2,
                     department_id: 1,
@@ -384,7 +384,7 @@ const updateProductHandler = new Elysia()
 const deleteProductHandler = new Elysia()
   .use(rateLimit({ windowMs: 60000, max: 30 }))
   .delete(
-    '/api/products/:pluNo',
+    '/api/products/:productId',
     async ({ params, set, headers }: any) => {
       const authHeader = headers['authorization'] || headers['Authorization'];
 
@@ -401,7 +401,7 @@ const deleteProductHandler = new Elysia()
           await getUserIdFromToken(token);
         }
 
-        const result = await deleteProduct(Number(params.pluNo));
+        const result = await deleteProduct(Number(params.productId));
         return { data: result };
       } catch (err: any) {
         if (err.message === 'Product tidak ditemukan') {
@@ -413,10 +413,10 @@ const deleteProductHandler = new Elysia()
     },
     {
       params: t.Object({
-        pluNo: t.Number(),
+        productId: t.Number(),
       }),
       detail: {
-        summary: 'Soft delete product by PLU number',
+        summary: 'Soft delete product by product ID',
         tags: ['Products'],
         security: [{ bearerAuth: [] }],
         responses: {
@@ -451,7 +451,7 @@ const deleteProductHandler = new Elysia()
             },
           },
           422: {
-            description: 'Invalid PLU number',
+            description: 'Invalid product ID',
           },
         },
       },
@@ -461,6 +461,6 @@ const deleteProductHandler = new Elysia()
 export const productsRoute = new Elysia()
   .use(createProductHandler)
   .use(getProductsHandler)
-  .use(getProductByPluNoHandler)
+  .use(getProductByProductIdHandler)
   .use(updateProductHandler)
   .use(deleteProductHandler);
