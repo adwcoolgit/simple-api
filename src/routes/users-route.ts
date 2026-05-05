@@ -35,6 +35,32 @@ const registerRoute = new Elysia()
       }),
       detail: {
         summary: 'Register a new user',
+        tags: ['Users'],
+        responses: {
+          200: {
+            description: 'User registered successfully',
+            content: {
+              'application/json': {
+                example: {
+                  data: 'Success',
+                },
+              },
+            },
+          },
+          409: {
+            description: 'Email already registered',
+            content: {
+              'application/json': {
+                example: {
+                  error: 'Email sudah terdaftar',
+                },
+              },
+            },
+          },
+          422: {
+            description: 'Validation error',
+          },
+        },
       },
     }
   );
@@ -62,6 +88,34 @@ const loginRoute = new Elysia()
       }),
       detail: {
         summary: 'Login with email and password',
+        tags: ['Users'],
+        responses: {
+          200: {
+            description: 'Login successful',
+            content: {
+              'application/json': {
+                example: {
+                  data: {
+                    token: 'uuid-token-here',
+                  },
+                },
+              },
+            },
+          },
+          401: {
+            description: 'Invalid email or password',
+            content: {
+              'application/json': {
+                example: {
+                  error: 'Email atau password salah',
+                },
+              },
+            },
+          },
+          422: {
+            description: 'Validation error',
+          },
+        },
       },
     }
   );
@@ -74,11 +128,69 @@ const listUsersRoute = new Elysia().get('/api/users', async () => {
       return rest;
     }),
   };
+}, {
+  detail: {
+    summary: 'List all users (without passwords)',
+    tags: ['Users'],
+    responses: {
+      200: {
+        description: 'Users list retrieved successfully',
+        content: {
+          'application/json': {
+            example: {
+              users: [
+                {
+                  id: 1,
+                  name: 'John Doe',
+                  email: 'john@example.com',
+                  createdAt: '2024-01-01T00:00:00.000Z',
+                  updatedAt: '2024-01-01T00:00:00.000Z',
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
 const currentUserRoute = new Elysia()
   .use(rateLimit({ windowMs: 60000, max: 60 })) // 60 requests per minute for current user
-  .get('/api/users/current', bearerAuth(getCurrentUser));
+  .get('/api/users/current', bearerAuth(getCurrentUser), {
+    detail: {
+      summary: 'Get current authenticated user',
+      tags: ['Users'],
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Current user retrieved successfully',
+          content: {
+            'application/json': {
+              example: {
+                data: {
+                  id: 1,
+                  name: 'John Doe',
+                  email: 'john@example.com',
+                  createdAt: '2024-01-01T00:00:00.000Z',
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: 'Unauthorized - invalid or missing token',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Unauthorized',
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 
 const logoutRoute = new Elysia()
   .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for logout
@@ -156,6 +268,7 @@ const updateRoute = new Elysia()
       }),
       detail: {
         summary: 'Update current user',
+        tags: ['Users'],
         security: [{ bearerAuth: [] }],
         responses: {
           200: {
