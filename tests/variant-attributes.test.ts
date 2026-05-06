@@ -23,69 +23,50 @@ let testProductId: number;
 let testVariantId: number;
 
 beforeEach(async () => {
-  // Quick cleanup - only delete test variant attributes
-  await db.delete(variantAttributes).where(sql`${variantAttributes.attributeName} like 'Test%'`);
+  // Quick cleanup - delete in correct order due to foreign key constraints
+  await db.execute(sql`DELETE FROM variant_attributes`);
+  await db.execute(sql`DELETE FROM product_variants WHERE sku LIKE 'Test%'`);
+  await db.execute(sql`DELETE FROM products WHERE product_name LIKE 'Test%'`);
 
-  // Check if test user and token already exist
-  const existingUser = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
-  if (existingUser.length > 0) {
-    testUserId = existingUser[0]!.id;
-    const existingSession = await db.select().from(sessions).where(eq(sessions.userId, testUserId)).limit(1);
-    if (existingSession.length > 0) {
-      authToken = existingSession[0]!.token;
-    }
-  }
+  // Setup test data
+  const hashedPassword = await bcrypt.hash(testPassword, 12);
 
-  if (!authToken) {
-    // Create test user if not exists
-    if (!existingUser.length) {
-      const hashedPassword = await bcrypt.hash(testPassword, 12);
-      await db.insert(users).values({
-        name: testName,
-        email: testEmail,
-        password: hashedPassword,
-      });
-    }
-
-    // Get user ID
-    const user = await db.select({ id: users.id }).from(users).where(eq(users.email, testEmail)).limit(1);
-    testUserId = user[0]!.id;
-
-    // Create session token directly in DB
-    authToken = `test-token-${Date.now()}`;
-    await db.insert(sessions).values({
-      token: authToken,
-      userId: testUserId,
+  // Create or get test user
+  let user = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
+  if (user.length === 0) {
+    await db.insert(users).values({
+      name: testName,
+      email: testEmail,
+      password: hashedPassword,
     });
+    user = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
   }
+  testUserId = user[0]!.id;
 
-  // Create test product if not exists
-  const existingProduct = await db.select().from(products).where(sql`${products.productName} = 'Test Product'`).limit(1);
-  if (existingProduct.length === 0) {
-    const [product] = await db.insert(products).values({
-      productName: 'Test Product',
-      description: 'Test product for variants',
-      isActive: true,
-    }).$returningId();
-    testProductId = product!.productId;
-  } else {
-    testProductId = existingProduct[0]!.productId;
-  }
+  // Create session token
+  authToken = `test-token-${Date.now()}`;
+  await db.insert(sessions).values({
+    token: authToken,
+    userId: testUserId,
+  });
 
-  // Create test variant if not exists
-  const existingVariant = await db.select().from(productVariants).where(sql`${productVariants.sku} = 'Test-Variant-SKU'`).limit(1);
-  if (existingVariant.length === 0) {
-    const [variant] = await db.insert(productVariants).values({
-      productId: testProductId,
-      sku: 'Test-Variant-SKU',
-      variantName: 'Test Variant',
-      isActive: true,
-      isSellable: true,
-    }).$returningId();
-    testVariantId = variant!.id;
-  } else {
-    testVariantId = existingVariant[0]!.id;
-  }
+  // Create test product
+  const [product] = await db.insert(products).values({
+    productName: 'Test Product',
+    description: 'Test product for variants',
+    isActive: true,
+  }).$returningId();
+  testProductId = product!.productId;
+
+  // Create test variant
+  const [variant] = await db.insert(productVariants).values({
+    productId: testProductId,
+    sku: 'Test-Variant-SKU',
+    variantName: 'Test Variant',
+    isActive: true,
+    isSellable: true,
+  }).$returningId();
+  testVariantId = variant!.id;
 });
 
 // Helper function to make authenticated requests
