@@ -34,3 +34,13 @@ export const products = mysqlTable('products', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
 });
+
+export const productVariants = mysqlTable('product_variants', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  productId: bigint('product_id', { mode: 'number' }).notNull().references(() => products.productId),
+  sku: varchar('sku', { length: 50 }).notNull().unique(),
+  variantName: varchar('variant_name', { length: 100 }),
+  uom: varchar('uom', { length: 10 }),
+  isActive: boolean('is_active').default(true).notNull(),
+  isSellable: boolean('is_sellable').default(true).notNull(),
+});
