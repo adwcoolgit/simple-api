@@ -120,40 +120,44 @@ const loginRoute = new Elysia()
     }
   );
 
-const listUsersRoute = new Elysia().get('/api/users', async () => {
-  const allUsers = await db.select().from(users);
-  return {
-    users: allUsers.map((u: any) => {
-      const { password, ...rest } = u;
-      return rest;
-    }),
-  };
-}, {
-  detail: {
-    summary: 'List all users (without passwords)',
-    tags: ['Users'],
-    responses: {
-      200: {
-        description: 'Users list retrieved successfully',
-        content: {
-          'application/json': {
-            example: {
-              users: [
-                {
-                  id: 1,
-                  name: 'John Doe',
-                  email: 'john@example.com',
-                  createdAt: '2024-01-01T00:00:00.000Z',
-                  updatedAt: '2024-01-01T00:00:00.000Z',
-                },
-              ],
+const listUsersRoute = new Elysia().get(
+  '/api/users',
+  async () => {
+    const allUsers = await db.select().from(users);
+    return {
+      users: allUsers.map((u: any) => {
+        const { password, ...rest } = u;
+        return rest;
+      }),
+    };
+  },
+  {
+    detail: {
+      summary: 'List all users (without passwords)',
+      tags: ['Users'],
+      responses: {
+        200: {
+          description: 'Users list retrieved successfully',
+          content: {
+            'application/json': {
+              example: {
+                users: [
+                  {
+                    id: 1,
+                    name: 'John Doe',
+                    email: 'john@example.com',
+                    createdAt: '2024-01-01T00:00:00.000Z',
+                    updatedAt: '2024-01-01T00:00:00.000Z',
+                  },
+                ],
+              },
             },
           },
         },
       },
     },
-  },
-});
+  }
+);
 
 const currentUserRoute = new Elysia()
   .use(rateLimit({ windowMs: 60000, max: 60 })) // 60 requests per minute for current user
@@ -197,6 +201,7 @@ const logoutRoute = new Elysia()
   .delete('/api/users/logout', bearerAuth(logoutUser), {
     detail: {
       summary: 'Logout and delete session',
+      tags: ['Users'],
       security: [{ bearerAuth: [] }],
       responses: {
         200: {

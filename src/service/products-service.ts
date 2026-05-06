@@ -94,7 +94,7 @@ export async function getProducts(filters: GetProductsFilters = {}) {
     let whereConditions = [];
 
     if (filters.isActive !== undefined) {
-      whereConditions.push(eq(products.isActive, filters.isActive === true || filters.isActive === 'true'));
+      whereConditions.push(eq(products.isActive, filters.isActive));
     }
 
     if (filters.categoryId !== undefined) {
@@ -108,10 +108,12 @@ export async function getProducts(filters: GetProductsFilters = {}) {
     const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
     // Get total count
-    const [{ count }] = await dbRead
+    const countResult = await dbRead
       .select({ count: sql<number>`count(*)` })
       .from(products)
       .where(whereClause);
+
+    const count = countResult[0]?.count || 0;
 
     // Get paginated products
     const productList = await dbRead
@@ -147,7 +149,7 @@ export async function getProductByProductId(productId: number) {
       throw new Error('Product tidak ditemukan');
     }
 
-    if (product.isActive === false || product.isActive === 0) {
+    if (product.isActive === false) {
       throw new Error('Product tidak ditemukan');
     }
 
