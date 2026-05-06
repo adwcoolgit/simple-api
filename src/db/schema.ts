@@ -44,3 +44,10 @@ export const productVariants = mysqlTable('product_variants', {
   isActive: boolean('is_active').default(true).notNull(),
   isSellable: boolean('is_sellable').default(true).notNull(),
 });
+
+export const variantAttributes = mysqlTable('variant_attributes', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  variantId: bigint('variant_id', { mode: 'number' }).notNull().references(() => productVariants.id),
+  attributeName: varchar('attribute_name', { length: 50 }),
+  attributeValue: varchar('attribute_value', { length: 50 }),
+});
