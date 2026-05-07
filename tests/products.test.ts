@@ -1,3 +1,4 @@
+import './setup';
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { Elysia } from 'elysia';
 import { routes } from '../src/routes';

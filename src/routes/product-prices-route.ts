@@ -3,15 +3,14 @@ import {
   createProductPrice,
   getProductPrices,
   getProductPriceById,
-  getActiveProductPrices,
   updateProductPrice,
   deleteProductPrice,
 } from '../service/product-prices-service';
 import { bearerAuth, getUserIdFromToken } from './auth-middleware';
-import { rateLimit } from '../middleware/rate-limit';
+// import { rateLimit } from '../middleware/rate-limit';
 
 const createProductPriceHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .post(
     '/api/product-prices',
     async ({ body, set, headers }: any) => {
@@ -290,7 +289,7 @@ const getActiveProductPricesHandler = new Elysia()
   );
 
 const updateProductPriceHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .patch(
     '/api/product-prices/:id',
     async ({ params, body, set, headers }: any) => {
@@ -397,7 +396,7 @@ const updateProductPriceHandler = new Elysia()
   );
 
 const deleteProductPriceHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .delete(
     '/api/product-prices/:id',
     async ({ params, set, headers }: any) => {
