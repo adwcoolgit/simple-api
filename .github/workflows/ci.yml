@@ -56,13 +56,20 @@ jobs:
 
     - name: Check database connection
       run: |
-        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
+        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES; DESCRIBE products;"
       env:
         DB_HOST: 127.0.0.1
         DB_PORT: 3306
         DB_NAME: simple_api_test
         DB_USER: root
         DB_PASSWORD: rootpassword
+
+    - name: Check Redis connection
+      run: |
+        redis-cli -h 127.0.0.1 -p 6379 ping
+      env:
+        REDIS_HOST: 127.0.0.1
+        REDIS_PORT: 6379
 
     - name: Run tests
       run: bun test --verbose
