@@ -24,10 +24,7 @@ const createProductHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const product = await createProduct({
           productName: body.product_name,
@@ -111,10 +108,7 @@ const getProductsHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const filters = {
           page: query.page ? Number(query.page) : undefined,
@@ -201,10 +195,7 @@ const getProductByProductIdHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const product = await getProductByProductId(Number(params.productId));
         return { data: product };
@@ -293,10 +284,7 @@ const updateProductHandler = new Elysia()
       }
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const updatedProduct = await updateProduct(Number(params.productId), {
           productName: body.product_name,
@@ -396,10 +384,7 @@ const deleteProductHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const result = await deleteProduct(Number(params.productId));
         return { data: result };

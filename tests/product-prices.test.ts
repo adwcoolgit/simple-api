@@ -201,11 +201,7 @@ describe('POST /api/product-prices — Tambah Harga', () => {
       'Authorization': 'Bearer invalid-token',
     });
 
-    if (process.env.NODE_ENV === 'test') {
-      expect(res.status).toBe(201);
-    } else {
-      expect(res.status).toBe(401);
-    }
+    expect(res.status).toBe(401);
   });
 
   it('15. Field required tidak dikirim', async () => {

@@ -146,23 +146,14 @@ describe('POST /api/products — Buat Product Baru', () => {
   });
 
   it('6. Token tidak valid', async () => {
-    // In test environment, authentication is skipped for faster tests
-    // So invalid tokens still work in test environment
     const res = await makeRequest('POST', '/api/products', {
       product_name: 'Test Product',
     }, {
       'Authorization': 'Bearer invalid-token',
     });
 
-    if (process.env.NODE_ENV === 'test') {
-      // In test environment, authentication is skipped
-      expect(res.status).toBe(201);
-      expect(res.json.data).toHaveProperty('productId');
-    } else {
-      // In production, should get 401
-      expect(res.status).toBe(401);
-      expect(res.json).toEqual({ error: 'Unauthorized' });
-    }
+    expect(res.status).toBe(401);
+    expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
   it('7. `is_active` tidak dikirim → default `true` di DB', async () => {

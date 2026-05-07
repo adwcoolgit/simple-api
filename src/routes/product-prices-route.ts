@@ -25,10 +25,7 @@ const createProductPriceHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const price = await createProductPrice({
           variant_id: body.variant_id,
@@ -313,10 +310,7 @@ const updateProductPriceHandler = new Elysia()
       }
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const result = await updateProductPrice(Number(params.id), {
           price: body.price,
@@ -417,10 +411,7 @@ const deleteProductPriceHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const result = await deleteProductPrice(Number(params.id));
         return { data: result };
