@@ -73,8 +73,8 @@ jobs:
         run: |
           mysql -h 127.0.0.1 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
 
-      - name: Run tests sequentially
-        run: bun test --concurrent=1
+      - name: Run tests
+        run: bun test --parallel=1 --isolate
 
   deploy:
     runs-on: ubuntu-latest
