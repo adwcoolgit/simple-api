@@ -24,16 +24,6 @@ jobs:
           --health-timeout=5s
           --health-retries=10
 
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -69,23 +59,18 @@ jobs:
             -prootpassword \
             simple_api_test \
             -e "SHOW TABLES;"
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_NAME: simple_api_test
-          DB_USER: root
-          DB_PASSWORD: rootpassword
 
       - name: Run tests
         run: bun test --verbose
         env:
+          NODE_ENV: test
+          DISABLE_REDIS: true
+
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
           DB_NAME: simple_api_test
           DB_USER: root
           DB_PASSWORD: rootpassword
-          REDIS_HOST: 127.0.0.1
-          REDIS_PORT: 6379
 
   deploy:
     runs-on: ubuntu-latest
@@ -108,4 +93,3 @@ jobs:
       - name: Deploy to staging
         run: |
           echo "Deploying to staging environment..."
-        
