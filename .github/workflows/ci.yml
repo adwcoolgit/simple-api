@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -22,7 +22,7 @@ jobs:
           --health-cmd="mysqladmin ping -h 127.0.0.1 -prootpassword"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=10
 
       redis:
         image: redis:7-alpine
@@ -32,57 +32,64 @@ jobs:
           --health-cmd="redis-cli ping"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=10
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
 
-    - name: Install dependencies
-      run: bun install
+      - name: Install dependencies
+        run: bun install
 
-    - name: Generate database migrations
-      run: bun run db:generate
+      - name: Wait for MySQL
+        run: |
+          until mysqladmin ping -h "127.0.0.1" -prootpassword --silent; do
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
 
-    - name: Run database migrations
-      run: bun run db:migrate
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_NAME: simple_api_test
-        DB_USER: root
-        DB_PASSWORD: rootpassword
+      - name: Run database migrations
+        run: bun run db:migrate
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: simple_api_test
+          DB_USER: root
+          DB_PASSWORD: rootpassword
 
-    - name: Check database connection
-      run: |
-        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES; DESCRIBE products;"
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_NAME: simple_api_test
-        DB_USER: root
-        DB_PASSWORD: rootpassword
+      - name: Check database connection
+        run: |
+          mysql \
+            -h 127.0.0.1 \
+            -P 3306 \
+            -u root \
+            -prootpassword \
+            simple_api_test \
+            -e "SHOW TABLES;"
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: simple_api_test
+          DB_USER: root
+          DB_PASSWORD: rootpassword
 
-    - name: Check Redis connection
-      run: |
-        redis-cli -h 127.0.0.1 -p 6379 ping
-      env:
-        REDIS_HOST: 127.0.0.1
-        REDIS_PORT: 6379
+      - name: Check Redis connection
+        run: |
+          redis-cli -h 127.0.0.1 -p 6379 ping
 
-    - name: Run tests
-      run: bun test --verbose
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_NAME: simple_api_test
-        DB_USER: root
-        DB_PASSWORD: rootpassword
-        REDIS_HOST: 127.0.0.1
-        REDIS_PORT: 6379
+      - name: Run tests
+        run: bun test --verbose
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: simple_api_test
+          DB_USER: root
+          DB_PASSWORD: rootpassword
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
 
   deploy:
     runs-on: ubuntu-latest
@@ -90,18 +97,19 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
 
-    - name: Install dependencies
-      run: bun install
+      - name: Install dependencies
+        run: bun install
 
-    - name: Build application
-      run: bun run build
+      - name: Build application
+        run: bun run build
 
-    - name: Deploy to staging
-      run: |
-        echo "Deploying to staging environment..."
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+        
