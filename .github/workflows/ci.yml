@@ -54,8 +54,18 @@ jobs:
         DB_USER: root
         DB_PASSWORD: rootpassword
 
+    - name: Check database connection
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
+      env:
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_NAME: simple_api_test
+        DB_USER: root
+        DB_PASSWORD: rootpassword
+
     - name: Run tests
-      run: bun test
+      run: bun test --verbose
       env:
         DB_HOST: 127.0.0.1
         DB_PORT: 3306

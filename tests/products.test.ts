@@ -18,7 +18,30 @@ const testName = 'Test User';
 let authToken: string;
 let testUserId: number;
 
+// Database readiness check
+async function checkDatabaseReady() {
+  try {
+    await db.select().from(products).limit(1);
+    await db.select().from(users).limit(1);
+    await db.select().from(sessions).limit(1);
+    console.log('✅ Database tables are ready');
+    return true;
+  } catch (error) {
+    console.error('❌ Database not ready:', error);
+    return false;
+  }
+}
+
 beforeEach(async () => {
+  // Check database readiness
+  const isReady = await checkDatabaseReady();
+  if (!isReady) {
+    throw new Error('Database is not ready for tests');
+  }
+
+  // Wait for database to be ready
+  await new Promise(resolve => setTimeout(resolve, 500));
+
   // Quick cleanup - only delete test products
   await db.delete(products).where(sql`${products.productName} like 'Test%'`);
 
