@@ -59,7 +59,8 @@ CREATE TABLE `variant_attributes` (
 	CONSTRAINT `variant_attributes_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
-ALTER TABLE `product_prices` ADD CONSTRAINT `product_prices_variant_id_product_variants_id_fk` FOREIGN KEY (`variant_id`) REFERENCES `product_variants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `product_variants` ADD CONSTRAINT `product_variants_product_id_products_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `products`(`product_id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `variant_attributes` ADD CONSTRAINT `variant_attributes_variant_id_product_variants_id_fk` FOREIGN KEY (`variant_id`) REFERENCES `product_variants`(`id`) ON DELETE no action ON UPDATE no action;
+ALTER TABLE `product_prices` ADD CONSTRAINT `product_prices_variant_id_product_variants_id_fk` FOREIGN KEY (`variant_id`) REFERENCES `product_variants`(`id`) ON DELETE no action ON UPDATE no action;
 --> statement-breakpoint
+ALTER TABLE `product_variants` ADD CONSTRAINT `product_variants_product_id_products_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `products`(`product_id`) ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE `variant_attributes` ADD CONSTRAINT `variant_attributes_variant_id_product_variants_id_fk` FOREIGN KEY (`variant_id`) REFERENCES `product_variants`(`id`) ON DELETE no action ON UPDATE no action;
