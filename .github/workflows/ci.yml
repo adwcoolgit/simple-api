@@ -17,22 +17,13 @@ jobs:
           MYSQL_ROOT_PASSWORD: rootpassword
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -prootpassword"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-          --default-authentication-plugin=mysql_native_password
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -prootpassword" --health-interval=10s --health-timeout=5s --health-retries=15
 
       redis:
         image: redis:7-alpine
         ports:
           - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=5
 
     steps:
     - name: Checkout repository
@@ -46,8 +37,7 @@ jobs:
 
     - name: Generate database migrations
       run: |
-        rm -rf drizzle/meta/_journal.json
-        rm -rf drizzle/meta/0000_snapshot.json
+        rm -rf drizzle/meta/_journal.json drizzle/meta/0000_snapshot.json
         bun run db:generate
 
     - name: Prepare database
@@ -60,11 +50,6 @@ jobs:
         done
         mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "DROP DATABASE IF EXISTS simple_api_test; CREATE DATABASE simple_api_test;"
         mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_USER: root
-        DB_PASSWORD: rootpassword
 
     - name: Run database migrations
       run: bun run db:migrate
