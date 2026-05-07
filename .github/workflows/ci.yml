@@ -22,8 +22,16 @@ jobs:
           --health-cmd="mysqladmin ping -h 127.0.0.1 -prootpassword"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=10
-
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,13 +42,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Wait for MySQL
-        run: |
-          until mysqladmin ping -h "127.0.0.1" -prootpassword --silent; do
-            echo "Waiting for MySQL..."
-            sleep 2
-          done
-
+      # LANGSUNG MIGRATE (tanpa generate & tanpa reset)
       - name: Run database migrations
         run: bun run db:migrate
         env:
@@ -50,27 +52,16 @@ jobs:
           DB_USER: root
           DB_PASSWORD: rootpassword
 
-      - name: Check database connection
-        run: |
-          mysql \
-            -h 127.0.0.1 \
-            -P 3306 \
-            -u root \
-            -prootpassword \
-            simple_api_test \
-            -e "SHOW TABLES;"
-
       - name: Run tests
-        run: bun test --verbose
+        run: bun test
         env:
-          NODE_ENV: test
-          DISABLE_REDIS: true
-
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
           DB_NAME: simple_api_test
           DB_USER: root
           DB_PASSWORD: rootpassword
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
 
   deploy:
     runs-on: ubuntu-latest
