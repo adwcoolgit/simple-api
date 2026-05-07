@@ -5,7 +5,7 @@ import { usersRoute } from '../src/routes/users-route';
 import { productsRoute } from '../src/routes/products-route';
 import { productVariantsRoute } from '../src/routes/product-variants-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants } from '../src/db/schema';
+import { users, sessions, products, productVariants, variantAttributes, productPrices } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -20,9 +20,23 @@ let authToken: string;
 let testUserId: number;
 let testProductId: number;
 
-beforeEach(async () => {
-  // Quick cleanup - only delete test variants
-  await db.delete(productVariants).where(sql`${productVariants.sku} like 'Test%'`);
+  beforeEach(async () => {
+    // Quick cleanup - delete dependent records first, then test variants and products
+    // Delete prices for test variants
+    await db.delete(productPrices).where(inArray(productPrices.variant_id,
+      db.select({ id: productVariants.id }).from(productVariants).where(sql`${productVariants.sku} like 'Test%'`)
+    ));
+    // Delete attributes for test variants
+    await db.delete(variantAttributes).where(inArray(variantAttributes.variantId,
+      db.select({ id: productVariants.id }).from(productVariants).where(sql`${productVariants.sku} like 'Test%'`)
+    ));
+    // Delete test variants
+    await db.delete(productVariants).where(sql`${productVariants.sku} like 'Test%'`);
+    // Delete test products (including variants from other tests)
+    await db.delete(productVariants).where(inArray(productVariants.productId,
+      db.select({ productId: products.productId }).from(products).where(sql`${products.productName} like 'Test%'`)
+    ));
+    await db.delete(products).where(sql`${products.productName} like 'Test%'`);
 
   // Check if test user and token already exist
   const existingUser = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);

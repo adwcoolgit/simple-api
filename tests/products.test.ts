@@ -4,7 +4,7 @@ import { routes } from '../src/routes';
 import { usersRoute } from '../src/routes/users-route';
 import { productsRoute } from '../src/routes/products-route';
 import { db } from '../src/db';
-import { users, sessions, products } from '../src/db/schema';
+import { users, sessions, products, productVariants, variantAttributes, productPrices } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -42,7 +42,24 @@ beforeEach(async () => {
   // Wait for database to be ready
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Quick cleanup - only delete test products
+  // Quick cleanup - delete dependent records first, then test products
+  // Delete prices for variants of test products
+  await db.delete(productPrices).where(inArray(productPrices.variant_id,
+    db.select({ id: productVariants.id }).from(productVariants).where(inArray(productVariants.productId,
+      db.select({ productId: products.productId }).from(products).where(sql`${products.productName} like 'Test%'`)
+    ))
+  ));
+  // Delete attributes for variants of test products
+  await db.delete(variantAttributes).where(inArray(variantAttributes.variantId,
+    db.select({ id: productVariants.id }).from(productVariants).where(inArray(productVariants.productId,
+      db.select({ productId: products.productId }).from(products).where(sql`${products.productName} like 'Test%'`)
+    ))
+  ));
+  // Delete variants of test products
+  await db.delete(productVariants).where(inArray(productVariants.productId,
+    db.select({ productId: products.productId }).from(products).where(sql`${products.productName} like 'Test%'`)
+  ));
+  // Now delete test products
   await db.delete(products).where(sql`${products.productName} like 'Test%'`);
 
   // Check if test user and token already exist
@@ -211,6 +228,10 @@ describe('GET /api/products — List Semua Product', () => {
 
   it('9. List saat tidak ada data', async () => {
     // More aggressive cleanup - delete all products including those from other tests
+    // Delete dependent records first
+    await db.execute(sql`DELETE FROM product_prices`);
+    await db.execute(sql`DELETE FROM variant_attributes`);
+    await db.execute(sql`DELETE FROM product_variants`);
     await db.execute(sql`DELETE FROM products`);
     const res = await makeAuthRequest('GET', '/api/products');
     expect(res.status).toBe(200);
