@@ -16,7 +16,7 @@ export const sessions = mysqlTable('sessions', {
   id: int('id').autoincrement().primaryKey(),
   token: varchar('token', { length: 255 }).notNull(),
   userId: int('user_id').notNull(),
-  createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 export const users = mysqlTable('users', {
@@ -24,8 +24,8 @@ export const users = mysqlTable('users', {
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
-  createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
-  updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdate(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
 });
 
 export const products = mysqlTable('products', {
@@ -35,8 +35,8 @@ export const products = mysqlTable('products', {
   categoryId: bigint('category_id', { mode: 'number' }),
   departmentId: smallint('department_id'),
   isActive: boolean('is_active').default(true).notNull(),
-  createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
-  updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`).$onUpdate(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
 });
 
 export const productVariants = mysqlTable('product_variants', {
