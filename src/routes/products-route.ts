@@ -7,10 +7,10 @@ import {
   deleteProduct,
 } from '../service/products-service';
 import { bearerAuth, getUserIdFromToken } from './auth-middleware';
-import { rateLimit } from '../middleware/rate-limit';
+// import { rateLimit } from '../middleware/rate-limit';
 
 const createProductHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .post(
     '/api/products',
     async ({ body, set, headers }: any) => {
@@ -24,10 +24,7 @@ const createProductHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const product = await createProduct({
           productName: body.product_name,
@@ -97,7 +94,7 @@ const createProductHandler = new Elysia()
   );
 
 const getProductsHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 60 }))
+  // .use(rateLimit({ windowMs: 60000, max: 60 }))
   .get(
     '/api/products',
     async ({ query, set, headers }: any) => {
@@ -111,10 +108,7 @@ const getProductsHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const filters = {
           page: query.page ? Number(query.page) : undefined,
@@ -187,7 +181,7 @@ const getProductsHandler = new Elysia()
   );
 
 const getProductByProductIdHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 60 }))
+  // .use(rateLimit({ windowMs: 60000, max: 60 }))
   .get(
     '/api/products/:productId',
     async ({ params, set, headers }: any) => {
@@ -201,10 +195,7 @@ const getProductByProductIdHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const product = await getProductByProductId(Number(params.productId));
         return { data: product };
@@ -273,7 +264,7 @@ const getProductByProductIdHandler = new Elysia()
   );
 
 const updateProductHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .patch(
     '/api/products/:productId',
     async ({ params, body, set, headers }: any) => {
@@ -293,10 +284,7 @@ const updateProductHandler = new Elysia()
       }
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const updatedProduct = await updateProduct(Number(params.productId), {
           productName: body.product_name,
@@ -382,7 +370,7 @@ const updateProductHandler = new Elysia()
   );
 
 const deleteProductHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .delete(
     '/api/products/:productId',
     async ({ params, set, headers }: any) => {
@@ -396,10 +384,7 @@ const deleteProductHandler = new Elysia()
       const token = authHeader.substring(7);
 
       try {
-        // Skip token validation in test environment for faster tests
-        if (process.env.NODE_ENV !== 'test') {
-          await getUserIdFromToken(token);
-        }
+        await getUserIdFromToken(token);
 
         const result = await deleteProduct(Number(params.productId));
         return { data: result };
