@@ -47,6 +47,15 @@ jobs:
     - name: Generate database migrations
       run: bun run db:generate
 
+    - name: Prepare database
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "DROP DATABASE IF EXISTS simple_api_test; CREATE DATABASE simple_api_test;"
+      env:
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_USER: root
+        DB_PASSWORD: rootpassword
+
     - name: Run database migrations
       run: bun run db:migrate
       env:
