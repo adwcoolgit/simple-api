@@ -15,7 +15,6 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: simple_api_test
         ports:
           - 3306:3306
         options: >-
@@ -23,6 +22,7 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+          --default-authentication-plugin=mysql_native_password
 
       redis:
         image: redis:7-alpine
@@ -45,11 +45,21 @@ jobs:
       run: bun install
 
     - name: Generate database migrations
-      run: bun run db:generate
+      run: |
+        rm -rf drizzle/meta/_journal.json
+        rm -rf drizzle/meta/0000_snapshot.json
+        bun run db:generate
 
     - name: Prepare database
       run: |
+        for i in {1..30}; do
+          if mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "SELECT 1" 2>/dev/null; then
+            break
+          fi
+          sleep 1
+        done
         mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "DROP DATABASE IF EXISTS simple_api_test; CREATE DATABASE simple_api_test;"
+        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
       env:
         DB_HOST: 127.0.0.1
         DB_PORT: 3306
@@ -68,19 +78,10 @@ jobs:
     - name: Check database connection
       run: |
         mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES; DESCRIBE products;"
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_NAME: simple_api_test
-        DB_USER: root
-        DB_PASSWORD: rootpassword
 
     - name: Check Redis connection
       run: |
         redis-cli -h 127.0.0.1 -p 6379 ping
-      env:
-        REDIS_HOST: 127.0.0.1
-        REDIS_PORT: 6379
 
     - name: Run tests
       run: bun test --verbose
