@@ -19,11 +19,16 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping -h 127.0.0.1 -prootpassword" --health-interval=10s --health-timeout=5s --health-retries=15
 
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=5
+       redis:
+         image: redis:7-alpine
+         ports:
+           - 6379:6379
+         options: >-
+           --health-cmd="redis-cli ping"
+           --health-interval=10s
+           --health-timeout=5s
+           --health-retries=5
+           --requirepass prog
 
     steps:
     - name: Checkout repository
@@ -55,24 +60,21 @@ jobs:
         DB_USER: root
         DB_PASSWORD: rootpassword
 
-    - name: Check database connection
-      run: |
-        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES; DESCRIBE products;"
+     - name: Check database connection
+       run: |
+         mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES; DESCRIBE products;"
 
-    - name: Check Redis connection
-      run: |
-        redis-cli -h 127.0.0.1 -p 6379 ping
-
-    - name: Run tests
-      run: bun test --verbose
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_NAME: simple_api_test
-        DB_USER: root
-        DB_PASSWORD: rootpassword
-        REDIS_HOST: 127.0.0.1
-        REDIS_PORT: 6379
+     - name: Run tests
+       run: bun test --verbose
+       env:
+         DB_HOST: 127.0.0.1
+         DB_PORT: 3306
+         DB_NAME: simple_api_test
+         DB_USER: root
+         DB_PASSWORD: rootpassword
+         REDIS_HOST: 127.0.0.1
+         REDIS_PORT: 6379
+         REDIS_PASSWORD: prog
 
   deploy:
     runs-on: ubuntu-latest
