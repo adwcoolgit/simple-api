@@ -97,6 +97,9 @@ jobs:
             CREATE DATABASE simple_api_test;
           "
 
+      - name: Generate migrations
+        run: bunx drizzle-kit generate
+
       - name: Run database migrations
         run: bun run db:migrate
         env:
