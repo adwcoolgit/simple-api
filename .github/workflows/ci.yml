@@ -21,14 +21,11 @@ jobs:
     services:
       mysql:
         image: mysql:8.0
-
         env:
           MYSQL_ROOT_PASSWORD: rootpassword
           MYSQL_DATABASE: simple_api_test
-
         ports:
           - 3306:3306
-
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 -prootpassword"
           --health-interval=10s
@@ -58,18 +55,16 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Install MySQL and Redis clients
+      - name: Install database clients
         run: |
           sudo apt-get update
           sudo apt-get install -y mysql-client redis-tools
 
       - name: Wait for MySQL
         run: |
-          echo "Waiting for MySQL..."
-
           for i in {1..30}; do
             if mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "SELECT 1" >/dev/null 2>&1; then
-              echo "✅ MySQL is ready"
+              echo "✅ MySQL ready"
               exit 0
             fi
 
@@ -77,16 +72,14 @@ jobs:
             sleep 2
           done
 
-          echo "❌ MySQL failed to start"
+          echo "❌ MySQL failed"
           exit 1
 
       - name: Wait for Redis
         run: |
-          echo "Waiting for Redis..."
-
           for i in {1..30}; do
             if redis-cli -h 127.0.0.1 -p 6379 -a redis_password_123 ping | grep -q PONG; then
-              echo "✅ Redis is ready"
+              echo "✅ Redis ready"
               exit 0
             fi
 
@@ -94,20 +87,15 @@ jobs:
             sleep 2
           done
 
-          echo "❌ Redis failed to start"
+          echo "❌ Redis failed"
           exit 1
 
-      - name: Recreate test database
+      - name: Reset database
         run: |
           mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "
             DROP DATABASE IF EXISTS simple_api_test;
             CREATE DATABASE simple_api_test;
           "
-
-          echo "✅ Fresh database created"
-
-      - name: Generate Drizzle migrations
-        run: bunx drizzle-kit generate
 
       - name: Run database migrations
         run: bun run db:migrate
@@ -118,10 +106,8 @@ jobs:
           DB_USER: root
           DB_PASSWORD: rootpassword
 
-      - name: Debug database tables
+      - name: Show database tables
         run: |
-          echo "===== DATABASE TABLES ====="
-
           mysql \
             -h 127.0.0.1 \
             -P 3306 \
@@ -130,7 +116,7 @@ jobs:
             simple_api_test \
             -e "SHOW TABLES;"
 
-      - name: Verify inventory table exists
+      - name: Verify inventory table
         run: |
           mysql \
             -h 127.0.0.1 \
@@ -148,26 +134,21 @@ jobs:
           DB_NAME: simple_api_test
           DB_USER: root
           DB_PASSWORD: rootpassword
-
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           REDIS_PASSWORD: redis_password_123
 
       - name: Start application server
         run: |
-          echo "Starting application server..."
-
           bun run src/index.ts &
 
           SERVER_PID=$!
 
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
 
-          echo "Waiting for server..."
-
           for i in {1..30}; do
             if curl -f -s http://127.0.0.1:3000/test >/dev/null 2>&1; then
-              echo "✅ Server is ready"
+              echo "✅ Server ready"
               exit 0
             fi
 
@@ -175,7 +156,7 @@ jobs:
             sleep 2
           done
 
-          echo "❌ Server failed to start"
+          echo "❌ Server failed"
           exit 1
         env:
           DB_HOST: 127.0.0.1
@@ -183,7 +164,6 @@ jobs:
           DB_NAME: simple_api_test
           DB_USER: root
           DB_PASSWORD: rootpassword
-
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           REDIS_PASSWORD: redis_password_123
@@ -196,7 +176,6 @@ jobs:
           DB_NAME: simple_api_test
           DB_USER: root
           DB_PASSWORD: rootpassword
-
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           REDIS_PASSWORD: redis_password_123
@@ -205,24 +184,15 @@ jobs:
         if: always()
         run: |
           if [ ! -z "$SERVER_PID" ]; then
-            echo "Stopping server (PID: $SERVER_PID)..."
-
             kill $SERVER_PID 2>/dev/null || true
-
             sleep 2
-
             kill -9 $SERVER_PID 2>/dev/null || true
-
-            echo "✅ Server stopped"
           fi
 
   deploy:
     name: Deploy to Staging
-
     runs-on: ubuntu-latest
-
     needs: test
-
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
@@ -238,27 +208,12 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build application
-        run: |
-          echo "Building application..."
-
-          bun run build
-
-          echo "✅ Build completed"
+        run: bun run build
 
       - name: Run security audit
         run: |
-          echo "Running security audit..."
-
-          bun audit || echo "⚠️ Security audit completed with warnings"
+          bun audit || echo "Audit completed with warnings"
 
       - name: Deploy to staging
         run: |
-          echo "🚀 Deploying to staging environment..."
-
-          echo "Deployment steps would go here:"
-          echo "- Copy files to staging server"
-          echo "- Run database migrations"
-          echo "- Restart application services"
-          echo "- Run health checks"
-
-          echo "✅ Staging deployment completed (placeholder)"
+          echo "🚀 Deploy placeholder"
