@@ -6,11 +6,11 @@ import {
   updateVariantAttribute,
   deleteVariantAttribute,
 } from '../service/variant-attributes-service';
-import { getUserIdFromToken } from './auth-middleware';
-import { rateLimit } from '../middleware/rate-limit';
+import { bearerAuth, getUserIdFromToken } from './auth-middleware';
+// import { rateLimit } from '../middleware/rate-limit';
 
 const createVariantAttributeHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .post(
     '/api/variant-attributes',
     async ({ body, set, headers }: any) => {
@@ -103,7 +103,7 @@ const createVariantAttributeHandler = new Elysia()
   );
 
 const getVariantAttributesHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 60 }))
+  // .use(rateLimit({ windowMs: 60000, max: 60 }))
   .get(
     '/api/variant-attributes/:variantId',
     async ({ params, set }: any) => {
@@ -159,7 +159,7 @@ const getVariantAttributesHandler = new Elysia()
   );
 
 const getVariantAttributeByIdHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 60 }))
+  // .use(rateLimit({ windowMs: 60000, max: 60 }))
   .get(
     '/api/variant-attributes/detail/:id',
     async ({ params, set }: any) => {
@@ -213,7 +213,7 @@ const getVariantAttributeByIdHandler = new Elysia()
   );
 
 const updateVariantAttributeHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .patch(
     '/api/variant-attributes/:id',
     async ({ params, body, set, headers }: any) => {
@@ -312,7 +312,7 @@ const updateVariantAttributeHandler = new Elysia()
   );
 
 const deleteVariantAttributeHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .delete(
     '/api/variant-attributes/:id',
     async ({ params, set, headers }: any) => {

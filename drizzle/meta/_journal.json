@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1778020959971,
-      "tag": "0001_true_lightspeed",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1778026500231,
-      "tag": "0001_tense_blizzard",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1778030548532,
-      "tag": "0002_real_firelord",
+      "when": 1778164836253,
+      "tag": "0000_left_imperial_guard",
       "breakpoints": true
     }
   ]

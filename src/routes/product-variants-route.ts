@@ -6,11 +6,11 @@ import {
   updateProductVariant,
   deleteProductVariant,
 } from '../service/product-variants-service';
-import { getUserIdFromToken } from './auth-middleware';
-import { rateLimit } from '../middleware/rate-limit';
+import { bearerAuth, getUserIdFromToken } from './auth-middleware';
+// import { rateLimit } from '../middleware/rate-limit';
 
 const createProductVariantHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .post(
     '/api/product-variants',
     async ({ body, set, headers }: any) => {
@@ -126,7 +126,7 @@ const createProductVariantHandler = new Elysia()
   );
 
 const getProductVariantsHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 60 }))
+  // .use(rateLimit({ windowMs: 60000, max: 60 }))
   .get(
     '/api/product-variants',
     async ({ query, set, headers }: any) => {
@@ -199,7 +199,7 @@ const getProductVariantsHandler = new Elysia()
   );
 
 const getProductVariantByIdHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 60 }))
+  // .use(rateLimit({ windowMs: 60000, max: 60 }))
   .get(
     '/api/product-variants/:id',
     async ({ params, set, headers }: any) => {
@@ -284,7 +284,7 @@ const getProductVariantByIdHandler = new Elysia()
   );
 
 const updateProductVariantHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .patch(
     '/api/product-variants/:id',
     async ({ params, body, set, headers }: any) => {
@@ -398,7 +398,7 @@ const updateProductVariantHandler = new Elysia()
   );
 
 const deleteProductVariantHandler = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 30 }))
+  // .use(rateLimit({ windowMs: 60000, max: 30 }))
   .delete(
     '/api/product-variants/:id',
     async ({ params, set, headers }: any) => {

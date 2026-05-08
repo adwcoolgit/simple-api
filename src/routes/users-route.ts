@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia';
+import bcrypt from 'bcryptjs';
 import {
   registerUser,
   loginUser,
@@ -7,12 +8,12 @@ import {
   updateUser,
 } from '../service/users-service';
 import { bearerAuth, getUserIdFromToken } from './auth-middleware';
-import { rateLimit } from '../middleware/rate-limit';
+// import { rateLimit } from '../middleware/rate-limit';
 import { db } from '../db';
 import { users } from '../db/schema';
 
 const registerRoute = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for registration
+  // .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for registration
   .post(
     '/api/users',
     async ({ body, set }: any) => {
@@ -66,7 +67,7 @@ const registerRoute = new Elysia()
   );
 
 const loginRoute = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 5 })) // 5 requests per minute for login
+  // .use(rateLimit({ windowMs: 60000, max: 5 })) // 5 requests per minute for login
   .post(
     '/api/users/login',
     async ({ body, set }: any) => {
@@ -160,7 +161,7 @@ const listUsersRoute = new Elysia().get(
 );
 
 const currentUserRoute = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 60 })) // 60 requests per minute for current user
+  // .use(rateLimit({ windowMs: 60000, max: 60 })) // 60 requests per minute for current user
   .get('/api/users/current', bearerAuth(getCurrentUser), {
     detail: {
       summary: 'Get current authenticated user',
@@ -197,7 +198,7 @@ const currentUserRoute = new Elysia()
   });
 
 const logoutRoute = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for logout
+  // .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for logout
   .delete('/api/users/logout', bearerAuth(logoutUser), {
     detail: {
       summary: 'Logout and delete session',
@@ -229,7 +230,7 @@ const logoutRoute = new Elysia()
   });
 
 const updateRoute = new Elysia()
-  .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for update
+  // .use(rateLimit({ windowMs: 60000, max: 10 })) // 10 requests per minute for update
   .patch(
     '/api/users',
     async ({ body, set, headers }: any) => {

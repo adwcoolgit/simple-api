@@ -1,10 +1,11 @@
+import './setup';
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { Elysia } from 'elysia';
 import { routes } from '../src/routes';
 import { usersRoute } from '../src/routes/users-route';
 import { productsRoute } from '../src/routes/products-route';
 import { db } from '../src/db';
-import { users, sessions, products } from '../src/db/schema';
+import { users, sessions, products, productVariants, variantAttributes, productPrices } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -18,9 +19,67 @@ const testName = 'Test User';
 let authToken: string;
 let testUserId: number;
 
+// Database readiness check
+async function checkDatabaseReady() {
+  try {
+    await db.select().from(products).limit(1);
+    await db.select().from(users).limit(1);
+    await db.select().from(sessions).limit(1);
+    console.log('✅ Database tables are ready');
+    return true;
+  } catch (error) {
+    console.error('❌ Database not ready:', error);
+    return false;
+  }
+}
+
 beforeEach(async () => {
-  // Quick cleanup - only delete test products
-  await db.delete(products).where(sql`${products.productName} like 'Test%'`);
+  // Check database readiness
+  const isReady = await checkDatabaseReady();
+  if (!isReady) {
+    throw new Error('Database is not ready for tests');
+  }
+
+  // Wait for database to be ready
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Clean up test data in correct order: prices -> attributes -> variants -> products
+  try {
+    // Get all test product IDs first
+    const testProductIds = await db
+      .select({ productId: products.productId })
+      .from(products)
+      .where(sql`${products.productName} like 'Test%'`);
+
+    if (testProductIds.length > 0) {
+      const productIdList = testProductIds.map(p => p.productId);
+
+      // Get all variant IDs for these products
+      const testVariantIds = await db
+        .select({ id: productVariants.id })
+        .from(productVariants)
+        .where(inArray(productVariants.productId, productIdList));
+
+      if (testVariantIds.length > 0) {
+        const variantIdList = testVariantIds.map(v => v.id);
+
+        // Delete prices for these variants
+        await db.delete(productPrices).where(inArray(productPrices.variant_id, variantIdList));
+
+        // Delete attributes for these variants
+        await db.delete(variantAttributes).where(inArray(variantAttributes.variantId, variantIdList));
+      }
+
+      // Delete variants
+      await db.delete(productVariants).where(inArray(productVariants.productId, productIdList));
+    }
+
+    // Delete test products
+    await db.delete(products).where(sql`${products.productName} like 'Test%'`);
+  } catch (error) {
+    console.warn('Cleanup warning (non-critical):', error);
+    // Continue with test - cleanup failures shouldn't stop tests
+  }
 
   // Check if test user and token already exist
   const existingUser = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
@@ -146,23 +205,14 @@ describe('POST /api/products — Buat Product Baru', () => {
   });
 
   it('6. Token tidak valid', async () => {
-    // In test environment, authentication is skipped for faster tests
-    // So invalid tokens still work in test environment
     const res = await makeRequest('POST', '/api/products', {
       product_name: 'Test Product',
     }, {
       'Authorization': 'Bearer invalid-token',
     });
 
-    if (process.env.NODE_ENV === 'test') {
-      // In test environment, authentication is skipped
-      expect(res.status).toBe(201);
-      expect(res.json.data).toHaveProperty('productId');
-    } else {
-      // In production, should get 401
-      expect(res.status).toBe(401);
-      expect(res.json).toEqual({ error: 'Unauthorized' });
-    }
+    expect(res.status).toBe(401);
+    expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
   it('7. `is_active` tidak dikirim → default `true` di DB', async () => {
@@ -197,6 +247,10 @@ describe('GET /api/products — List Semua Product', () => {
 
   it('9. List saat tidak ada data', async () => {
     // More aggressive cleanup - delete all products including those from other tests
+    // Delete dependent records first
+    await db.execute(sql`DELETE FROM product_prices`);
+    await db.execute(sql`DELETE FROM variant_attributes`);
+    await db.execute(sql`DELETE FROM product_variants`);
     await db.execute(sql`DELETE FROM products`);
     const res = await makeAuthRequest('GET', '/api/products');
     expect(res.status).toBe(200);

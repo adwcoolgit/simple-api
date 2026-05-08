@@ -5,8 +5,12 @@ import {
   smallint,
   varchar,
   timestamp,
+  datetime,
   boolean,
+  mysqlEnum,
+  decimal,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
 
 export const sessions = mysqlTable('sessions', {
   id: int('id').autoincrement().primaryKey(),
@@ -50,4 +54,13 @@ export const variantAttributes = mysqlTable('variant_attributes', {
   variantId: bigint('variant_id', { mode: 'number' }).notNull().references(() => productVariants.id),
   attributeName: varchar('attribute_name', { length: 50 }),
   attributeValue: varchar('attribute_value', { length: 50 }),
+});
+
+export const productPrices = mysqlTable('product_prices', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  variant_id: bigint('variant_id', { mode: 'number' }).notNull().references(() => productVariants.id),
+  price_type: mysqlEnum('price_type', ['retail', 'member', 'reseller']).notNull(),
+  price: decimal('price', { precision: 12, scale: 2 }).notNull(),
+  start_date: datetime('start_date'),
+  end_date: datetime('end_date'),
 });
