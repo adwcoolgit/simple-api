@@ -7,6 +7,7 @@ import { productVariantsRoute } from './routes/product-variants-route';
 import { variantAttributesRoute } from './routes/variant-attributes-route';
 import { productPricesRoute } from './routes/product-prices-route';
 import { loggerMiddleware } from './middleware/logger';
+import { redis } from './cache/redis';
 
 const app = new Elysia()
   .use(loggerMiddleware)
@@ -28,6 +29,13 @@ const app = new Elysia()
   .listen(Bun.env.PORT || 3000);
 
 
+
+// Test Redis connection on startup
+redis.ping().then(() => {
+  console.log('🟥 Redis connected and ready');
+}).catch((err) => {
+  console.warn('🟥 Redis connection failed:', err.message);
+});
 
 console.log(
   '🚀 Server running on ' +
