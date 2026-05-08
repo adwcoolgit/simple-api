@@ -64,17 +64,49 @@ jobs:
         run: |
           mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES; DESCRIBE products;"
 
-      - name: Run tests
-        run: bun test --verbose
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_NAME: simple_api_test
-          DB_USER: root
-          DB_PASSWORD: rootpassword
-          REDIS_HOST: 127.0.0.1
-          REDIS_PORT: 6379
-          REDIS_PASSWORD: prog
+     - name: Run unit tests
+       run: bun test --verbose
+       env:
+         DB_HOST: 127.0.0.1
+         DB_PORT: 3306
+         DB_NAME: simple_api_test
+         DB_USER: root
+         DB_PASSWORD: rootpassword
+         REDIS_HOST: 127.0.0.1
+         REDIS_PORT: 6379
+         REDIS_PASSWORD: prog
+
+     - name: Start application server
+       run: |
+         bun run src/index.ts &
+         SERVER_PID=$!
+         echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+         # Wait for server to start
+         for i in {1..30}; do
+           if curl -f http://localhost:3000/test >/dev/null 2>&1; then
+             echo "Server is ready"
+             break
+           fi
+           sleep 1
+         done
+
+     - name: Run integration tests
+       run: bun run test
+       env:
+         DB_HOST: 127.0.0.1
+         DB_PORT: 3306
+         DB_NAME: simple_api_test
+         DB_USER: root
+         DB_PASSWORD: rootpassword
+         REDIS_HOST: 127.0.0.1
+         REDIS_PORT: 6379
+         REDIS_PASSWORD: prog
+
+     - name: Stop application server
+       run: |
+         if [ ! -z "$SERVER_PID" ]; then
+           kill $SERVER_PID || true
+         fi
 
   deploy:
     runs-on: ubuntu-latest
