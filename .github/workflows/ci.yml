@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -19,62 +19,62 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping -h 127.0.0.1 -prootpassword" --health-interval=10s --health-timeout=5s --health-retries=15
 
-       redis:
-         image: redis:7-alpine
-         ports:
-           - 6379:6379
-         options: >-
-           --health-cmd="redis-cli ping"
-           --health-interval=10s
-           --health-timeout=5s
-           --health-retries=5
-           --requirepass prog
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+          --requirepass prog
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
 
-    - name: Install dependencies
-      run: bun install
+      - name: Install dependencies
+        run: bun install
 
-    - name: Prepare database
-      run: |
-        for i in {1..30}; do
-          if mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "SELECT 1" 2>/dev/null; then
-            break
-          fi
-          sleep 1
-        done
-        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "DROP DATABASE IF EXISTS simple_api_test; CREATE DATABASE simple_api_test;"
-        mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
+      - name: Prepare database
+        run: |
+          for i in {1..30}; do
+            if mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "SELECT 1" 2>/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "DROP DATABASE IF EXISTS simple_api_test; CREATE DATABASE simple_api_test;"
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
 
-    - name: Run database migrations
-      run: bun run db:migrate
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_NAME: simple_api_test
-        DB_USER: root
-        DB_PASSWORD: rootpassword
+      - name: Run database migrations
+        run: bun run db:migrate
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: simple_api_test
+          DB_USER: root
+          DB_PASSWORD: rootpassword
 
-     - name: Check database connection
-       run: |
-         mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES; DESCRIBE products;"
+      - name: Check database connection
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES; DESCRIBE products;"
 
-     - name: Run tests
-       run: bun test --verbose
-       env:
-         DB_HOST: 127.0.0.1
-         DB_PORT: 3306
-         DB_NAME: simple_api_test
-         DB_USER: root
-         DB_PASSWORD: rootpassword
-         REDIS_HOST: 127.0.0.1
-         REDIS_PORT: 6379
-         REDIS_PASSWORD: prog
+      - name: Run tests
+        run: bun test --verbose
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: simple_api_test
+          DB_USER: root
+          DB_PASSWORD: rootpassword
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: prog
 
   deploy:
     runs-on: ubuntu-latest
@@ -82,18 +82,18 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
 
-    - name: Install dependencies
-      run: bun install
+      - name: Install dependencies
+        run: bun install
 
-    - name: Build application
-      run: bun run build
+      - name: Build application
+        run: bun run build
 
-    - name: Deploy to staging
-      run: |
-        echo "Deploying to staging environment..."
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
