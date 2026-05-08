@@ -34,12 +34,17 @@ jobs:
           - 6379:6379
         options: --requirepass redis_password_123
 
-      - name: Verify database setup
-        run: |
-          echo "Checking database tables..."
-          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
-          echo "Checking products table structure..."
-          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "DESCRIBE products;"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
       - name: Prepare test database
         run: |

@@ -6,6 +6,16 @@ import { productsRoute } from './routes/products-route';
 import { productVariantsRoute } from './routes/product-variants-route';
 import { variantAttributesRoute } from './routes/variant-attributes-route';
 import { productPricesRoute } from './routes/product-prices-route';
+import {
+  createInventory,
+  listInventory,
+  getInventoryDetail,
+  updateInventorySettings,
+  adjustStock,
+  reserveStock,
+  releaseStock,
+  deleteInventory,
+} from './routes/inventory-route';
 import { loggerMiddleware } from './middleware/logger';
 import { redis } from './cache/redis';
 
@@ -20,6 +30,14 @@ const app = new Elysia()
   .use(productVariantsRoute)
   .use(variantAttributesRoute)
   .use(productPricesRoute)
+  .use(createInventory)
+  .use(listInventory)
+  .use(getInventoryDetail)
+  .use(updateInventorySettings)
+  .use(adjustStock)
+  .use(reserveStock)
+  .use(releaseStock)
+  .use(deleteInventory)
   .get('/test', () => ({ message: 'Test endpoint' }), {
     detail: {
       summary: 'Test endpoint for Swagger',
