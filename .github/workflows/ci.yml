@@ -19,16 +19,16 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping -h 127.0.0.1 -prootpassword" --health-interval=10s --health-timeout=5s --health-retries=15
 
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-          --requirepass prog
+       redis:
+         image: redis:7-alpine
+         ports:
+           - 6379:6379
+         options: >-
+           --health-cmd="redis-cli -a prog ping"
+           --health-interval=10s
+           --health-timeout=5s
+           --health-retries=5
+           --requirepass prog
 
     steps:
       - name: Checkout repository
