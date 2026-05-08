@@ -43,25 +43,43 @@ beforeEach(async () => {
   // Wait for database to be ready
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Quick cleanup - delete dependent records first, then test products
-  // Delete prices for variants of test products
-  await db.delete(productPrices).where(inArray(productPrices.variant_id,
-    db.select({ id: productVariants.id }).from(productVariants).where(inArray(productVariants.productId,
-      db.select({ productId: products.productId }).from(products).where(sql`${products.productName} like 'Test%'`)
-    ))
-  ));
-  // Delete attributes for variants of test products
-  await db.delete(variantAttributes).where(inArray(variantAttributes.variantId,
-    db.select({ id: productVariants.id }).from(productVariants).where(inArray(productVariants.productId,
-      db.select({ productId: products.productId }).from(products).where(sql`${products.productName} like 'Test%'`)
-    ))
-  ));
-  // Delete variants of test products
-  await db.delete(productVariants).where(inArray(productVariants.productId,
-    db.select({ productId: products.productId }).from(products).where(sql`${products.productName} like 'Test%'`)
-  ));
-  // Now delete test products
-  await db.delete(products).where(sql`${products.productName} like 'Test%'`);
+  // Clean up test data in correct order: prices -> attributes -> variants -> products
+  try {
+    // Get all test product IDs first
+    const testProductIds = await db
+      .select({ productId: products.productId })
+      .from(products)
+      .where(sql`${products.productName} like 'Test%'`);
+
+    if (testProductIds.length > 0) {
+      const productIdList = testProductIds.map(p => p.productId);
+
+      // Get all variant IDs for these products
+      const testVariantIds = await db
+        .select({ id: productVariants.id })
+        .from(productVariants)
+        .where(inArray(productVariants.productId, productIdList));
+
+      if (testVariantIds.length > 0) {
+        const variantIdList = testVariantIds.map(v => v.id);
+
+        // Delete prices for these variants
+        await db.delete(productPrices).where(inArray(productPrices.variant_id, variantIdList));
+
+        // Delete attributes for these variants
+        await db.delete(variantAttributes).where(inArray(variantAttributes.variantId, variantIdList));
+      }
+
+      // Delete variants
+      await db.delete(productVariants).where(inArray(productVariants.productId, productIdList));
+    }
+
+    // Delete test products
+    await db.delete(products).where(sql`${products.productName} like 'Test%'`);
+  } catch (error) {
+    console.warn('Cleanup warning (non-critical):', error);
+    // Continue with test - cleanup failures shouldn't stop tests
+  }
 
   // Check if test user and token already exist
   const existingUser = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);

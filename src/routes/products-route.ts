@@ -36,6 +36,10 @@ const createProductHandler = new Elysia()
         set.status = 201;
         return { data: product };
       } catch (err: any) {
+        if (err.message.includes('Unauthorized')) {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
         if (err.message.includes('terlalu panjang')) {
           set.status = 422;
           return { error: err.message };
