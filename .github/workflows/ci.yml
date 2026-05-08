@@ -61,7 +61,7 @@ jobs:
 
     - name: Check Redis connection
       run: |
-        redis-cli -h redis-16447.c91.us-east-1-3.ec2.cloud.redislabs.com -p 16447 -a GgVX8XLZwYXlx2KgVxWj9WfvWkNbI58l ping
+        redis-cli -h 127.0.0.1 -p 6379 ping
 
     - name: Run tests
       run: bun test --verbose
