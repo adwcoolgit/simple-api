@@ -36,7 +36,7 @@ const createProductHandler = new Elysia()
         set.status = 201;
         return { data: product };
       } catch (err: any) {
-        if (err.message.includes('Unauthorized')) {
+        if (err.message === 'Unauthorized') {
           set.status = 401;
           return { error: 'Unauthorized' };
         }
@@ -125,6 +125,10 @@ const getProductsHandler = new Elysia()
         const result = await getProducts(filters);
         return { data: result.data, meta: result.meta };
       } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
         throw err;
       }
     },
@@ -204,6 +208,10 @@ const getProductByProductIdHandler = new Elysia()
         const product = await getProductByProductId(Number(params.productId));
         return { data: product };
       } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
         if (err.message === 'Product tidak ditemukan') {
           set.status = 404;
           return { error: err.message };
@@ -299,6 +307,10 @@ const updateProductHandler = new Elysia()
         });
         return { data: updatedProduct };
       } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
         if (err.message === 'Product tidak ditemukan') {
           set.status = 404;
           return { error: err.message };

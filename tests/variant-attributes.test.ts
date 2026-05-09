@@ -12,7 +12,7 @@ import bcrypt from 'bcryptjs';
 
 const app = new Elysia().use(routes).use(usersRoute).use(productsRoute).use(productVariantsRoute).use(variantAttributesRoute);
 
-const testEmail = 'test@example.com';
+const testEmail = `test-variant-${Date.now()}@example.com`;
 const testPassword = 'password123';
 const testName = 'Test User';
 
@@ -24,9 +24,11 @@ let testVariantId: number;
 
 beforeEach(async () => {
   // Quick cleanup - delete in correct order due to foreign key constraints
+  await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
   await db.execute(sql`DELETE FROM variant_attributes`);
-  await db.execute(sql`DELETE FROM product_variants WHERE sku LIKE 'Test%'`);
-  await db.execute(sql`DELETE FROM products WHERE product_name LIKE 'Test%'`);
+  await db.execute(sql`DELETE FROM product_variants WHERE sku LIKE 'Test-%'`);
+  await db.execute(sql`DELETE FROM products WHERE product_name LIKE 'Test Product-%'`);
+  await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
 
   // Setup test data
   const hashedPassword = await bcrypt.hash(testPassword, 12);
@@ -50,9 +52,11 @@ beforeEach(async () => {
     userId: testUserId,
   });
 
+  const timestamp = Date.now();
+
   // Create test product
   const [product] = await db.insert(products).values({
-    productName: 'Test Product',
+    productName: `Test Product-${timestamp}`,
     description: 'Test product for variants',
     isActive: true,
   }).$returningId();
@@ -61,7 +65,7 @@ beforeEach(async () => {
   // Create test variant
   const [variant] = await db.insert(productVariants).values({
     productId: testProductId,
-    sku: 'Test-Variant-SKU',
+    sku: `Test-Variant-SKU-${timestamp}`,
     variantName: 'Test Variant',
     isActive: true,
     isSellable: true,

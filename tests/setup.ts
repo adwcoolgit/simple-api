@@ -10,48 +10,55 @@ process.env.REDIS_PORT = '';
 
 // Setup test database
 async function setupTestDatabase() {
+  console.log('🔄 Checking database connection...');
+
   try {
-    // Connect without specifying database to create it
-    const connection = await mysql.createConnection({
-      host: Bun.env.DB_HOST || 'localhost',
-      user: Bun.env.DB_USER || 'root',
-      password: Bun.env.DB_PASSWORD || '',
-      port: parseInt(Bun.env.DB_PORT || '3306'),
-    });
+    // Try to connect with different host options
+    let testConnection;
+    const hosts = ['localhost', '127.0.0.1'];
+    let connected = false;
 
-    // Create test database if it doesn't exist
-    await connection.execute('CREATE DATABASE IF NOT EXISTS simple_api_test');
-    await connection.end();
+    for (const host of hosts) {
+      try {
+        console.log(`Trying to connect to MySQL at ${host}:3306...`);
+        testConnection = await mysql.createConnection({
+          host: host,
+          user: Bun.env.DB_USER || 'root',
+          password: Bun.env.DB_PASSWORD || '',
+          database: 'simple_api_test',
+          port: parseInt(Bun.env.DB_PORT || '3306'),
+          connectTimeout: 5000,
+        });
 
-    // Connect to test database and run migrations
-    const testConnection = await mysql.createConnection({
-      host: Bun.env.DB_HOST || 'localhost',
-      user: Bun.env.DB_USER || 'root',
-      password: Bun.env.DB_PASSWORD || '',
-      database: 'simple_api_test',
-      port: parseInt(Bun.env.DB_PORT || '3306'),
-    });
-
-    // Read and execute migration file
-    const fs = await import('fs');
-    const path = await import('path');
-
-    const migrationPath = path.join(process.cwd(), 'drizzle', '0000_left_imperial_guard.sql');
-    const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-
-    // Split by statement-breakpoint and execute each statement
-    const statements = migrationSQL.split('--> statement-breakpoint').map(s => s.trim()).filter(s => s.length > 0);
-
-    for (const statement of statements) {
-      if (statement.trim()) {
-        await testConnection.execute(statement);
+        // Test the connection with a simple query
+        await testConnection.execute('SELECT 1');
+        console.log(`✅ Connected to MySQL at ${host}:3306`);
+        connected = true;
+        break;
+      } catch (hostError) {
+        console.log(`❌ Failed to connect to ${host}:3306`);
+        if (testConnection) {
+          try {
+            await testConnection.end();
+          } catch {}
+        }
       }
     }
 
-    await testConnection.end();
-    console.log('✅ Test database and migrations ready');
+    if (!connected) {
+      throw new Error('Could not connect to MySQL on any host');
+    }
+
+    await testConnection!.end();
+    console.log('✅ Test database connection verified');
   } catch (error) {
-    console.warn('⚠️ Could not setup test database:', error);
+    console.error('❌ Database connection failed:', error.message);
+    console.error('💡 Make sure MySQL is running on localhost:3306');
+    console.error('💡 Default credentials: root / (empty password)');
+    console.error('💡 Or set DB_HOST, DB_USER, DB_PASSWORD environment variables');
+
+    // Don't exit - allow tests to run in mock mode or skip database tests
+    console.log('⚠️ Continuing with tests that may not require database...');
   }
 }
 

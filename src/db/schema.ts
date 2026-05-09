@@ -64,3 +64,26 @@ export const productPrices = mysqlTable('product_prices', {
   start_date: datetime('start_date'),
   end_date: datetime('end_date'),
 });
+
+export const warehouses = mysqlTable('warehouses', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  address: varchar('address', { length: 500 }),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+});
+
+export const inventory = mysqlTable('inventory', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  variantId: bigint('variant_id', { mode: 'number' }).notNull().references(() => productVariants.id),
+  warehouseId: bigint('warehouse_id', { mode: 'number' }).notNull().references(() => warehouses.id),
+  stockQty: decimal('stock_qty', { precision: 12, scale: 2 }).default('0').notNull(),
+  reservedQty: decimal('reserved_qty', { precision: 12, scale: 2 }).default('0').notNull(),
+  minStock: decimal('min_stock', { precision: 12, scale: 2 }),
+  maxStock: decimal('max_stock', { precision: 12, scale: 2 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  uniqueVariantWarehouse: sql`UNIQUE (${table.variantId}, ${table.warehouseId})`,
+}));

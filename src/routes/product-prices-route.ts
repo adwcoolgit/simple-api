@@ -3,6 +3,7 @@ import {
   createProductPrice,
   getProductPrices,
   getProductPriceById,
+  getActiveProductPrices,
   updateProductPrice,
   deleteProductPrice,
 } from '../service/product-prices-service';
@@ -36,6 +37,10 @@ const createProductPriceHandler = new Elysia()
         set.status = 201;
         return { data: price };
       } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
         if (err.message === 'Variant tidak ditemukan') {
           set.status = 404;
           return { error: err.message };
@@ -239,7 +244,7 @@ const getProductPriceByIdHandler = new Elysia()
 
 const getActiveProductPricesHandler = new Elysia()
   .get(
-    '/api/product-prices/active',
+    '/api/product-prices-active',
     async ({ query }: any) => {
       try {
         const filters = {
@@ -318,6 +323,10 @@ const updateProductPriceHandler = new Elysia()
         });
         return { data: result };
       } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
         if (err.message === 'Harga tidak ditemukan') {
           set.status = 404;
           return { error: err.message };
@@ -415,6 +424,10 @@ const deleteProductPriceHandler = new Elysia()
         const result = await deleteProductPrice(Number(params.id));
         return { data: result };
       } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
         if (err.message === 'Harga tidak ditemukan') {
           set.status = 404;
           return { error: err.message };
@@ -472,7 +485,7 @@ const deleteProductPriceHandler = new Elysia()
 export const productPricesRoute = new Elysia()
   .use(createProductPriceHandler)
   .use(getProductPricesHandler)
-  .use(getProductPriceByIdHandler)
   .use(getActiveProductPricesHandler)
+  .use(getProductPriceByIdHandler)
   .use(updateProductPriceHandler)
   .use(deleteProductPriceHandler);

@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs';
 
 const app = new Elysia().use(routes).use(usersRoute).use(productsRoute).use(productVariantsRoute);
 
-const testEmail = 'test@example.com';
+const testEmail = `test-product-variant-${Date.now()}@example.com`;
 const testPassword = 'password123';
 const testName = 'Test User';
 
@@ -95,18 +95,16 @@ let testProductId: number;
     });
   }
 
-  // Create test product if not exists
-  const existingProduct = await db.select().from(products).where(sql`${products.productName} = 'Test Product'`).limit(1);
-  if (existingProduct.length === 0) {
-    const [product] = await db.insert(products).values({
-      productName: 'Test Product',
-      description: 'Test product for variants',
-      isActive: true,
-    }).$returningId();
-    testProductId = product!.productId;
-  } else {
-    testProductId = existingProduct[0]!.productId;
-  }
+  const timestamp = Date.now();
+  const productName = `Test Product-${timestamp}`;
+
+  // Create test product
+  const [product] = await db.insert(products).values({
+    productName: productName,
+    description: 'Test product for variants',
+    isActive: true,
+  }).$returningId();
+  testProductId = product!.productId;
 });
 
 // Helper function to make authenticated requests
