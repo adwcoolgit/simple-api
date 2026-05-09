@@ -290,9 +290,8 @@ describe('GET /api/products/:productId — Detail Product', () => {
   let testProductId: number;
 
   beforeEach(async () => {
-    const timestamp = Date.now();
     const [product] = await db.insert(products).values({
-      productName: `Test Detail Product-${timestamp}`,
+      productName: 'Test Detail Product',
       description: 'Test Description',
       isActive: true,
     }).$returningId();

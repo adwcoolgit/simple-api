@@ -367,7 +367,7 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
   });
 
   it('26. Ada harga aktif (tanggal mencakup NOW)', async () => {
-    const res = await makeRequest('GET', '/api/product-prices/active');
+    const res = await makeRequest('GET', '/api/product-prices-active');
     expect(res.status).toBe(200);
     expect(Array.isArray(res.json.data)).toBe(true);
     expect(res.json.data.length).toBeGreaterThan(0);
@@ -375,7 +375,7 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
   });
 
   it('27. Harga permanen (kedua tanggal null) muncul di hasil', async () => {
-    const res = await makeRequest('GET', '/api/product-prices/active');
+    const res = await makeRequest('GET', '/api/product-prices-active');
     expect(res.status).toBe(200);
     expect(res.json.data.some((p: any) => p.price_type === 'member')).toBe(true);
   });
@@ -392,19 +392,19 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
       start_date: past,
       end_date: past,
     });
-    const res = await makeRequest('GET', '/api/product-prices/active');
+    const res = await makeRequest('GET', '/api/product-prices-active');
     expect(res.status).toBe(200);
     expect(res.json.data.every((p: any) => p.price !== '50000.00')).toBe(true);
   });
 
   it('29. Harga yang belum mulai tidak muncul', async () => {
-    const res = await makeRequest('GET', '/api/product-prices/active');
+    const res = await makeRequest('GET', '/api/product-prices-active');
     expect(res.status).toBe(200);
     expect(res.json.data.every((p: any) => p.price_type !== 'reseller')).toBe(true);
   });
 
   it('30. Filter price_type pada harga aktif', async () => {
-    const res = await makeRequest('GET', '/api/product-prices/active?price_type=member', undefined);
+    const res = await makeRequest('GET', '/api/product-prices-active?price_type=member', undefined);
     expect(res.status).toBe(200);
     expect(res.json.data.every((p: any) => p.price_type === 'member')).toBe(true);
   });

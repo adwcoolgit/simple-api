@@ -3,6 +3,7 @@ import {
   createProductPrice,
   getProductPrices,
   getProductPriceById,
+  getActiveProductPrices,
   updateProductPrice,
   deleteProductPrice,
 } from '../service/product-prices-service';
@@ -243,7 +244,7 @@ const getProductPriceByIdHandler = new Elysia()
 
 const getActiveProductPricesHandler = new Elysia()
   .get(
-    '/api/product-prices/active',
+    '/api/product-prices-active',
     async ({ query }: any) => {
       try {
         const filters = {
@@ -484,7 +485,7 @@ const deleteProductPriceHandler = new Elysia()
 export const productPricesRoute = new Elysia()
   .use(createProductPriceHandler)
   .use(getProductPricesHandler)
-  .use(getProductPriceByIdHandler)
   .use(getActiveProductPricesHandler)
+  .use(getProductPriceByIdHandler)
   .use(updateProductPriceHandler)
   .use(deleteProductPriceHandler);
