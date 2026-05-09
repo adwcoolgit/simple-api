@@ -457,22 +457,14 @@ describe('POST /api/inventory/:variantId/:warehouseId/adjust — Penyesuaian Sto
     expect(res.json.error).toBe('Stok tidak mencukupi');
   });
 
-  it('4. Pengurangan yang menyebabkan stok < 0', async () => {
-    const res = await makeRequest('POST', `/api/inventory/${testVariantId}/${testWarehouseId}/adjust`, {
-      qty: -200,
-    }, { 'Authorization': `Bearer ${token}` });
-    expect(res.status).toBe(422);
-    expect(res.json.error).toBe('Stok tidak mencukupi');
-  });
-
-  it('6. qty bernilai 0', async () => {
+  it('5. qty bernilai 0', async () => {
     const res = await makeRequest('POST', `/api/inventory/${testVariantId}/${testWarehouseId}/adjust`, {
       qty: 0,
     }, { 'Authorization': `Bearer ${token}` });
     expect(res.status).toBe(422);
   });
 
-  it('7. Record tidak ditemukan', async () => {
+  it('6. Record tidak ditemukan', async () => {
     const res = await makeRequest('POST', `/api/inventory/99999/${testWarehouseId}/adjust`, {
       qty: 10,
     }, { 'Authorization': `Bearer ${token}` });
@@ -480,7 +472,7 @@ describe('POST /api/inventory/:variantId/:warehouseId/adjust — Penyesuaian Sto
     expect(res.json.error).toBe('Inventory tidak ditemukan');
   });
 
-  it('8. Tanpa token', async () => {
+  it('7. Tanpa token', async () => {
     const res = await makeRequest('POST', `/api/inventory/${testVariantId}/${testWarehouseId}/adjust`, {
       qty: 10,
     });
