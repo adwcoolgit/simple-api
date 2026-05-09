@@ -75,6 +75,10 @@ const loginRoute = new Elysia()
         const result = await loginUser(body);
         return { data: result };
       } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Email atau password salah' };
+        }
         if (err.message === 'Email atau password salah') {
           set.status = 401;
           return { error: 'Email atau password salah' };

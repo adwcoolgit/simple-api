@@ -33,6 +33,10 @@ const createInventoryRoute = new Elysia()
         set.status = 201;
         return { data: result };
       } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
         if (err.message === 'Inventory untuk varian dan gudang ini sudah ada') {
           set.status = 409;
           return { error: err.message };
@@ -111,8 +115,16 @@ const listInventoryRoute = new Elysia()
       if (query.variant_id) filters.variant_id = parseInt(query.variant_id);
       if (query.low_stock === 'true') filters.low_stock = true;
 
-      const result = await getInventoryListSvc(filters);
-      return { data: result };
+      try {
+        const result = await getInventoryListSvc(filters);
+        return { data: result };
+      } catch (err: any) {
+        if (err.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
+        throw err;
+      }
     },
     {
       query: t.Object({
