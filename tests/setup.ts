@@ -36,7 +36,7 @@ async function setupTestDatabase() {
     const fs = await import('fs');
     const path = await import('path');
 
-    const migrationPath = path.join(process.cwd(), 'drizzle', '0000_left_imperial_guard.sql');
+    const migrationPath = path.join(process.cwd(), 'drizzle', '0000_nifty_apocalypse.sql');
     const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
     // Split by statement-breakpoint and execute each statement
