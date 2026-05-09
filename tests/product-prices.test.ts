@@ -108,7 +108,7 @@ async function makeAuthRequest(method: string, path: string, body?: any) {
 }
 
 // Helper function to make requests without auth
-async function makeRequest(method: string, path: string, body?: any, headers?: Record<string, string>) {
+async function makeRequest(method: string, path: string, body?: any, headers?: Record<string, string>): Promise<{ status: number; json: any }> {
   const url = `http://localhost${path}`;
   const init: RequestInit = {
     method,
@@ -315,13 +315,40 @@ describe('GET /api/product-prices/:id — Detail Harga', () => {
 
 describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
   beforeEach(async () => {
-    // Create test prices
+    // Ensure test variant exists
+    if (!testVariantId) {
+      const existingVariants = await db.select().from(productVariants).limit(1);
+      if (existingVariants.length > 0) {
+        testVariantId = existingVariants[0]!.id;
+      } else {
+        // Create a test product first
+        const [product] = await db.insert(products).values({
+          productName: 'Test Product for Active Prices',
+          description: 'Test Description',
+        }).$returningId();
+
+        // Create test variant
+        const [variant] = await db.insert(productVariants).values({
+          productId: product!.productId,
+          sku: 'TEST-ACTIVE-SKU',
+          variantName: 'Test Variant for Active',
+        }).$returningId();
+        testVariantId = variant!.id;
+      }
+    }
+
+    // Create test prices with dates relative to current time
+    const now = new Date();
+    const past = new Date(now.getTime() - 86400000); // 1 day ago
+    const future = new Date(now.getTime() + 86400000); // 1 day from now
+    const farFuture = new Date(now.getTime() + 31536000000); // 1 year from now
+
     await db.insert(productPrices).values({
       variant_id: testVariantId,
       price_type: 'retail',
       price: '150000.00',
-      start_date: new Date('2025-01-01T00:00:00Z'), // past
-      end_date: new Date('2027-12-31T23:59:59Z'), // future
+      start_date: past,
+      end_date: farFuture,
     });
     await db.insert(productPrices).values({
       variant_id: testVariantId,
@@ -334,7 +361,7 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
       variant_id: testVariantId,
       price_type: 'reseller',
       price: '100000.00',
-      start_date: new Date('2027-01-01T00:00:00Z'), // future
+      start_date: future, // future
       end_date: null,
     });
   });
@@ -354,13 +381,16 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
   });
 
   it('28. Harga yang sudah expired tidak muncul', async () => {
-    // Add expired price
+    const now = new Date();
+    const past = new Date(now.getTime() - 86400000 * 30); // 30 days ago
+
+    // Add expired price using valid price_type
     await db.insert(productPrices).values({
       variant_id: testVariantId,
       price_type: 'retail',
       price: '50000.00',
-      start_date: new Date('2020-01-01T00:00:00Z'),
-      end_date: new Date('2020-12-31T23:59:59Z'),
+      start_date: past,
+      end_date: past,
     });
     const res = await makeRequest('GET', '/api/product-prices/active');
     expect(res.status).toBe(200);
@@ -374,7 +404,7 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
   });
 
   it('30. Filter price_type pada harga aktif', async () => {
-    const res = await makeRequest('GET', '/api/product-prices/active?price_type=member');
+    const res = await makeRequest('GET', '/api/product-prices/active?price_type=member', undefined);
     expect(res.status).toBe(200);
     expect(res.json.data.every((p: any) => p.price_type === 'member')).toBe(true);
   });

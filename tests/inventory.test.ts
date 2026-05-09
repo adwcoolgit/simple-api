@@ -28,7 +28,7 @@ const app = new Elysia()
   .use(releaseStock)
   .use(deleteInventory);
 
-const testEmail = 'test@example.com';
+const testEmail = `test-inventory-${Date.now()}@example.com`;
 const testPassword = 'password123';
 const testName = 'Test User';
 
@@ -72,29 +72,31 @@ beforeEach(async () => {
   const loginJson = await loginRes.json() as any;
   token = loginJson.data.token;
 
+  const timestamp = Date.now();
+
   // Create test product, variant, and warehouse
   const productRes = await db.insert(products).values({
-    productName: 'Test Product',
+    productName: `Test Product-${timestamp}`,
     description: 'Test Description',
   });
   const productId = productRes[0].insertId;
 
   const variantRes = await db.insert(productVariants).values({
     productId: BigInt(productId),
-    sku: 'TEST-SKU-001',
+    sku: `TEST-SKU-${timestamp}`,
     variantName: 'Test Variant',
   });
   testVariantId = Number(variantRes[0].insertId);
 
   const warehouseRes = await db.insert(warehouses).values({
-    name: 'Test Warehouse',
+    name: `Test Warehouse-${timestamp}`,
     address: 'Test Address',
   });
   testWarehouseId = Number(warehouseRes[0].insertId);
 
   // Create a second warehouse for low_stock test
   const warehouseRes2 = await db.insert(warehouses).values({
-    name: 'Test Warehouse 2',
+    name: `Test Warehouse 2-${timestamp}`,
     address: 'Test Address 2',
   });
   testWarehouseId2 = Number(warehouseRes2[0].insertId);

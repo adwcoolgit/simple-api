@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs';
 
 const app = new Elysia().use(routes).use(usersRoute).use(productsRoute);
 
-const testEmail = 'test@example.com';
+const testEmail = `test-${Date.now()}@example.com`;
 const testPassword = 'password123';
 const testName = 'Test User';
 
@@ -45,37 +45,20 @@ beforeEach(async () => {
 
   // Clean up test data in correct order: prices -> attributes -> variants -> products
   try {
-    // Get all test product IDs first
-    const testProductIds = await db
-      .select({ productId: products.productId })
-      .from(products)
-      .where(sql`${products.productName} like 'Test%'`);
+    // Most aggressive cleanup - delete everything in reverse dependency order
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
 
-    if (testProductIds.length > 0) {
-      const productIdList = testProductIds.map(p => p.productId);
+    // Delete in reverse dependency order
+    await db.execute(sql`DELETE FROM product_prices`);
+    await db.execute(sql`DELETE FROM variant_attributes`);
+    await db.execute(sql`DELETE FROM inventory`);
+    await db.execute(sql`DELETE FROM product_variants`);
+    await db.execute(sql`DELETE FROM products`);
+    await db.execute(sql`DELETE FROM warehouses`);
+    await db.execute(sql`DELETE FROM sessions`);
+    await db.execute(sql`DELETE FROM users WHERE email LIKE 'test%'`);
 
-      // Get all variant IDs for these products
-      const testVariantIds = await db
-        .select({ id: productVariants.id })
-        .from(productVariants)
-        .where(inArray(productVariants.productId, productIdList));
-
-      if (testVariantIds.length > 0) {
-        const variantIdList = testVariantIds.map(v => v.id);
-
-        // Delete prices for these variants
-        await db.delete(productPrices).where(inArray(productPrices.variant_id, variantIdList));
-
-        // Delete attributes for these variants
-        await db.delete(variantAttributes).where(inArray(variantAttributes.variantId, variantIdList));
-      }
-
-      // Delete variants
-      await db.delete(productVariants).where(inArray(productVariants.productId, productIdList));
-    }
-
-    // Delete test products
-    await db.delete(products).where(sql`${products.productName} like 'Test%'`);
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
   } catch (error) {
     console.warn('Cleanup warning (non-critical):', error);
     // Continue with test - cleanup failures shouldn't stop tests
@@ -226,11 +209,12 @@ describe('POST /api/products — Buat Product Baru', () => {
 
 describe('GET /api/products — List Semua Product', () => {
   beforeEach(async () => {
-    // Create test products
+    const timestamp = Date.now();
+    // Create test products with unique names
     await db.insert(products).values([
-      { productName: 'Test Product 1', description: 'Desc 1', categoryId: 1, departmentId: 1, isActive: true },
-      { productName: 'Test Product 2', description: 'Desc 2', categoryId: 1, departmentId: 2, isActive: false },
-      { productName: 'Test Product 3', description: 'Desc 3', categoryId: 2, departmentId: 1, isActive: true },
+      { productName: `Test Product 1-${timestamp}`, description: 'Desc 1', categoryId: 1, departmentId: 1, isActive: true },
+      { productName: `Test Product 2-${timestamp}`, description: 'Desc 2', categoryId: 1, departmentId: 2, isActive: false },
+      { productName: `Test Product 3-${timestamp}`, description: 'Desc 3', categoryId: 2, departmentId: 1, isActive: true },
     ]);
   });
 
@@ -306,8 +290,9 @@ describe('GET /api/products/:productId — Detail Product', () => {
   let testProductId: number;
 
   beforeEach(async () => {
+    const timestamp = Date.now();
     const [product] = await db.insert(products).values({
-      productName: 'Test Detail Product',
+      productName: `Test Detail Product-${timestamp}`,
       description: 'Test Description',
       isActive: true,
     }).$returningId();
@@ -343,8 +328,9 @@ describe('PATCH /api/products/:productId — Update Product', () => {
   let testProductId: number;
 
   beforeEach(async () => {
+    const timestamp = Date.now();
     const [product] = await db.insert(products).values({
-      productName: 'Test Update Product',
+      productName: `Test Update Product-${timestamp}`,
       description: 'Original Description',
       isActive: true,
     }).$returningId();
@@ -436,8 +422,9 @@ describe('DELETE /api/products/:productId — Soft Delete Product', () => {
   let testProductId: number;
 
   beforeEach(async () => {
+    const timestamp = Date.now();
     const [product] = await db.insert(products).values({
-      productName: 'Test Delete Product',
+      productName: `Test Delete Product-${timestamp}`,
       description: 'Test Description',
       isActive: true,
     }).$returningId();

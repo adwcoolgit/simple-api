@@ -165,32 +165,32 @@ export async function getActiveProductPrices(filters: Omit<GetProductPricesFilte
   try {
     const now = new Date();
 
-    let whereConditions = [
-      or(
-        isNull(productPrices.start_date),
-        lte(productPrices.start_date, now)
-      ),
-      or(
-        isNull(productPrices.end_date),
-        gte(productPrices.end_date, now)
-      )
-    ];
+    // Simple query to get all prices first, then filter in memory
+    let query = dbRead
+      .select()
+      .from(productPrices)
+      .orderBy(asc(productPrices.variant_id), asc(productPrices.price_type));
 
     if (filters.variant_id !== undefined) {
-      whereConditions.push(eq(productPrices.variant_id, filters.variant_id));
+      query = query.where(eq(productPrices.variant_id, filters.variant_id));
     }
 
     if (filters.price_type !== undefined) {
-      whereConditions.push(eq(productPrices.price_type, filters.price_type));
+      query = query.where(eq(productPrices.price_type, filters.price_type));
     }
 
-    const whereClause = and(...whereConditions);
+    const allPrices = await query;
 
-    const activePrices = await dbRead
-      .select()
-      .from(productPrices)
-      .where(whereClause)
-      .orderBy(asc(productPrices.variant_id), asc(productPrices.price_type));
+    // Filter for active prices in memory
+    const activePrices = allPrices.filter(price => {
+      const startDate = price.start_date;
+      const endDate = price.end_date;
+
+      const startValid = startDate === null || startDate <= now;
+      const endValid = endDate === null || endDate >= now;
+
+      return startValid && endValid;
+    });
 
     return {
       data: activePrices,
