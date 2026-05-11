@@ -97,14 +97,14 @@ jobs:
             CREATE DATABASE simple_api_test;
           "
 
-      - name: Run database migrations
-        run: bunx drizzle-kit push
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_NAME: simple_api_test
-          DB_USER: root
-          DB_PASSWORD: rootpassword
+       - name: Run database migrations
+         run: bun run db:migrate
+         env:
+           DB_HOST: 127.0.0.1
+           DB_PORT: 3306
+           DB_NAME: simple_api_test
+           DB_USER: root
+           DB_PASSWORD: rootpassword
 
       - name: Show database tables
         run: |
