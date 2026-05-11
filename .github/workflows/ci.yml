@@ -2,13 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - develop
-
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 env:
   NODE_ENV: test
@@ -37,10 +33,10 @@ jobs:
         ports:
           - 6379:6379
         options: >-
-          --health-cmd "redis-cli -a redis_password_123 ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="redis-cli -a redis_password_123 ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
         command: redis-server --requirepass redis_password_123
 
     steps:
@@ -61,70 +57,74 @@ jobs:
           sudo apt-get install -y mysql-client redis-tools
 
       - name: Wait for MySQL
+        id: mysql-wait
         run: |
+          echo "Waiting for MySQL to be ready..."
           for i in {1..30}; do
             if mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "SELECT 1" >/dev/null 2>&1; then
-              echo "✅ MySQL ready"
+              echo "✅ MySQL is ready"
               exit 0
             fi
-
             echo "Waiting for MySQL... ($i/30)"
             sleep 2
           done
-
-          echo "❌ MySQL failed"
+          echo "❌ MySQL failed to become ready"
           exit 1
 
       - name: Wait for Redis
+        id: redis-wait
         run: |
+          echo "Waiting for Redis to be ready..."
           for i in {1..30}; do
             if redis-cli -h 127.0.0.1 -p 6379 -a redis_password_123 ping | grep -q PONG; then
-              echo "✅ Redis ready"
+              echo "✅ Redis is ready"
               exit 0
             fi
-
             echo "Waiting for Redis... ($i/30)"
             sleep 2
           done
-
-          echo "❌ Redis failed"
+          echo "❌ Redis failed to become ready"
           exit 1
 
-      - name: Reset database
+      - name: Reset test database
         run: |
+          echo "Resetting test database..."
           mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "
             DROP DATABASE IF EXISTS simple_api_test;
             CREATE DATABASE simple_api_test;
           "
 
-       - name: Run database migrations
-         run: bun run db:migrate
-         env:
-           DB_HOST: 127.0.0.1
-           DB_PORT: 3306
-           DB_NAME: simple_api_test
-           DB_USER: root
-           DB_PASSWORD: rootpassword
+      - name: Generate database migrations
+        run: bunx drizzle-kit generate
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: simple_api_test
+          DB_USER: root
+          DB_PASSWORD: rootpassword
 
-      - name: Show database tables
-        run: |
-          mysql \
-            -h 127.0.0.1 \
-            -P 3306 \
-            -u root \
-            -prootpassword \
-            simple_api_test \
-            -e "SHOW TABLES;"
+      - name: Apply database migrations
+        run: bun run db:migrate
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: simple_api_test
+          DB_USER: root
+          DB_PASSWORD: rootpassword
 
-      - name: Verify inventory table
+      - name: Verify migration was applied
         run: |
-          mysql \
-            -h 127.0.0.1 \
-            -P 3306 \
-            -u root \
-            -prootpassword \
-            simple_api_test \
-            -e "DESCRIBE inventory;"
+          echo "Verifying database tables..."
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
+
+          echo "Verifying inventory table structure..."
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "DESCRIBE inventory;"
+
+          echo "Verifying warehouses table structure..."
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "DESCRIBE warehouses;"
+
+          echo "Verifying product_costs table structure..."
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "DESCRIBE product_costs;"
 
       - name: Run unit tests
         run: bun test --verbose
@@ -139,24 +139,25 @@ jobs:
           REDIS_PASSWORD: redis_password_123
 
       - name: Start application server
+        id: server-start
         run: |
+          echo "Starting application server..."
           bun run src/index.ts &
-
           SERVER_PID=$!
-
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+          echo "Server started with PID: $SERVER_PID"
 
+          # Wait for server to be ready
+          echo "Waiting for server to be ready..."
           for i in {1..30}; do
             if curl -f -s http://127.0.0.1:3000/test >/dev/null 2>&1; then
-              echo "✅ Server ready"
+              echo "✅ Server is ready on http://127.0.0.1:3000"
               exit 0
             fi
-
             echo "Waiting for server... ($i/30)"
             sleep 2
           done
-
-          echo "❌ Server failed"
+          echo "❌ Server failed to start"
           exit 1
         env:
           DB_HOST: 127.0.0.1
@@ -184,9 +185,11 @@ jobs:
         if: always()
         run: |
           if [ ! -z "$SERVER_PID" ]; then
+            echo "Stopping server (PID: $SERVER_PID)..."
             kill $SERVER_PID 2>/dev/null || true
             sleep 2
             kill -9 $SERVER_PID 2>/dev/null || true
+            echo "✅ Server stopped"
           fi
 
   deploy:
@@ -212,8 +215,15 @@ jobs:
 
       - name: Run security audit
         run: |
-          bun audit || echo "Audit completed with warnings"
+          echo "Running security audit..."
+          bun audit || echo "⚠️ Security audit completed with warnings"
 
       - name: Deploy to staging
         run: |
-          echo "🚀 Deploy placeholder"
+          echo "🚀 Deploying to staging environment..."
+          echo "Deployment steps would go here:"
+          echo "- Copy files to staging server"
+          echo "- Run database migrations"
+          echo "- Restart application services"
+          echo "- Run health checks"
+          echo "✅ Staging deployment completed (placeholder)"
