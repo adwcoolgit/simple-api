@@ -138,7 +138,7 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
 describe('POST /api/products — Buat Product Baru', () => {
   it('1. Semua field valid', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
-      product_name: 'Indomie Goreng',
+      name: 'Indomie Goreng',
       description: 'Mie instan rasa goreng',
       category_id: "1",
       department_id: 2,
@@ -146,7 +146,7 @@ describe('POST /api/products — Buat Product Baru', () => {
     });
     expect(res.status).toBe(201);
     expect(res.json.data).toHaveProperty('productId');
-    expect(res.json.data.productName).toBe('Indomie Goreng');
+    expect(res.json.data.name).toBe('Indomie Goreng');
     expect(res.json.data.description).toBe('Mie instan rasa goreng');
     expect(res.json.data.categoryId).toBe(1);
     expect(res.json.data.departmentId).toBe(2);
@@ -155,33 +155,33 @@ describe('POST /api/products — Buat Product Baru', () => {
 
   it('2. Hanya `product_name` (field lain opsional tidak dikirim)', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
-      product_name: 'Test Product Only Name',
+      name: 'Test Product Only Name',
     });
     expect(res.status).toBe(201);
-    expect(res.json.data.productName).toBe('Test Product Only Name');
+    expect(res.json.data.name).toBe('Test Product Only Name');
     expect(res.json.data.description).toBeNull();
     expect(res.json.data.categoryId).toBeNull();
     expect(res.json.data.departmentId).toBeNull();
     expect(res.json.data.isActive).toBe(true);
   });
 
-  it('3. `product_name` tidak dikirim', async () => {
+  it('3. `name` tidak dikirim', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
       description: 'Test Description',
     });
     expect(res.status).toBe(422);
   });
 
-  it('4. `product_name` string kosong', async () => {
+  it('4. `name` string kosong', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
-      product_name: '',
+      name: '',
     });
     expect(res.status).toBe(422);
   });
 
   it('5. Tanpa header Authorization', async () => {
     const res = await makeRequest('POST', '/api/products', {
-      product_name: 'Test Product',
+      name: 'Test Product',
     });
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
@@ -189,7 +189,7 @@ describe('POST /api/products — Buat Product Baru', () => {
 
   it('6. Token tidak valid', async () => {
     const res = await makeRequest('POST', '/api/products', {
-      product_name: 'Test Product',
+      name: 'Test Product',
     }, {
       'Authorization': 'Bearer invalid-token',
     });
@@ -200,7 +200,7 @@ describe('POST /api/products — Buat Product Baru', () => {
 
   it('7. `is_active` tidak dikirim → default `true` di DB', async () => {
     const res = await makeAuthRequest('POST', '/api/products', {
-      product_name: 'Test Product Default Active',
+      name: 'Test Product Default Active',
     });
     expect(res.status).toBe(201);
     expect(res.json.data.isActive).toBe(true);
@@ -212,9 +212,9 @@ describe('GET /api/products — List Semua Product', () => {
     const timestamp = Date.now();
     // Create test products with unique names
     await db.insert(products).values([
-      { productName: `Test Product 1-${timestamp}`, description: 'Desc 1', categoryId: 1, departmentId: 1, isActive: true },
-      { productName: `Test Product 2-${timestamp}`, description: 'Desc 2', categoryId: 1, departmentId: 2, isActive: false },
-      { productName: `Test Product 3-${timestamp}`, description: 'Desc 3', categoryId: 2, departmentId: 1, isActive: true },
+      { name: `Test Product 1-${timestamp}`, description: 'Desc 1', categoryId: 1, departmentId: 1, isActive: true },
+      { name: `Test Product 2-${timestamp}`, description: 'Desc 2', categoryId: 1, departmentId: 2, isActive: false },
+      { name: `Test Product 3-${timestamp}`, description: 'Desc 3', categoryId: 2, departmentId: 1, isActive: true },
     ]);
   });
 
@@ -291,7 +291,7 @@ describe('GET /api/products/:productId — Detail Product', () => {
 
   beforeEach(async () => {
     const [product] = await db.insert(products).values({
-      productName: 'Test Detail Product',
+      name: 'Test Detail Product',
       description: 'Test Description',
       isActive: true,
     }).$returningId();
@@ -302,7 +302,7 @@ describe('GET /api/products/:productId — Detail Product', () => {
     const res = await makeAuthRequest('GET', `/api/products/${testProductId}`);
     expect(res.status).toBe(200);
     expect(res.json.data.productId).toBe(testProductId);
-    expect(res.json.data.productName).toBe('Test Detail Product');
+    expect(res.json.data.name).toBe('Test Detail Product');
   });
 
   it('18. `productId` tidak ada di DB', async () => {
@@ -329,19 +329,19 @@ describe('PATCH /api/products/:productId — Update Product', () => {
   beforeEach(async () => {
     const timestamp = Date.now();
     const [product] = await db.insert(products).values({
-      productName: `Test Update Product-${timestamp}`,
+      name: `Test Update Product-${timestamp}`,
       description: 'Original Description',
       isActive: true,
     }).$returningId();
     testProductId = product!.productId;
   });
 
-  it('21. Update `product_name` saja', async () => {
+  it('21. Update `name` saja', async () => {
     const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
-      product_name: 'Updated Product Name',
+      name: 'Updated Product Name',
     });
     expect(res.status).toBe(200);
-    expect(res.json.data.productName).toBe('Updated Product Name');
+    expect(res.json.data.name).toBe('Updated Product Name');
     expect(res.json.data.description).toBe('Original Description');
   });
 
@@ -363,14 +363,14 @@ describe('PATCH /api/products/:productId — Update Product', () => {
 
   it('24. Update semua field sekaligus', async () => {
     const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
-      product_name: 'Fully Updated Product',
+      name: 'Fully Updated Product',
       description: 'Fully Updated Description',
       category_id: "5",
       department_id: 3,
       is_active: false,
     });
     expect(res.status).toBe(200);
-    expect(res.json.data.productName).toBe('Fully Updated Product');
+    expect(res.json.data.name).toBe('Fully Updated Product');
     expect(res.json.data.description).toBe('Fully Updated Description');
     expect(res.json.data.categoryId).toBe(5);
     expect(res.json.data.departmentId).toBe(3);
@@ -379,7 +379,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
 
   it('25. `productId` tidak ada di DB', async () => {
     const res = await makeAuthRequest('PATCH', '/api/products/99999', {
-      product_name: 'Nonexistent Product',
+      name: 'Nonexistent Product',
     });
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
@@ -393,14 +393,14 @@ describe('PATCH /api/products/:productId — Update Product', () => {
 
   it('27. `productId` bukan angka', async () => {
     const res = await makeAuthRequest('PATCH', '/api/products/abc', {
-      product_name: 'Invalid Product ID',
+      name: 'Invalid Product ID',
     });
     expect(res.status).toBe(422);
   });
 
   it('28. Tanpa header Authorization', async () => {
     const res = await makeRequest('PATCH', `/api/products/${testProductId}`, {
-      product_name: 'Unauthorized Update',
+      name: 'Unauthorized Update',
     });
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
@@ -410,7 +410,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
     const beforeUpdate = await db.select({ updatedAt: products.updatedAt }).from(products).where(eq(products.productId, testProductId));
     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
     await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
-      product_name: 'Updated for Timestamp',
+      name: 'Updated for Timestamp',
     });
     const afterUpdate = await db.select({ updatedAt: products.updatedAt }).from(products).where(eq(products.productId, testProductId));
     expect(new Date(afterUpdate[0]!.updatedAt).getTime()).toBeGreaterThan(new Date(beforeUpdate[0]!.updatedAt).getTime());
@@ -423,7 +423,7 @@ describe('DELETE /api/products/:productId — Soft Delete Product', () => {
   beforeEach(async () => {
     const timestamp = Date.now();
     const [product] = await db.insert(products).values({
-      productName: `Test Delete Product-${timestamp}`,
+      name: `Test Delete Product-${timestamp}`,
       description: 'Test Description',
       isActive: true,
     }).$returningId();

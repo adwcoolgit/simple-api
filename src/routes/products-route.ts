@@ -27,7 +27,7 @@ const createProductHandler = new Elysia()
         await getUserIdFromToken(token);
 
         const product = await createProduct({
-          productName: body.product_name,
+          name: body.name,
           description: body.description,
           categoryId: body.category_id ? parseInt(body.category_id) : undefined,
           departmentId: body.department_id,
@@ -49,7 +49,7 @@ const createProductHandler = new Elysia()
     },
     {
       body: t.Object({
-        product_name: t.String({ minLength: 1, maxLength: 255 }),
+        name: t.String({ minLength: 1, maxLength: 255 }),
         description: t.Optional(t.String({ maxLength: 255 })),
         category_id: t.Optional(t.String()),
         department_id: t.Optional(t.Number()),
@@ -67,7 +67,7 @@ const createProductHandler = new Elysia()
                 example: {
                   data: {
                     product_id: 1,
-                    product_name: 'Indomie Goreng',
+                    name: 'Indomie Goreng',
                     description: 'Mie instan rasa goreng',
                     category_id: 1,
                     department_id: 2,
@@ -155,7 +155,7 @@ const getProductsHandler = new Elysia()
                   data: [
                     {
                       product_id: 1,
-                      product_name: 'Indomie Goreng',
+                      name: 'Indomie Goreng',
                       description: 'Mie instan rasa goreng',
                       category_id: 1,
                       department_id: 2,
@@ -235,7 +235,7 @@ const getProductByProductIdHandler = new Elysia()
                 example: {
                   data: {
                     product_id: 1,
-                    product_name: 'Indomie Goreng',
+                    name: 'Indomie Goreng',
                     description: 'Mie instan rasa goreng',
                     category_id: 1,
                     department_id: 2,
@@ -290,7 +290,7 @@ const updateProductHandler = new Elysia()
       const token = authHeader.substring(7);
 
       // Check if at least one field is provided
-      if (!body.product_name && !body.description && body.category_id === undefined && body.department_id === undefined && body.is_active === undefined) {
+      if (!body.name && !body.description && body.category_id === undefined && body.department_id === undefined && body.is_active === undefined) {
         set.status = 422;
         return { error: 'At least one field must be provided' };
       }
@@ -299,7 +299,7 @@ const updateProductHandler = new Elysia()
         await getUserIdFromToken(token);
 
         const updatedProduct = await updateProduct(Number(params.productId), {
-          productName: body.product_name,
+          name: body.name,
           description: body.description,
           categoryId: body.category_id !== undefined ? parseInt(body.category_id) : undefined,
           departmentId: body.department_id,
@@ -327,7 +327,7 @@ const updateProductHandler = new Elysia()
         productId: t.Number(),
       }),
       body: t.Object({
-        product_name: t.Optional(t.String({ maxLength: 255 })),
+        name: t.Optional(t.String({ maxLength: 255 })),
         description: t.Optional(t.String({ maxLength: 255 })),
         category_id: t.Optional(t.String()),
         department_id: t.Optional(t.Number()),
@@ -345,7 +345,7 @@ const updateProductHandler = new Elysia()
                 example: {
                   data: {
                     product_id: 1,
-                    product_name: 'Indomie Goreng Special',
+                    name: 'Indomie Goreng Special',
                     description: 'Edisi terbaru',
                     category_id: 2,
                     department_id: 1,

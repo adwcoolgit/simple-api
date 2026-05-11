@@ -39,7 +39,7 @@ beforeEach(async () => {
   } else {
     // Create a test product first
     const [product] = await db.insert(products).values({
-      productName: 'Test Product for Prices',
+      name: 'Test Product for Prices',
       description: 'Test Description',
       isActive: true,
     }).$returningId();
@@ -323,7 +323,7 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
       } else {
         // Create a test product first
         const [product] = await db.insert(products).values({
-          productName: 'Test Product for Active Prices',
+          name: 'Test Product for Active Prices',
           description: 'Test Description',
         }).$returningId();
 

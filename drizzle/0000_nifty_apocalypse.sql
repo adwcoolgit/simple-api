@@ -8,7 +8,8 @@ CREATE TABLE `inventory` (
 	`max_stock` decimal(12,2),
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-	CONSTRAINT `inventory_id` PRIMARY KEY(`id`)
+	CONSTRAINT `inventory_id` PRIMARY KEY(`id`),
+	CONSTRAINT `inventory_variant_id_warehouse_id_unique` UNIQUE(`variant_id`,`warehouse_id`)
 );
 --> statement-breakpoint
 CREATE TABLE `product_prices` (
