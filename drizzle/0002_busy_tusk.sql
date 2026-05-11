@@ -1,0 +1,1 @@
+ALTER TABLE `product_costs` ADD `created_at` timestamp DEFAULT (now()) NOT NULL;

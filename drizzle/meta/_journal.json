@@ -15,6 +15,13 @@
       "when": 1778468630201,
       "tag": "0001_eager_rocket_raccoon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1778487027288,
+      "tag": "0002_busy_tusk",
+      "breakpoints": true
     }
   ]
 }
