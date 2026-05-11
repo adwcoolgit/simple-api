@@ -18,45 +18,52 @@ const testName = 'Test User';
 // Use pre-created token for faster tests
 let authToken: string;
 let testUserId: number;
+let uniqueId: string;
 let testProductId: number;
 
   beforeEach(async () => {
-    // Clean up test data in correct order: prices -> attributes -> variants -> products
+    // Clean up test data in correct order: inventory -> prices -> attributes -> variants -> products
     try {
-      // Get all test variant IDs first
-      const testVariantIds = await db
-        .select({ id: productVariants.id })
-        .from(productVariants)
-        .where(sql`${productVariants.sku} like 'Test%'`);
+      // Critical: Delete in reverse dependency order to avoid foreign key constraints
 
-      if (testVariantIds.length > 0) {
-        const variantIdList = testVariantIds.map(v => v.id);
+      // 1. Delete inventory records first (references variants)
+      await db.execute(sql`DELETE FROM inventory WHERE variant_id IN (
+        SELECT id FROM product_variants WHERE sku LIKE 'Test%'
+      )`);
 
-        // Delete prices for these variants
-        await db.delete(productPrices).where(inArray(productPrices.variant_id, variantIdList));
+      // 2. Delete prices for test variants
+      await db.execute(sql`DELETE FROM product_prices WHERE variant_id IN (
+        SELECT id FROM product_variants WHERE sku LIKE 'Test%'
+      )`);
 
-        // Delete attributes for these variants
-        await db.delete(variantAttributes).where(inArray(variantAttributes.variantId, variantIdList));
-      }
+      // 3. Delete attributes for test variants
+      await db.execute(sql`DELETE FROM variant_attributes WHERE variant_id IN (
+        SELECT id FROM product_variants WHERE sku LIKE 'Test%'
+      )`);
 
-      // Delete test variants
+      // 4. Delete test variants
       await db.delete(productVariants).where(sql`${productVariants.sku} like 'Test%'`);
 
-      // Get and delete test products (including variants from other tests)
+      // 5. Get and delete test products (including variants from other tests)
       const testProductIds = await db
         .select({ productId: products.productId })
         .from(products)
-        .where(sql`${products.productName} like 'Test%'`);
+        .where(sql`${products.name} like 'Test%'`);
 
       if (testProductIds.length > 0) {
         const productIdList = testProductIds.map(p => p.productId);
+
+        // Delete any remaining inventory for these products' variants
+        await db.execute(sql`DELETE FROM inventory WHERE variant_id IN (
+          SELECT id FROM product_variants WHERE product_id IN (${productIdList.join(',')})
+        )`);
 
         // Delete any remaining variants for these products
         await db.delete(productVariants).where(inArray(productVariants.productId, productIdList));
       }
 
-      // Delete test products
-      await db.delete(products).where(sql`${products.productName} like 'Test%'`);
+      // 6. Delete test products
+      await db.delete(products).where(sql`${products.name} like 'Test%'`);
     } catch (error) {
       console.warn('Cleanup warning (non-critical):', error);
       // Continue with test - cleanup failures shouldn't stop tests
@@ -96,11 +103,12 @@ let testProductId: number;
   }
 
   const timestamp = Date.now();
-  const productName = `Test Product-${timestamp}`;
+  uniqueId = Math.random().toString(36).substring(2, 8);
+  const productName = `Test Product-${timestamp}-${uniqueId}`;
 
   // Create test product
   const [product] = await db.insert(products).values({
-    productName: productName,
+    name: productName,
     description: 'Test product for variants',
     isActive: true,
   }).$returningId();
@@ -149,7 +157,7 @@ describe('POST /api/product-variants', () => {
   it('1. Semua field valid lengkap', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
-      sku: 'Test-SKU-001',
+      sku: `Test-SKU-001-${uniqueId}`,
       variant_name: 'Test Variant',
       uom: 'pcs',
       is_active: true,
@@ -158,7 +166,7 @@ describe('POST /api/product-variants', () => {
     expect(res.status).toBe(201);
     expect(res.json.data).toHaveProperty('id');
     expect(res.json.data.productId).toBe(testProductId);
-    expect(res.json.data.sku).toBe('Test-SKU-001');
+    expect(res.json.data.sku).toBe(`Test-SKU-001-${uniqueId}`);
     expect(res.json.data.variantName).toBe('Test Variant');
     expect(res.json.data.uom).toBe('pcs');
     expect(res.json.data.isActive).toBe(true);
@@ -168,11 +176,11 @@ describe('POST /api/product-variants', () => {
   it('2. Hanya field required (product_id, sku)', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
-      sku: 'Test-SKU-002',
+      sku: `Test-SKU-002-${uniqueId}`,
     });
     expect(res.status).toBe(201);
     expect(res.json.data.productId).toBe(testProductId);
-    expect(res.json.data.sku).toBe('Test-SKU-002');
+    expect(res.json.data.sku).toBe(`Test-SKU-002-${uniqueId}`);
     expect(res.json.data.variantName).toBeNull();
     expect(res.json.data.uom).toBeNull();
     expect(res.json.data.isActive).toBe(true);
@@ -297,7 +305,7 @@ describe('GET /api/product-variants?product_id=', () => {
   it('2. Product tidak memiliki variant', async () => {
     // Create another product without variants
     const [otherProduct] = await db.insert(products).values({
-      productName: 'Other Test Product',
+      name: 'Other Test Product',
       isActive: true,
     }).$returningId();
     const res = await makeAuthRequest('GET', `/api/product-variants?product_id=${otherProduct.productId}`);
@@ -342,7 +350,7 @@ describe('GET /api/product-variants/:id', () => {
   beforeEach(async () => {
     const [variant] = await db.insert(productVariants).values({
       productId: testProductId,
-      sku: 'Test-Detail-SKU',
+      sku: `Test-Detail-SKU-${uniqueId}`,
       variantName: 'Test Detail Variant',
       isActive: true,
       isSellable: true,
@@ -354,7 +362,7 @@ describe('GET /api/product-variants/:id', () => {
     const res = await makeAuthRequest('GET', `/api/product-variants/${testVariantId}`);
     expect(res.status).toBe(200);
     expect(res.json.data.id).toBe(testVariantId);
-    expect(res.json.data.sku).toBe('Test-Detail-SKU');
+    expect(res.json.data.sku).toBe(`Test-Detail-SKU-${uniqueId}`);
   });
 
   it('2. ID tidak ditemukan', async () => {
@@ -395,7 +403,7 @@ describe('PATCH /api/product-variants/:id', () => {
   beforeEach(async () => {
     const [variant] = await db.insert(productVariants).values({
       productId: testProductId,
-      sku: 'Test-Update-SKU',
+      sku: `Test-Update-SKU-${uniqueId}`,
       variantName: 'Original Name',
       isActive: true,
       isSellable: true,
@@ -405,7 +413,7 @@ describe('PATCH /api/product-variants/:id', () => {
 
   it('1. Update sku saja', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-variants/${testVariantId}`, {
-      sku: 'Test-Updated-SKU',
+      sku: `Test-Updated-SKU-${uniqueId}`,
     });
     expect(res.status).toBe(200);
     expect(res.json).toEqual({ data: 'OK' });
@@ -449,7 +457,7 @@ describe('PATCH /api/product-variants/:id', () => {
 
   it('6. Update sku dengan nilai yang sama (milik sendiri)', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-variants/${testVariantId}`, {
-      sku: 'Test-Update-SKU', // Same as original
+      sku: `Test-Update-SKU-${uniqueId}`, // Same as original
     });
     expect(res.status).toBe(200);
     expect(res.json).toEqual({ data: 'OK' });
@@ -523,7 +531,7 @@ describe('DELETE /api/product-variants/:id', () => {
   beforeEach(async () => {
     const [variant] = await db.insert(productVariants).values({
       productId: testProductId,
-      sku: 'Test-Delete-SKU',
+      sku: `Test-Delete-SKU-${uniqueId}`,
       isActive: true,
       isSellable: true,
     }).$returningId();

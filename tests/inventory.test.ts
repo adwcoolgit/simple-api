@@ -76,7 +76,7 @@ beforeEach(async () => {
 
   // Create test product, variant, and warehouse
   const productRes = await db.insert(products).values({
-    productName: `Test Product-${timestamp}`,
+    name: `Test Product-${timestamp}`,
     description: 'Test Description',
   });
   const productId = productRes[0].insertId;

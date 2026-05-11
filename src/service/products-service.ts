@@ -3,7 +3,7 @@ import { db, dbRead } from '../db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 
 export interface CreateProductInput {
-  productName: string;
+  name: string;
   description?: string;
   categoryId?: number;
   departmentId?: number;
@@ -11,7 +11,7 @@ export interface CreateProductInput {
 }
 
 export interface UpdateProductInput {
-  productName?: string;
+  name?: string;
   description?: string;
   categoryId?: number;
   departmentId?: number;
@@ -34,11 +34,11 @@ export interface ProductsPaginationMeta {
 
 export async function createProduct(input: CreateProductInput) {
   // Input validation
-  if (!input.productName || input.productName.trim().length === 0) {
-    throw new Error('product_name is required');
+  if (!input.name || input.name.trim().length === 0) {
+    throw new Error('name is required');
   }
-  if (input.productName.length > 255) {
-    throw new Error('product_name terlalu panjang, maksimal 255 karakter');
+  if (input.name.length > 255) {
+    throw new Error('name terlalu panjang, maksimal 255 karakter');
   }
   if (input.description && input.description.length > 255) {
     throw new Error('description terlalu panjang, maksimal 255 karakter');
@@ -46,7 +46,7 @@ export async function createProduct(input: CreateProductInput) {
 
   try {
     const [newProduct] = await db.insert(products).values({
-      productName: input.productName,
+      name: input.name,
       description: input.description,
       categoryId: input.categoryId,
       departmentId: input.departmentId,
@@ -167,12 +167,12 @@ export async function getProductByProductId(productId: number) {
 
 export async function updateProduct(productId: number, input: UpdateProductInput) {
   // Input validation
-  if (input.productName !== undefined) {
-    if (!input.productName || input.productName.trim().length === 0) {
-      throw new Error('product_name is required');
+  if (input.name !== undefined) {
+    if (!input.name || input.name.trim().length === 0) {
+      throw new Error('name is required');
     }
-    if (input.productName.length > 255) {
-      throw new Error('product_name terlalu panjang, maksimal 255 karakter');
+    if (input.name.length > 255) {
+      throw new Error('name terlalu panjang, maksimal 255 karakter');
     }
   }
   if (input.description !== undefined && input.description.length > 255) {
@@ -193,8 +193,8 @@ export async function updateProduct(productId: number, input: UpdateProductInput
     // Prepare update data
     const updateData: any = {};
 
-    if (input.productName !== undefined) {
-      updateData.productName = input.productName;
+    if (input.name !== undefined) {
+      updateData.name = input.name;
     }
     if (input.description !== undefined) {
       updateData.description = input.description;

@@ -27,7 +27,7 @@ beforeEach(async () => {
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
   await db.execute(sql`DELETE FROM variant_attributes`);
   await db.execute(sql`DELETE FROM product_variants WHERE sku LIKE 'Test-%'`);
-  await db.execute(sql`DELETE FROM products WHERE product_name LIKE 'Test Product-%'`);
+  await db.execute(sql`DELETE FROM products WHERE name LIKE 'Test Product-%'`);
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
 
   // Setup test data
@@ -56,7 +56,7 @@ beforeEach(async () => {
 
   // Create test product
   const [product] = await db.insert(products).values({
-    productName: `Test Product-${timestamp}`,
+    name: `Test Product-${timestamp}`,
     description: 'Test product for variants',
     isActive: true,
   }).$returningId();
