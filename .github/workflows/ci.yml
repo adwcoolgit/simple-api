@@ -88,38 +88,10 @@ jobs:
           "
           echo "✅ Test database created"
 
-      - name: Generate migrations
-        run: bunx drizzle-kit generate
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_NAME: simple_api_test
-          DB_USER: root
-          DB_PASSWORD: rootpassword
-
-      - name: Apply migrations
-        run: bun run db:migrate
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_NAME: simple_api_test
-          DB_USER: root
-          DB_PASSWORD: rootpassword
-
-      - name: Verify database setup
+      - name: Prepare database schema
         run: |
-          echo "🔍 Verifying database tables..."
-          TABLES=$(mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;" | wc -l)
-          if [ "$TABLES" -lt 8 ]; then
-            echo "❌ Expected at least 8 tables, found $TABLES"
-            mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;"
-            exit 1
-          fi
-          echo "✅ All tables created successfully"
-
-          echo "🔍 Verifying product_costs table..."
-          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "DESCRIBE product_costs;" > /dev/null
-          echo "✅ Product costs table verified"
+          echo "📋 Database schema will be created automatically by the application"
+          echo "Skipping manual migration steps - tables created on app startup"
 
       - name: Run unit tests
         run: bun test --verbose --timeout 10000
@@ -154,6 +126,23 @@ jobs:
             echo "❌ Server failed to start properly"
             exit 1
           fi
+
+          echo "🔍 Verifying database tables were created..."
+          TABLES=$(mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;" 2>/dev/null | wc -l)
+          if [ "$TABLES" -lt 8 ]; then
+            echo "❌ Expected at least 8 tables, found $TABLES"
+            mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "SHOW TABLES;" 2>/dev/null || echo "Could not list tables"
+            exit 1
+          fi
+          echo "✅ All tables created successfully"
+
+          echo "🔍 Verifying product_costs table..."
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword simple_api_test -e "DESCRIBE product_costs;" >/dev/null 2>&1
+          if [ $? -ne 0 ]; then
+            echo "❌ Product costs table not found"
+            exit 1
+          fi
+          echo "✅ Product costs table verified"
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
