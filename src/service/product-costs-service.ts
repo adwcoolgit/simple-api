@@ -56,7 +56,7 @@ export async function createProductCost(data: CreateProductCostData): Promise<Pr
   return {
     id: inserted[0].id,
     variant_id: inserted[0].variantId,
-    cost_price: parseFloat(inserted[0].costPrice),
+    cost_price: inserted[0].costPrice,
     effective_date: inserted[0].effectiveDate.toISOString(),
     created_at: inserted[0].createdAt.toISOString(),
   };
@@ -87,7 +87,7 @@ export async function getProductCostsByVariant(variantId: number): Promise<Produ
   return costs.map(cost => ({
     id: cost.id,
     variant_id: cost.variantId,
-    cost_price: parseFloat(cost.costPrice),
+    cost_price: cost.costPrice,
     effective_date: cost.effectiveDate?.toISOString(),
     created_at: cost.createdAt.toISOString(),
   }));
@@ -124,7 +124,7 @@ export async function getCurrentProductCost(variantId: number): Promise<ProductC
   return {
     id: currentCost.id,
     variant_id: currentCost.variantId,
-    cost_price: parseFloat(currentCost.costPrice),
+    cost_price: currentCost.costPrice,
     effective_date: currentCost.effectiveDate?.toISOString(),
     created_at: currentCost.createdAt.toISOString(),
   };
