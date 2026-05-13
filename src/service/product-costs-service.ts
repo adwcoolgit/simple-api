@@ -15,10 +15,10 @@ export interface UpdateProductCostData {
 
 export interface ProductCostResponse {
   id: number;
-  variantId: number;
-  costPrice?: number;
-  effectiveDate?: Date;
-  createdAt: Date;
+  variant_id: number;
+  cost_price?: number;
+  effective_date?: Date;
+  created_at: Date;
 }
 
 /**

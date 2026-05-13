@@ -29,7 +29,11 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
   .derive(authMiddleware)
   .post('/', async ({ body }) => {
     try {
-      const result = await createProductCost(body);
+      const result = await createProductCost({
+        variantId: body.variant_id,
+        costPrice: body.cost_price,
+        effectiveDate: body.effective_date,
+      });
       return {
         data: result,
       };
@@ -106,7 +110,10 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
 
   .patch('/:id', async ({ params, body }) => {
     try {
-      const result = await updateProductCost(params.id, body);
+      const result = await updateProductCost(params.id, {
+        costPrice: body.cost_price,
+        effectiveDate: body.effective_date,
+      });
       return {
         data: result,
       };
