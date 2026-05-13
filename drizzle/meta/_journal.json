@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1778284137553,
-      "tag": "0000_nifty_apocalypse",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1778468630201,
-      "tag": "0001_eager_rocket_raccoon",
+      "when": 1778636197386,
+      "tag": "0000_old_jazinda",
       "breakpoints": true
     }
   ]

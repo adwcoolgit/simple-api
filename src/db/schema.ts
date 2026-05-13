@@ -65,6 +65,14 @@ export const productPrices = mysqlTable('product_prices', {
   end_date: datetime('end_date'),
 });
 
+export const productCosts = mysqlTable('product_costs', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  variantId: bigint('variant_id', { mode: 'number' }).notNull().references(() => productVariants.id),
+  costPrice: decimal('cost_price', { precision: 12, scale: 2 }),
+  effectiveDate: datetime('effective_date'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const warehouses = mysqlTable('warehouses', {
   id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
