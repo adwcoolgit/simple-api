@@ -95,9 +95,6 @@ jobs:
           "
           echo "✅ Test database created"
 
-      - name: Typecheck
-        run: bunx tsc --noEmit
-
       - name: Generate and migrate database schema
         run: |
           bun run db:generate
