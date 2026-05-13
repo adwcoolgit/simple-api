@@ -29,9 +29,15 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
       set.status = 401;
       return { error: auth.error };
     }
+    if (body.cost_price == null) {
+      set.status = 422;
+      return { error: 'cost_price is required' };
+    }
+    if (body.effective_date == null) {
+      set.status = 422;
+      return { error: 'effective_date is required' };
+    }
     try {
-      if (body.cost_price == null) throw new Error('cost_price is required');
-      if (body.effective_date == null) throw new Error('effective_date is required');
       if (body.cost_price < 0) throw new Error('cost_price must be non-negative');
       const result = await createProductCost({
         variantId: body.variant_id,
@@ -55,8 +61,87 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
       effective_date: t.Date(),
     }),
     detail: {
+      summary: 'Create a new product cost record',
       tags: ['Product Costs'],
-      summary: 'Tambah riwayat harga pokok baru',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['variant_id', 'cost_price', 'effective_date'],
+              properties: {
+                variant_id: {
+                  type: 'number',
+                  description: 'The ID of the product variant',
+                  example: 1,
+                },
+                cost_price: {
+                  type: 'number',
+                  minimum: 0,
+                  description: 'The cost price of the product',
+                  example: 150000.0,
+                },
+                effective_date: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'The date when this cost becomes effective',
+                  example: '2026-01-01T00:00:00.000Z',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        201: {
+          description: 'Product cost created successfully',
+          content: {
+            'application/json': {
+              example: {
+                data: {
+                  id: 1,
+                  variant_id: 1,
+                  cost_price: '150000.00',
+                  effective_date: '2026-01-01T00:00:00.000Z',
+                  created_at: '2026-01-01T00:00:00.000Z',
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: 'Unauthorized',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Unauthorized',
+              },
+            },
+          },
+        },
+        404: {
+          description: 'Variant not found',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Variant tidak ditemukan',
+              },
+            },
+          },
+        },
+        422: {
+          description: 'Validation error',
+          content: {
+            'application/json': {
+              example: {
+                error: 'cost_price is required',
+              },
+            },
+          },
+        },
+      },
     },
   })
 
@@ -77,8 +162,49 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
       variantId: t.Number(),
     }),
     detail: {
+      summary: 'Get all product cost records for a specific variant',
       tags: ['Product Costs'],
-      summary: 'Ambil semua riwayat harga pokok per varian',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'List of product costs',
+          content: {
+            'application/json': {
+              example: {
+                data: [
+                  {
+                    id: 1,
+                    variant_id: 1,
+                    cost_price: '150000.00',
+                    effective_date: '2026-01-01T00:00:00.000Z',
+                    created_at: '2026-01-01T00:00:00.000Z',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        401: {
+          description: 'Unauthorized',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Unauthorized',
+              },
+            },
+          },
+        },
+        404: {
+          description: 'Variant not found',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Variant tidak ditemukan',
+              },
+            },
+          },
+        },
+      },
     },
   })
 
@@ -99,8 +225,47 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
       variantId: t.Number(),
     }),
     detail: {
+      summary: 'Get the current active product cost for a specific variant',
       tags: ['Product Costs'],
-      summary: 'Ambil harga pokok yang sedang aktif',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Current active product cost',
+          content: {
+            'application/json': {
+              example: {
+                data: {
+                  id: 1,
+                  variant_id: 1,
+                  cost_price: '150000.00',
+                  effective_date: '2026-01-01T00:00:00.000Z',
+                  created_at: '2026-01-01T00:00:00.000Z',
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: 'Unauthorized',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Unauthorized',
+              },
+            },
+          },
+        },
+        404: {
+          description: 'Variant not found or no active cost',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Harga pokok aktif tidak ditemukan',
+              },
+            },
+          },
+        },
+      },
     },
   })
 
@@ -134,8 +299,74 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
       effective_date: t.Optional(t.Date()),
     }),
     detail: {
+      summary: 'Update a product cost record',
       tags: ['Product Costs'],
-      summary: 'Update data harga pokok',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                cost_price: {
+                  type: 'number',
+                  minimum: 0,
+                  description: 'The updated cost price',
+                  example: 175000.0,
+                },
+                effective_date: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'The updated effective date',
+                  example: '2026-06-01T00:00:00.000Z',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: 'Product cost updated successfully',
+          content: {
+            'application/json': {
+              example: {
+                data: 'OK',
+              },
+            },
+          },
+        },
+        401: {
+          description: 'Unauthorized',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Unauthorized',
+              },
+            },
+          },
+        },
+        404: {
+          description: 'Record not found',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Data tidak ditemukan',
+              },
+            },
+          },
+        },
+        422: {
+          description: 'Validation error',
+          content: {
+            'application/json': {
+              example: {
+                error: 'At least one field must be provided',
+              },
+            },
+          },
+        },
+      },
     },
   })
 
@@ -156,7 +387,40 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
       id: t.Number(),
     }),
     detail: {
+      summary: 'Delete a product cost record',
       tags: ['Product Costs'],
-      summary: 'Hapus data harga pokok',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Product cost deleted successfully',
+          content: {
+            'application/json': {
+              example: {
+                data: 'OK',
+              },
+            },
+          },
+        },
+        401: {
+          description: 'Unauthorized',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Unauthorized',
+              },
+            },
+          },
+        },
+        404: {
+          description: 'Record not found',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Data tidak ditemukan',
+              },
+            },
+          },
+        },
+      },
     },
   });
