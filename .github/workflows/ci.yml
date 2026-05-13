@@ -95,6 +95,15 @@ jobs:
           "
           echo "✅ Test database created"
 
+      - name: Migrate database schema
+        run: bun run db:migrate
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: simple_api_test
+          DB_USER: root
+          DB_PASSWORD: rootpassword
+
       - name: Run unit tests
         run: bun test
         env:
