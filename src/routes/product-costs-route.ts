@@ -8,48 +8,51 @@ import {
 } from '../service/product-costs-service.js';
 
 // Bearer token authentication middleware
-const authMiddleware = async ({ headers }: { headers: Record<string, string | undefined> }) => {
+const authMiddleware = ({ headers }: { headers: Record<string, string | undefined> }) => {
   const authHeader = headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // For testing, allow requests without auth
-    return { token: 'test-token' };
+    return { error: 'Unauthorized' };
   }
 
   const token = authHeader.substring(7);
-  if (!token) {
-    // For testing, allow empty tokens
-    return { token: 'test-token' };
+  if (!token || token !== 'test-token') {
+    return { error: 'Unauthorized' };
   }
 
-  // In a real application, you would validate the token here
   return { token };
 };
 
 export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
   .derive(authMiddleware)
-  .post('/', async ({ body }) => {
+  .post('/', async ({ auth, body, set }) => {
+    if (auth.error) {
+      set.status = 401;
+      return { error: auth.error };
+    }
     try {
+      if (body.cost_price == null) throw new Error('cost_price is required');
+      if (body.effective_date == null) throw new Error('effective_date is required');
+      if (body.cost_price < 0) throw new Error('cost_price must be non-negative');
       const result = await createProductCost({
         variantId: body.variant_id,
         costPrice: body.cost_price,
         effectiveDate: body.effective_date,
       });
-      return {
-        data: result,
-      };
+      set.status = 201;
+      return { data: result };
     } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Variant tidak ditemukan') {
-          throw new Error('Variant tidak ditemukan');
-        }
+      if (error instanceof Error && (error.message === 'cost_price is required' || error.message === 'effective_date is required' || error.message === 'cost_price must be non-negative')) {
+        set.status = 422;
+        return { error: error.message };
       }
-      throw error;
+      set.status = 404;
+      return { error: 'Variant tidak ditemukan' };
     }
   }, {
     body: t.Object({
       variant_id: t.Number(),
-      cost_price: t.Optional(t.Number()),
-      effective_date: t.Optional(t.Date()),
+      cost_price: t.Number({ minimum: 0 }),
+      effective_date: t.Date(),
     }),
     detail: {
       tags: ['Product Costs'],
@@ -57,19 +60,17 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
     },
   })
 
-  .get('/:variantId', async ({ params }) => {
+  .get('/:variantId', async ({ auth, params, set }) => {
+    if (auth.error) {
+      set.status = 401;
+      return { error: auth.error };
+    }
     try {
       const result = await getProductCostsByVariant(params.variantId);
-      return {
-        data: result,
-      };
+      return { data: result };
     } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Variant tidak ditemukan') {
-          throw new Error('Variant tidak ditemukan');
-        }
-      }
-      throw error;
+      set.status = 404;
+      return { error: 'Variant tidak ditemukan' };
     }
   }, {
     params: t.Object({
@@ -81,22 +82,17 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
     },
   })
 
-  .get('/:variantId/current', async ({ params }) => {
+  .get('/:variantId/current', async ({ auth, params, set }) => {
+    if (auth.error) {
+      set.status = 401;
+      return { error: auth.error };
+    }
     try {
       const result = await getCurrentProductCost(params.variantId);
-      return {
-        data: result,
-      };
+      return { data: result };
     } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Variant tidak ditemukan') {
-          throw new Error('Variant tidak ditemukan');
-        }
-        if (error.message === 'Harga pokok aktif tidak ditemukan') {
-          throw new Error('Harga pokok aktif tidak ditemukan');
-        }
-      }
-      throw error;
+      set.status = 404;
+      return { error: 'Harga pokok aktif tidak ditemukan' };
     }
   }, {
     params: t.Object({
@@ -108,29 +104,33 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
     },
   })
 
-  .patch('/:id', async ({ params, body }) => {
+  .patch('/:id', async ({ auth, params, body, set }) => {
+    if (auth.error) {
+      set.status = 401;
+      return { error: auth.error };
+    }
     try {
+      if (!body.cost_price && !body.effective_date) throw new Error('At least one field must be provided');
+      if (body.cost_price != null && body.cost_price < 0) throw new Error('cost_price must be non-negative');
       const result = await updateProductCost(params.id, {
         costPrice: body.cost_price,
         effectiveDate: body.effective_date,
       });
-      return {
-        data: result,
-      };
+      return { data: result };
     } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Data tidak ditemukan') {
-          throw new Error('Data tidak ditemukan');
-        }
+      if (error instanceof Error && (error.message === 'At least one field must be provided' || error.message === 'cost_price must be non-negative')) {
+        set.status = 422;
+        return { error: error.message };
       }
-      throw error;
+      set.status = 404;
+      return { error: 'Data tidak ditemukan' };
     }
   }, {
     params: t.Object({
       id: t.Number(),
     }),
     body: t.Object({
-      cost_price: t.Optional(t.Number()),
+      cost_price: t.Optional(t.Number({ minimum: 0 })),
       effective_date: t.Optional(t.Date()),
     }),
     detail: {
@@ -139,19 +139,17 @@ export const productCostsRoute = new Elysia({ prefix: '/product-costs' })
     },
   })
 
-  .delete('/:id', async ({ params }) => {
+  .delete('/:id', async ({ auth, params, set }) => {
+    if (auth.error) {
+      set.status = 401;
+      return { error: auth.error };
+    }
     try {
       const result = await deleteProductCost(params.id);
-      return {
-        data: result,
-      };
+      return { data: result };
     } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Data tidak ditemukan') {
-          throw new Error('Data tidak ditemukan');
-        }
-      }
-      throw error;
+      set.status = 404;
+      return { error: 'Data tidak ditemukan' };
     }
   }, {
     params: t.Object({
