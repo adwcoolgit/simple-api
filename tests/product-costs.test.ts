@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, mock } from 'bun:test';
 import { Elysia } from 'elysia';
 import { productCostsRoute } from '../src/routes/product-costs-route';
 import { db } from '../src/db';
