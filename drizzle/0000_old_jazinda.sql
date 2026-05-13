@@ -8,8 +8,16 @@ CREATE TABLE `inventory` (
 	`max_stock` decimal(12,2),
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-	CONSTRAINT `inventory_id` PRIMARY KEY(`id`),
-	CONSTRAINT `inventory_variant_id_warehouse_id_unique` UNIQUE(`variant_id`,`warehouse_id`)
+	CONSTRAINT `inventory_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `product_costs` (
+	`id` bigint AUTO_INCREMENT NOT NULL,
+	`variant_id` bigint NOT NULL,
+	`cost_price` decimal(12,2),
+	`effective_date` datetime,
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `product_costs_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
 CREATE TABLE `product_prices` (
@@ -36,7 +44,7 @@ CREATE TABLE `product_variants` (
 --> statement-breakpoint
 CREATE TABLE `products` (
 	`product_id` bigint AUTO_INCREMENT NOT NULL,
-	`product_name` varchar(255) NOT NULL,
+	`name` varchar(255) NOT NULL,
 	`description` varchar(255),
 	`category_id` bigint,
 	`department_id` smallint,
@@ -85,6 +93,7 @@ CREATE TABLE `warehouses` (
 --> statement-breakpoint
 ALTER TABLE `inventory` ADD CONSTRAINT `inventory_variant_id_product_variants_id_fk` FOREIGN KEY (`variant_id`) REFERENCES `product_variants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `inventory` ADD CONSTRAINT `inventory_warehouse_id_warehouses_id_fk` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `product_costs` ADD CONSTRAINT `product_costs_variant_id_product_variants_id_fk` FOREIGN KEY (`variant_id`) REFERENCES `product_variants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_prices` ADD CONSTRAINT `product_prices_variant_id_product_variants_id_fk` FOREIGN KEY (`variant_id`) REFERENCES `product_variants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_variants` ADD CONSTRAINT `product_variants_product_id_products_product_id_fk` FOREIGN KEY (`product_id`) REFERENCES `products`(`product_id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `variant_attributes` ADD CONSTRAINT `variant_attributes_variant_id_product_variants_id_fk` FOREIGN KEY (`variant_id`) REFERENCES `product_variants`(`id`) ON DELETE no action ON UPDATE no action;
