@@ -13,7 +13,7 @@ import {
 export const productCostsRoute = new Elysia({ prefix: '/api' })
   .use(authMiddleware)
   .onError(({ error, set }) => {
-    if (error.name === 'ValidationError') {
+    if (error instanceof Error && error.name === 'ValidationError') {
       set.status = 422;
       return { error: 'Validation error' };
     }

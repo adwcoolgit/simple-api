@@ -13,7 +13,7 @@ import {
 export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product Images'] })
   .use(authMiddleware)
   .onError(({ error, set }) => {
-    if (error.name === 'ValidationError') {
+    if (error instanceof Error && error.name === 'ValidationError') {
       set.status = 422;
       return { error: 'Validation error' };
     }
