@@ -5,7 +5,7 @@ import { routes } from '../src/routes';
 import { usersRoute } from '../src/routes/users-route';
 import { productsRoute } from '../src/routes/products-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, variantAttributes, productPrices } from '../src/db/schema';
+import { users, sessions, products, productVariants, variantAttributes, productPrices, productCosts, productImages } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -43,7 +43,7 @@ beforeEach(async () => {
   // Wait for database to be ready
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Clean up test data in correct order: prices -> attributes -> variants -> products
+  // Clean up test data in correct order: prices -> attributes -> inventory -> costs -> images -> variants -> products
   try {
     // Most aggressive cleanup - delete everything in reverse dependency order
     await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
@@ -52,6 +52,8 @@ beforeEach(async () => {
     await db.execute(sql`DELETE FROM product_prices`);
     await db.execute(sql`DELETE FROM variant_attributes`);
     await db.execute(sql`DELETE FROM inventory`);
+    await db.execute(sql`DELETE FROM product_costs`);
+    await db.execute(sql`DELETE FROM product_images`);
     await db.execute(sql`DELETE FROM product_variants`);
     await db.execute(sql`DELETE FROM products`);
     await db.execute(sql`DELETE FROM warehouses`);

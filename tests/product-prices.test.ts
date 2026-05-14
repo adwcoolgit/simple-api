@@ -7,7 +7,7 @@ import { productVariantsRoute } from '../src/routes/product-variants-route';
 import { variantAttributesRoute } from '../src/routes/variant-attributes-route';
 import { productPricesRoute } from '../src/routes/product-prices-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, productPrices } from '../src/db/schema';
+import { users, sessions, products, productVariants, productPrices, productCosts, productImages } from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 

@@ -6,7 +6,7 @@ import { productsRoute } from '../src/routes/products-route';
 import { productVariantsRoute } from '../src/routes/product-variants-route';
 import { variantAttributesRoute } from '../src/routes/variant-attributes-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, variantAttributes } from '../src/db/schema';
+import { users, sessions, products, productVariants, variantAttributes, productCosts, productImages } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -26,6 +26,8 @@ beforeEach(async () => {
   // Quick cleanup - delete in correct order due to foreign key constraints
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
   await db.execute(sql`DELETE FROM variant_attributes`);
+  await db.execute(sql`DELETE FROM product_costs`);
+  await db.execute(sql`DELETE FROM product_images`);
   await db.execute(sql`DELETE FROM product_variants WHERE sku LIKE 'Test-%'`);
   await db.execute(sql`DELETE FROM products WHERE name LIKE 'Test Product-%'`);
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);

@@ -2,9 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, mock } from 'bu
 import { Elysia } from 'elysia';
 import { productCostsRoute } from '../src/routes/product-costs-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, productCosts } from '../src/db/schema';
+import { users, sessions, products, productVariants, productCosts, productImages } from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 
 // Mock Redis
 mock('ioredis', () => ({
@@ -82,11 +83,18 @@ beforeEach(async () => {
   if (!dbAvailable) return;
 
   // Cleanup test data
-  await db.delete(productCosts).where(sql`1=1`);
-  await db.delete(productVariants).where(sql`1=1`);
-  await db.delete(products).where(sql`1=1`);
-  await db.delete(sessions).where(sql`1=1`);
-  await db.delete(users).where(sql`1=1`);
+  try {
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
+    await db.delete(productCosts).where(sql`1=1`);
+    await db.delete(productImages).where(sql`1=1`);
+    await db.delete(productVariants).where(sql`1=1`);
+    await db.delete(products).where(sql`1=1`);
+    await db.delete(sessions).where(sql`1=1`);
+    await db.delete(users).where(sql`1=1`);
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
+  } catch (error) {
+    console.log('Before cleanup error:', error);
+  }
 
   // Create test user
   const hashedPassword = await bcrypt.hash(testPassword, 12);
@@ -105,27 +113,41 @@ beforeEach(async () => {
   });
 
   // Create test product
-  const [product] = await db.insert(products).values({
+  testProductId = randomUUID();
+  await db.insert(products).values({
+    productId: testProductId,
     name: 'Test Product for Costs',
     description: 'Test Description',
     isActive: true,
-  }).$returningId();
-  testProductId = product!.productId;
+  });
 
   // Create test variant
-  const [variant] = await db.insert(productVariants).values({
+  testVariantId = Math.floor(Math.random() * 1000000);
+  await db.insert(productVariants).values({
+    id: testVariantId,
     productId: testProductId,
-    sku: `TEST-COST-SKU-${Date.now()}`,
+    sku: `TEST-COST-VARIANT-${Date.now()}`,
     variantName: 'Test Variant for Costs',
     isActive: true,
     isSellable: true,
-  }).$returningId();
-  testVariantId = variant!.id;
+  });
 });
 
 afterEach(async () => {
   if (!dbAvailable) return;
   // Cleanup after tests
+  try {
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
+    await db.delete(productCosts).where(sql`1=1`);
+    await db.delete(productImages).where(sql`1=1`);
+    await db.delete(productVariants).where(sql`1=1`);
+    await db.delete(products).where(sql`1=1`);
+    await db.delete(sessions).where(sql`1=1`);
+    await db.delete(users).where(sql`1=1`);
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
+  } catch (error) {
+    console.log('Cleanup error:', error);
+  }
 });
 
 // Helper function to make authenticated requests
@@ -167,7 +189,7 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
 }
 
 describe('POST /api/product-costs', () => {
-  it.skip('should create product cost with all valid fields', async () => {
+  it('should create product cost with all valid fields', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -183,7 +205,7 @@ describe('POST /api/product-costs', () => {
     expect(res.json.data.created_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
 
-  it.skip('should return 404 when variant does not exist', async () => {
+  it('should return 404 when variant does not exist', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -195,7 +217,7 @@ describe('POST /api/product-costs', () => {
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
 
-  it.skip('should return 422 when cost_price is negative', async () => {
+  it('should return 422 when cost_price is negative', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -206,7 +228,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(422);
   });
 
-  it.skip('should return 422 when cost_price is not provided', async () => {
+  it('should return 422 when cost_price is not provided', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -216,7 +238,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(422);
   });
 
-  it.skip('should return 422 when effective_date is not provided', async () => {
+  it('should return 422 when effective_date is not provided', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -226,7 +248,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(422);
   });
 
-  it.skip('should return 401 when Authorization header is missing', async () => {
+  it('should return 401 when Authorization header is missing', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('POST', '/api/product-costs', {
@@ -237,7 +259,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(401);
   });
 
-  it.skip('should return 401 when token is invalid', async () => {
+  it('should return 401 when token is invalid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('POST', '/api/product-costs', {
@@ -250,7 +272,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(401);
   });
 
-  it.skip('should allow multiple cost records for the same variant', async () => {
+  it('should allow multiple cost records for the same variant', async () => {
     if (!dbAvailable) return;
 
     // Create first cost
@@ -289,7 +311,7 @@ describe('GET /api/product-costs/:variantId', () => {
     ]);
   });
 
-  it.skip('should return all cost records for existing variant', async () => {
+  it('should return all cost records for existing variant', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`);
@@ -302,7 +324,7 @@ describe('GET /api/product-costs/:variantId', () => {
     expect(res.json.data[0]).toHaveProperty('created_at');
   });
 
-  it.skip('should return 404 when variant does not exist', async () => {
+  it('should return 404 when variant does not exist', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', '/api/product-costs/99999');
@@ -310,14 +332,14 @@ describe('GET /api/product-costs/:variantId', () => {
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
 
-  it.skip('should return 401 when Authorization header is missing', async () => {
+  it('should return 401 when Authorization header is missing', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`);
     expect(res.status).toBe(401);
   });
 
-  it.skip('should return 401 when token is invalid', async () => {
+  it('should return 401 when token is invalid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`, undefined, {
@@ -326,7 +348,7 @@ describe('GET /api/product-costs/:variantId', () => {
     expect(res.status).toBe(401);
   });
 
-  it.skip('should return empty array when variant exists but has no cost data', async () => {
+  it('should return empty array when variant exists but has no cost data', async () => {
     if (!dbAvailable) return;
 
     // Delete costs
@@ -339,7 +361,7 @@ describe('GET /api/product-costs/:variantId', () => {
 });
 
 describe('GET /api/product-costs/:variantId/current', () => {
-  it.skip('should return most recent cost with effective_date in the past', async () => {
+  it('should return most recent cost with effective_date in the past', async () => {
     if (!dbAvailable) return;
 
     // Create cost with past date
@@ -355,7 +377,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
     expect(res.json.data.cost_price).toBe('150000.00');
   });
 
-  it.skip('should return 404 when no active cost is found', async () => {
+  it('should return 404 when no active cost is found', async () => {
     if (!dbAvailable) return;
 
     // Create cost with future date
@@ -370,7 +392,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
     expect(res.json.error).toBe('Harga pokok aktif tidak ditemukan');
   });
 
-  it.skip('should return 404 when variant has no cost data', async () => {
+  it('should return 404 when variant has no cost data', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`);
@@ -378,7 +400,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
     expect(res.json.error).toBe('Harga pokok aktif tidak ditemukan');
   });
 
-  it.skip('should return 404 when variant does not exist', async () => {
+  it('should return 404 when variant does not exist', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', '/api/product-costs/99999/current');
@@ -386,14 +408,14 @@ describe('GET /api/product-costs/:variantId/current', () => {
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
 
-  it.skip('should return 401 when Authorization header is missing', async () => {
+  it('should return 401 when Authorization header is missing', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`);
     expect(res.status).toBe(401);
   });
 
-  it.skip('should return 401 when token is invalid', async () => {
+  it('should return 401 when token is invalid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`, undefined, {
@@ -407,15 +429,16 @@ describe('PATCH /api/product-costs/:id', () => {
   beforeEach(async () => {
     if (!dbAvailable) return;
 
-    const [cost] = await db.insert(productCosts).values({
+    testCostId = Math.floor(Math.random() * 1000000);
+    await db.insert(productCosts).values({
+      id: testCostId,
       variantId: testVariantId,
       costPrice: '150000.00',
       effectiveDate: new Date('2026-01-01T00:00:00.000Z'),
-    }).$returningId();
-    testCostId = cost!.id;
+    });
   });
 
-  it.skip('should update cost_price only', async () => {
+  it('should update cost_price only', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -425,7 +448,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it.skip('should update effective_date only', async () => {
+  it('should update effective_date only', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -435,7 +458,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it.skip('should update all fields', async () => {
+  it('should update all fields', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -446,7 +469,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it.skip('should return 404 when record does not exist', async () => {
+  it('should return 404 when record does not exist', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', '/api/product-costs/99999', {
@@ -456,14 +479,14 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.json.error).toBe('Data tidak ditemukan');
   });
 
-  it.skip('should return 422 when request body is empty', async () => {
+  it('should return 422 when request body is empty', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {});
     expect(res.status).toBe(422);
   });
 
-  it.skip('should return 422 when cost_price is negative', async () => {
+  it('should return 422 when cost_price is negative', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -472,7 +495,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.status).toBe(422);
   });
 
-  it.skip('should return 401 when Authorization header is missing', async () => {
+  it('should return 401 when Authorization header is missing', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -481,7 +504,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.status).toBe(401);
   });
 
-  it.skip('should return 401 when token is invalid', async () => {
+  it('should return 401 when token is invalid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -497,15 +520,16 @@ describe('DELETE /api/product-costs/:id', () => {
   beforeEach(async () => {
     if (!dbAvailable) return;
 
-    const [cost] = await db.insert(productCosts).values({
+    testCostId = Math.floor(Math.random() * 1000000);
+    await db.insert(productCosts).values({
+      id: testCostId,
       variantId: testVariantId,
       costPrice: '150000.00',
       effectiveDate: new Date('2026-01-01T00:00:00.000Z'),
-    }).$returningId();
-    testCostId = cost!.id;
+    });
   });
 
-  it.skip('should successfully delete existing record', async () => {
+  it('should successfully delete existing record', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('DELETE', `/api/product-costs/${testCostId}`);
@@ -513,7 +537,7 @@ describe('DELETE /api/product-costs/:id', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it.skip('should return 404 when record does not exist', async () => {
+  it('should return 404 when record does not exist', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('DELETE', '/api/product-costs/99999');
@@ -521,14 +545,14 @@ describe('DELETE /api/product-costs/:id', () => {
     expect(res.json.error).toBe('Data tidak ditemukan');
   });
 
-  it.skip('should return 401 when Authorization header is missing', async () => {
+  it('should return 401 when Authorization header is missing', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('DELETE', `/api/product-costs/${testCostId}`);
     expect(res.status).toBe(401);
   });
 
-  it.skip('should return 401 when token is invalid', async () => {
+  it('should return 401 when token is invalid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('DELETE', `/api/product-costs/${testCostId}`, undefined, {
