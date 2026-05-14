@@ -1,0 +1,203 @@
+import { eq, and, desc, sql } from 'drizzle-orm';
+import { db } from '../db/index.js';
+import { productVariants, productImages } from '../db/schema.js';
+
+export interface AddProductImagesData {
+  variantId: number;
+  images: Array<{
+    imageUrl: string;
+    isPrimary: boolean;
+  }>;
+}
+
+export interface ProductImageResponse {
+  id: number;
+  variantId?: number;
+  imageUrl?: string;
+  isPrimary: boolean;
+}
+
+/**
+ * Add multiple product images for a variant
+ */
+export async function addProductImages(data: AddProductImagesData): Promise<ProductImageResponse[]> {
+  // Validate business logic
+  if (!data.images || data.images.length === 0) {
+    throw new Error('Images must not be empty');
+  }
+
+  const primaryCount = data.images.filter(img => img.isPrimary).length;
+  if (primaryCount !== 1) {
+    throw new Error('Exactly one image must be set as primary');
+  }
+
+  // Validate that variant exists if provided
+  if (data.variantId) {
+    const existingVariant = await db
+      .select()
+      .from(productVariants)
+      .where(eq(productVariants.id, data.variantId))
+      .limit(1);
+
+    if (!existingVariant.length) {
+      throw new Error('Variant tidak ditemukan');
+    }
+  }
+
+  // Run in transaction
+  return await db.transaction(async (tx) => {
+    // Reset all existing images for this variant to non-primary
+    if (data.variantId) {
+      await tx
+        .update(productImages)
+        .set({ isPrimary: false })
+        .where(eq(productImages.variantId, data.variantId));
+    }
+
+    // Bulk insert new images
+    const insertData = data.images.map(img => ({
+      variantId: data.variantId,
+      imageUrl: img.imageUrl,
+      isPrimary: img.isPrimary,
+    }));
+
+    const inserted = await tx
+      .insert(productImages)
+      .values(insertData)
+      .$returningId();
+
+    // Get the full records
+    const ids = inserted.map(i => i.id);
+    const result = await tx
+      .select()
+      .from(productImages)
+      .where(sql`${productImages.id} IN (${ids.join(',')})`);
+
+    return result.map(img => ({
+      id: img.id,
+      variantId: img.variantId,
+      imageUrl: img.imageUrl,
+      isPrimary: img.isPrimary,
+    }));
+  });
+}
+
+/**
+ * Get all images for a specific variant
+ */
+export async function getImagesByVariant(variantId: number): Promise<ProductImageResponse[]> {
+  // Validate that variant exists
+  const existingVariant = await db
+    .select()
+    .from(productVariants)
+    .where(eq(productVariants.id, variantId))
+    .limit(1);
+
+  if (!existingVariant.length) {
+    throw new Error('Variant tidak ditemukan');
+  }
+
+  // Get all images, ordered by is_primary DESC
+  const images = await db
+    .select()
+    .from(productImages)
+    .where(eq(productImages.variantId, variantId))
+    .orderBy(desc(productImages.isPrimary), desc(productImages.id));
+
+  return images.map(img => ({
+    id: img.id,
+    variantId: img.variantId,
+    imageUrl: img.imageUrl,
+    isPrimary: img.isPrimary,
+  }));
+}
+
+/**
+ * Set an image as primary for its variant
+ */
+export async function setPrimaryImage(imageId: number, variantId: number): Promise<string> {
+  // Check if image exists and belongs to the variant
+  const existingImage = await db
+    .select()
+    .from(productImages)
+    .where(and(eq(productImages.id, imageId), eq(productImages.variantId, variantId)))
+    .limit(1);
+
+  if (!existingImage.length) {
+    throw new Error('Image not found');
+  }
+
+  // Run in transaction
+  await db.transaction(async (tx) => {
+    // Reset all images for this variant to non-primary
+    await tx
+      .update(productImages)
+      .set({ isPrimary: false })
+      .where(eq(productImages.variantId, variantId));
+
+    // Set the specified image as primary
+    await tx
+      .update(productImages)
+      .set({ isPrimary: true })
+      .where(eq(productImages.id, imageId));
+  });
+
+  return 'OK';
+}
+
+/**
+ * Get the primary image for a variant
+ */
+export async function getPrimaryImage(variantId: number): Promise<ProductImageResponse> {
+  // Validate that variant exists
+  const existingVariant = await db
+    .select()
+    .from(productVariants)
+    .where(eq(productVariants.id, variantId))
+    .limit(1);
+
+  if (!existingVariant.length) {
+    throw new Error('Variant tidak ditemukan');
+  }
+
+  // Get the primary image
+  const [primaryImage] = await db
+    .select()
+    .from(productImages)
+    .where(and(eq(productImages.variantId, variantId), eq(productImages.isPrimary, true)))
+    .limit(1);
+
+  if (!primaryImage) {
+    throw new Error('Gambar primary tidak ditemukan');
+  }
+
+  return {
+    id: primaryImage.id,
+    variantId: primaryImage.variantId,
+    imageUrl: primaryImage.imageUrl,
+    isPrimary: primaryImage.isPrimary,
+  };
+}
+
+/**
+ * Delete a product image
+ */
+export async function deleteProductImage(imageId: number): Promise<string> {
+  // Check if image exists
+  const existingImage = await db
+    .select()
+    .from(productImages)
+    .where(eq(productImages.id, imageId))
+    .limit(1);
+
+  if (!existingImage.length) {
+    throw new Error('Image not found');
+  }
+
+  // Delete the image
+  await db
+    .delete(productImages)
+    .where(eq(productImages.id, imageId));
+
+  return 'OK';
+}
