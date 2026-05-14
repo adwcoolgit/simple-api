@@ -61,17 +61,10 @@ export async function addProductImages(data: AddProductImagesData): Promise<Prod
       isPrimary: img.isPrimary,
     }));
 
-    const inserted = await tx
+    const result = await tx
       .insert(productImages)
       .values(insertData)
-      .$returningId();
-
-    // Get the full records
-    const ids = inserted.map(i => i.id);
-    const result = await tx
-      .select()
-      .from(productImages)
-      .where(sql`${productImages.id} IN (${ids.join(',')})`);
+      .returning();
 
     return result.map(img => ({
       id: img.id,
