@@ -44,8 +44,12 @@ export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product I
         set.status = 401;
         return { error: 'Unauthorized' };
       }
-      if (error.message === 'Images must not be empty' || error.message === 'Exactly one image must be set as primary' || error.message === 'Variant tidak ditemukan') {
+      if (error.message === 'Images must not be empty' || error.message === 'Exactly one image must be set as primary') {
         set.status = 422;
+        return { error: error.message };
+      }
+      if (error.message === 'Variant tidak ditemukan') {
+        set.status = 404;
         return { error: error.message };
       }
       throw error;
