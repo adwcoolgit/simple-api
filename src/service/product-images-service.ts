@@ -1,4 +1,4 @@
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { productVariants, productImages } from '../db/schema.js';
 
@@ -54,24 +54,28 @@ export async function addProductImages(data: AddProductImagesData): Promise<Prod
         .where(eq(productImages.variantId, data.variantId));
     }
 
-    // Bulk insert new images
-    const insertData = data.images.map(img => ({
-      variantId: data.variantId,
-      imageUrl: img.imageUrl,
-      isPrimary: img.isPrimary,
-    }));
+    // Insert images one by one to ensure proper handling
+    const results: ProductImageResponse[] = [];
 
-    const result = await tx
-      .insert(productImages)
-      .values(insertData)
-      .returning();
+    for (const img of data.images) {
+      const [inserted] = await tx
+        .insert(productImages)
+        .values({
+          variantId: data.variantId,
+          imageUrl: img.imageUrl,
+          isPrimary: img.isPrimary,
+        })
+        .returning();
 
-    return result.map(img => ({
-      id: img.id,
-      variant_id: img.variantId,
-      image_url: img.imageUrl,
-      is_primary: img.isPrimary,
-    }));
+      results.push({
+        id: inserted.id,
+        variant_id: inserted.variantId,
+        image_url: inserted.imageUrl,
+        is_primary: inserted.isPrimary,
+      });
+    }
+
+    return results;
   });
 }
 
