@@ -7,28 +7,26 @@ import {
   deleteProductImage,
 } from '../service/product-images-service';
 
-const authMiddleware = ({ headers }: { headers: Record<string, string | undefined> }) => {
-  const authHeader = headers.authorization;
+const bearerAuth = ({ headers }: { headers: Record<string, string | undefined> }) => {
+  const authHeader = headers['authorization'] || headers['Authorization'];
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { error: 'Unauthorized' };
+    throw new Error('Unauthorized');
   }
 
   const token = authHeader.substring(7);
+
   if (!token || token !== 'test-token') {
-    return { error: 'Unauthorized' };
+    throw new Error('Unauthorized');
   }
 
   return { token };
 };
 
 export const productImagesRoute = new Elysia({ prefix: '/api/product-images', tags: ['Product Images'] })
-  .derive(authMiddleware)
-  .post('/', async ({ auth, body, set }) => {
-    if (auth.error) {
-      set.status = 401;
-      return { error: auth.error };
-    }
+  .post('/', async ({ body, set, headers }: any) => {
     try {
+      bearerAuth({ headers });
       const result = await addProductImages({
         variantId: body.variant_id,
         images: body.images.map((img: any) => ({
@@ -39,9 +37,15 @@ export const productImagesRoute = new Elysia({ prefix: '/api/product-images', ta
       set.status = 201;
       return { data: result };
     } catch (error) {
-      if (error instanceof Error && (error.message === 'Images must not be empty' || error.message === 'Exactly one image must be set as primary' || error.message === 'Variant tidak ditemukan')) {
-        set.status = 422;
-        return { error: error.message };
+      if (error instanceof Error) {
+        if (error.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
+        if (error.message === 'Images must not be empty' || error.message === 'Exactly one image must be set as primary' || error.message === 'Variant tidak ditemukan') {
+          set.status = 422;
+          return { error: error.message };
+        }
       }
       set.status = 404;
       return { error: 'Variant tidak ditemukan' };
@@ -163,17 +167,23 @@ export const productImagesRoute = new Elysia({ prefix: '/api/product-images', ta
     },
   })
 
-  .get('/:variantId', async ({ auth, params, set }) => {
-    if (auth.error) {
-      set.status = 401;
-      return { error: auth.error };
-    }
+  .get('/:variantId', async ({ params, set, headers }: any) => {
     try {
+      bearerAuth({ headers });
       const result = await getImagesByVariant(params.variantId);
       return { data: result };
     } catch (error) {
-      set.status = 404;
-      return { error: 'Variant tidak ditemukan' };
+      if (error instanceof Error) {
+        if (error.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
+        if (error.message === 'Variant tidak ditemukan') {
+          set.status = 404;
+          return { error: 'Variant tidak ditemukan' };
+        }
+      }
+      throw error;
     }
   }, {
     params: t.Object({
@@ -231,17 +241,23 @@ export const productImagesRoute = new Elysia({ prefix: '/api/product-images', ta
     },
   })
 
-  .get('/:variantId/current', async ({ auth, params, set }) => {
-    if (auth.error) {
-      set.status = 401;
-      return { error: auth.error };
-    }
+  .get('/:variantId/current', async ({ params, set, headers }: any) => {
     try {
+      bearerAuth({ headers });
       const result = await getPrimaryImage(params.variantId);
       return { data: result };
     } catch (error) {
-      set.status = 404;
-      return { error: 'Gambar primary tidak ditemukan' };
+      if (error instanceof Error) {
+        if (error.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
+        if (error.message === 'Variant tidak ditemukan' || error.message === 'Gambar primary tidak ditemukan') {
+          set.status = 404;
+          return { error: error.message };
+        }
+      }
+      throw error;
     }
   }, {
     params: t.Object({
@@ -291,18 +307,21 @@ export const productImagesRoute = new Elysia({ prefix: '/api/product-images', ta
     },
   })
 
-  .patch('/:imageId/primary', async ({ auth, params, body, set }) => {
-    if (auth.error) {
-      set.status = 401;
-      return { error: auth.error };
-    }
+  .patch('/:imageId/primary', async ({ params, body, set, headers }: any) => {
     try {
+      bearerAuth({ headers });
       const result = await setPrimaryImage(params.imageId, body.variant_id);
       return { data: result };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Image not found') {
-        set.status = 404;
-        return { error: 'Image not found' };
+      if (error instanceof Error) {
+        if (error.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
+        if (error.message === 'Image not found') {
+          set.status = 404;
+          return { error: 'Image not found' };
+        }
       }
       throw error;
     }
@@ -368,18 +387,21 @@ export const productImagesRoute = new Elysia({ prefix: '/api/product-images', ta
     },
   })
 
-  .delete('/:imageId', async ({ auth, params, set }) => {
-    if (auth.error) {
-      set.status = 401;
-      return { error: auth.error };
-    }
+  .delete('/:imageId', async ({ params, set, headers }: any) => {
     try {
+      bearerAuth({ headers });
       const result = await deleteProductImage(params.imageId);
       return { data: result };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Image not found') {
-        set.status = 404;
-        return { error: 'Image not found' };
+      if (error instanceof Error) {
+        if (error.message === 'Unauthorized') {
+          set.status = 401;
+          return { error: 'Unauthorized' };
+        }
+        if (error.message === 'Image not found') {
+          set.status = 404;
+          return { error: 'Image not found' };
+        }
       }
       throw error;
     }
