@@ -5,7 +5,7 @@ import { usersRoute } from '../src/routes/users-route';
 import { productsRoute } from '../src/routes/products-route';
 import { productVariantsRoute } from '../src/routes/product-variants-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, variantAttributes, productPrices } from '../src/db/schema';
+import { users, sessions, products, productVariants, variantAttributes, productPrices, productCosts, productImages } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -22,7 +22,7 @@ let uniqueId: string;
 let testProductId: number;
 
   beforeEach(async () => {
-    // Clean up test data in correct order: inventory -> prices -> attributes -> variants -> products
+    // Clean up test data in correct order: inventory -> prices -> attributes -> costs -> images -> variants -> products
     try {
       // Critical: Delete in reverse dependency order to avoid foreign key constraints
 
@@ -41,7 +41,17 @@ let testProductId: number;
         SELECT id FROM product_variants WHERE sku LIKE 'Test%'
       )`);
 
-      // 4. Delete test variants
+      // 4. Delete costs for test variants
+      await db.execute(sql`DELETE FROM product_costs WHERE variant_id IN (
+        SELECT id FROM product_variants WHERE sku LIKE 'Test%'
+      )`);
+
+      // 5. Delete images for test variants
+      await db.execute(sql`DELETE FROM product_images WHERE variant_id IN (
+        SELECT id FROM product_variants WHERE sku LIKE 'Test%'
+      )`);
+
+      // 6. Delete test variants
       await db.delete(productVariants).where(sql`${productVariants.sku} like 'Test%'`);
 
       // 5. Get and delete test products (including variants from other tests)
@@ -55,6 +65,16 @@ let testProductId: number;
 
         // Delete any remaining inventory for these products' variants
         await db.execute(sql`DELETE FROM inventory WHERE variant_id IN (
+          SELECT id FROM product_variants WHERE product_id IN (${productIdList.join(',')})
+        )`);
+
+        // Delete any remaining costs for these products' variants
+        await db.execute(sql`DELETE FROM product_costs WHERE variant_id IN (
+          SELECT id FROM product_variants WHERE product_id IN (${productIdList.join(',')})
+        )`);
+
+        // Delete any remaining images for these products' variants
+        await db.execute(sql`DELETE FROM product_images WHERE variant_id IN (
           SELECT id FROM product_variants WHERE product_id IN (${productIdList.join(',')})
         )`);
 

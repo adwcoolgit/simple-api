@@ -1,4 +1,4 @@
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { productVariants, productImages } from '../db/schema.js';
 
@@ -12,9 +12,9 @@ export interface AddProductImagesData {
 
 export interface ProductImageResponse {
   id: number;
-  variantId?: number;
-  imageUrl?: string;
-  isPrimary: boolean;
+  variant_id?: number;
+  image_url?: string;
+  is_primary: boolean;
 }
 
 /**
@@ -54,31 +54,40 @@ export async function addProductImages(data: AddProductImagesData): Promise<Prod
         .where(eq(productImages.variantId, data.variantId));
     }
 
-    // Bulk insert new images
-    const insertData = data.images.map(img => ({
-      variantId: data.variantId,
-      imageUrl: img.imageUrl,
-      isPrimary: img.isPrimary,
-    }));
+    // Insert images one by one to ensure proper handling
+    const results: ProductImageResponse[] = [];
 
-    const inserted = await tx
-      .insert(productImages)
-      .values(insertData)
-      .$returningId();
+    for (const img of data.images) {
+      const insertResult = await tx
+        .insert(productImages)
+        .values({
+          variantId: data.variantId,
+          imageUrl: img.imageUrl,
+          isPrimary: img.isPrimary,
+        });
 
-    // Get the full records
-    const ids = inserted.map(i => i.id);
-    const result = await tx
-      .select()
-      .from(productImages)
-      .where(sql`${productImages.id} IN (${ids.join(',')})`);
+      // Get the inserted record by querying for the latest insert
+      // Since we can't rely on .returning() in all environments
+      const [inserted] = await tx
+        .select()
+        .from(productImages)
+        .where(eq(productImages.variantId, data.variantId))
+        .orderBy(desc(productImages.id))
+        .limit(1);
 
-    return result.map(img => ({
-      id: img.id,
-      variantId: img.variantId,
-      imageUrl: img.imageUrl,
-      isPrimary: img.isPrimary,
-    }));
+      if (!inserted) {
+        throw new Error('Failed to insert image');
+      }
+
+      results.push({
+        id: inserted.id,
+        variant_id: inserted.variantId,
+        image_url: inserted.imageUrl,
+        is_primary: inserted.isPrimary,
+      });
+    }
+
+    return results;
   });
 }
 
@@ -104,12 +113,12 @@ export async function getImagesByVariant(variantId: number): Promise<ProductImag
     .where(eq(productImages.variantId, variantId))
     .orderBy(desc(productImages.isPrimary), desc(productImages.id));
 
-  return images.map(img => ({
-    id: img.id,
-    variantId: img.variantId,
-    imageUrl: img.imageUrl,
-    isPrimary: img.isPrimary,
-  }));
+    return images.map(img => ({
+      id: img.id,
+      variant_id: img.variantId,
+      image_url: img.imageUrl,
+      is_primary: img.isPrimary,
+    }));
 }
 
 /**
@@ -124,7 +133,7 @@ export async function setPrimaryImage(imageId: number, variantId: number): Promi
     .limit(1);
 
   if (!existingImage.length) {
-    throw new Error('Image not found');
+    throw new Error('Gambar tidak ditemukan');
   }
 
   // Run in transaction
@@ -171,12 +180,12 @@ export async function getPrimaryImage(variantId: number): Promise<ProductImageRe
     throw new Error('Gambar primary tidak ditemukan');
   }
 
-  return {
-    id: primaryImage.id,
-    variantId: primaryImage.variantId,
-    imageUrl: primaryImage.imageUrl,
-    isPrimary: primaryImage.isPrimary,
-  };
+    return {
+      id: primaryImage.id,
+      variant_id: primaryImage.variantId,
+      image_url: primaryImage.imageUrl,
+      is_primary: primaryImage.isPrimary,
+    };
 }
 
 /**
@@ -191,7 +200,7 @@ export async function deleteProductImage(imageId: number): Promise<string> {
     .limit(1);
 
   if (!existingImage.length) {
-    throw new Error('Image not found');
+    throw new Error('Gambar tidak ditemukan');
   }
 
   // Delete the image

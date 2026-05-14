@@ -13,7 +13,7 @@ import {
   deleteInventory,
 } from '../src/routes/inventory-route';
 import { db } from '../src/db';
-import { users, sessions, inventory, productVariants, products, warehouses } from '../src/db/schema';
+import { users, sessions, inventory, productVariants, products, warehouses, productCosts, productImages } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 
 const app = new Elysia()
@@ -41,6 +41,8 @@ beforeEach(async () => {
   // Cleanup test data
   await db.delete(inventory).where(sql`1=1`);
   await db.delete(warehouses).where(sql`1=1`);
+  await db.delete(productCosts).where(sql`1=1`);
+  await db.delete(productImages).where(sql`1=1`);
   await db.delete(productVariants).where(sql`1=1`);
   await db.delete(products).where(sql`1=1`);
 
