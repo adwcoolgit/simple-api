@@ -133,7 +133,7 @@ export async function setPrimaryImage(imageId: number, variantId: number): Promi
     .limit(1);
 
   if (!existingImage.length) {
-    throw new Error('Image not found');
+    throw new Error('Gambar tidak ditemukan');
   }
 
   // Run in transaction
@@ -200,7 +200,7 @@ export async function deleteProductImage(imageId: number): Promise<string> {
     .limit(1);
 
   if (!existingImage.length) {
-    throw new Error('Image not found');
+    throw new Error('Gambar tidak ditemukan');
   }
 
   // Delete the image
