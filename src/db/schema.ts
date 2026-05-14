@@ -73,6 +73,13 @@ export const productCosts = mysqlTable('product_costs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const productImages = mysqlTable('product_images', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  variantId: bigint('variant_id', { mode: 'number' }).references(() => productVariants.id),
+  imageUrl: varchar('image_url', { length: 255 }),
+  isPrimary: boolean('is_primary').default(false).notNull(),
+});
+
 export const warehouses = mysqlTable('warehouses', {
   id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),

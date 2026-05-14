@@ -7,6 +7,7 @@ import { productVariantsRoute } from './routes/product-variants-route';
 import { variantAttributesRoute } from './routes/variant-attributes-route';
 import { productPricesRoute } from './routes/product-prices-route';
 import { productCostsRoute } from './routes/product-costs-route';
+import { productImagesRoute } from './routes/product-images-route';
 import {
   createInventory,
   listInventory,
@@ -160,16 +161,21 @@ async function initializeDatabase() {
 
 const app = new Elysia()
   .use(loggerMiddleware)
-  .use(swagger({
-    path: '/openapi'
-  }))
+  .use(
+    swagger({
+      path: '/openapi',
+    })
+  )
   .use(routes)
   .use(usersRoute)
   .use(productsRoute)
   .use(productVariantsRoute)
   .use(variantAttributesRoute)
   .use(productPricesRoute)
-  .group('/api', app => app.use(productCostsRoute))
+  .group('/api', app => app
+    .use(productCostsRoute)
+    .use(productImagesRoute)
+  )
   .use(createInventory)
   .use(listInventory)
   .use(getInventoryDetail)
@@ -181,8 +187,8 @@ const app = new Elysia()
   .get('/test', () => ({ message: 'Test endpoint' }), {
     detail: {
       summary: 'Test endpoint for Swagger',
-      tags: ['Test']
-    }
+      tags: ['Test'],
+    },
   });
 
 // Initialize database before starting server
@@ -190,14 +196,15 @@ await initializeDatabase();
 
 app.listen(Bun.env.PORT || 3000);
 
-
-
 // Test Redis connection on startup
-redis.ping().then(() => {
-  console.log('🟥 Redis connected and ready');
-}).catch((err) => {
-  console.warn('🟥 Redis connection failed:', err.message);
-});
+redis
+  .ping()
+  .then(() => {
+    console.log('🟥 Redis connected and ready');
+  })
+  .catch((err) => {
+    console.warn('🟥 Redis connection failed:', err.message);
+  });
 
 console.log(
   '🚀 Server running on ' +
