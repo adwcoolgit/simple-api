@@ -13,23 +13,13 @@ import {
 export const productCostsRoute = new Elysia({ prefix: '/api' })
   .use(authMiddleware)
   .onError(({ error, set }) => {
-    if (error.message === 'Unauthorized') {
-      set.status = 401;
-      return { error: 'Unauthorized' };
-    }
-    set.status = 500;
-    return { error: 'Internal server error' };
-  })
-  .post('/product-costs', async ({ body, set, user }) => {
-    if (!body.variant_id || body.cost_price == null || body.effective_date == null) {
+    if (error.name === 'ValidationError') {
       set.status = 422;
       return { error: 'Validation error' };
     }
+  })
+  .post('/product-costs', async ({ body, set, user }) => {
     try {
-      if (body.cost_price < 0) {
-        set.status = 422;
-        return { error: 'Validation error' };
-      }
       const result = await createProductCost({
         variantId: body.variant_id,
         costPrice: body.cost_price,
@@ -276,15 +266,7 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
   })
 
   .patch('/product-costs/:id', async ({ params, body, set, user }) => {
-    if (body.cost_price == null && body.effective_date == null) {
-      set.status = 422;
-      return { error: 'Validation error' };
-    }
     try {
-      if (body.cost_price != null && body.cost_price < 0) {
-        set.status = 422;
-        return { error: 'Validation error' };
-      }
       await updateProductCost(parseInt(params.id), {
         costPrice: body.cost_price,
         effectiveDate: body.effective_date,
@@ -297,22 +279,6 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
         return { error: 'Data tidak ditemukan' };
       }
       throw error;
-    }
-    try {
-      if (!body.cost_price && !body.effective_date) throw new Error('At least one field must be provided');
-      if (body.cost_price != null && body.cost_price < 0) throw new Error('cost_price must be non-negative');
-      const result = await updateProductCost(params.id, {
-        costPrice: body.cost_price,
-        effectiveDate: body.effective_date,
-      });
-      return { data: result };
-    } catch (error) {
-      if (error instanceof Error && (error.message === 'At least one field must be provided' || error.message === 'cost_price must be non-negative')) {
-        set.status = 422;
-        return { error: error.message };
-      }
-      set.status = 404;
-      return { error: 'Data tidak ditemukan' };
     }
   }, {
     params: t.Object({

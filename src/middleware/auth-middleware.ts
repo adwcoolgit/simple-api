@@ -21,4 +21,10 @@ export const authMiddleware = new Elysia()
     }
 
     return { user: user[0] };
+  })
+  .onError(({ error, set }) => {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
   });

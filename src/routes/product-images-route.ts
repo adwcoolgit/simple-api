@@ -13,6 +13,12 @@ import {
 export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product Images'] })
   .use(authMiddleware)
   .onError(({ error, set }) => {
+    if (error.name === 'ValidationError') {
+      set.status = 422;
+      return { error: 'Validation error' };
+    }
+  })
+  .onError(({ error, set }) => {
     if (error instanceof Error && error.message === 'Unauthorized') {
       set.status = 401;
       return { error: 'Unauthorized' };
