@@ -74,7 +74,7 @@ const testEmail = 'productimagestest@example.com';
 const testPassword = 'password123';
 const testName = 'Product Images Test User';
 let testToken: string;
-let testUserId: string;
+let testUserId: number;
 let testProductId: string;
 let testVariantId: number;
 let testImageId: number;
@@ -97,12 +97,19 @@ beforeEach(async () => {
 
   // Create test user
   const hashedPassword = await bcrypt.hash(testPassword, 12);
-  testUserId = randomUUID();
+  testUserId = Math.floor(Math.random() * 1000000);
   await db.insert(users).values({
-    id: testUserId,
+    id: testUserId.toString(),
     name: testName,
     email: testEmail,
     password: hashedPassword,
+  });
+
+  // Create session token
+  testToken = `test-token-${Date.now()}`;
+  await db.insert(sessions).values({
+    token: testToken,
+    userId: testUserId.toString(),
   });
 
   // Create session token
