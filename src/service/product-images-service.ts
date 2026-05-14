@@ -12,9 +12,9 @@ export interface AddProductImagesData {
 
 export interface ProductImageResponse {
   id: number;
-  variantId?: number;
-  imageUrl?: string;
-  isPrimary: boolean;
+  variant_id?: number;
+  image_url?: string;
+  is_primary: boolean;
 }
 
 /**
@@ -75,9 +75,9 @@ export async function addProductImages(data: AddProductImagesData): Promise<Prod
 
     return result.map(img => ({
       id: img.id,
-      variantId: img.variantId,
-      imageUrl: img.imageUrl,
-      isPrimary: img.isPrimary,
+      variant_id: img.variantId,
+      image_url: img.imageUrl,
+      is_primary: img.isPrimary,
     }));
   });
 }
@@ -104,12 +104,12 @@ export async function getImagesByVariant(variantId: number): Promise<ProductImag
     .where(eq(productImages.variantId, variantId))
     .orderBy(desc(productImages.isPrimary), desc(productImages.id));
 
-  return images.map(img => ({
-    id: img.id,
-    variantId: img.variantId,
-    imageUrl: img.imageUrl,
-    isPrimary: img.isPrimary,
-  }));
+    return images.map(img => ({
+      id: img.id,
+      variant_id: img.variantId,
+      image_url: img.imageUrl,
+      is_primary: img.isPrimary,
+    }));
 }
 
 /**
@@ -171,12 +171,12 @@ export async function getPrimaryImage(variantId: number): Promise<ProductImageRe
     throw new Error('Gambar primary tidak ditemukan');
   }
 
-  return {
-    id: primaryImage.id,
-    variantId: primaryImage.variantId,
-    imageUrl: primaryImage.imageUrl,
-    isPrimary: primaryImage.isPrimary,
-  };
+    return {
+      id: primaryImage.id,
+      variant_id: primaryImage.variantId,
+      image_url: primaryImage.imageUrl,
+      is_primary: primaryImage.isPrimary,
+    };
 }
 
 /**
