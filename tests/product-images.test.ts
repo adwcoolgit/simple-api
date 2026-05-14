@@ -75,7 +75,7 @@ const testPassword = 'password123';
 const testName = 'Product Images Test User';
 let testToken: string;
 let testUserId: number;
-let testProductId: string;
+let testProductId: number;
 let testVariantId: number;
 let testImageId: number;
 
@@ -120,9 +120,9 @@ beforeEach(async () => {
   });
 
   // Create test product
-  testProductId = randomUUID();
+  testProductId = Math.floor(Math.random() * 1000000);
   await db.insert(products).values({
-    productId: testProductId,
+    productId: testProductId.toString(),
     name: 'Test Product for Images',
     description: 'Test Description',
     isActive: true,
@@ -132,7 +132,7 @@ beforeEach(async () => {
   testVariantId = Math.floor(Math.random() * 1000000);
   await db.insert(productVariants).values({
     id: testVariantId,
-    productId: testProductId,
+    productId: testProductId.toString(),
     sku: `TEST-IMG-SKU-${Date.now()}`,
     variantName: 'Test Variant for Images',
     isActive: true,
@@ -524,12 +524,13 @@ describe('DELETE /api/product-images/:imageId', () => {
   beforeEach(async () => {
     if (!dbAvailable) return;
 
-    // Create test image
-    const imageIds = await db.insert(productImages).values({
-      variantId: testVariantId,
-      imageUrl: 'https://example.com/test.jpg',
-      isPrimary: true,
-    }).$returningId();
+    testProductId = Math.floor(Math.random() * 1000000);
+    await db.insert(products).values({
+      productId: testProductId.toString(),
+      name: 'Test Product for Images',
+      description: 'Test Description',
+      isActive: true,
+    });
     testImageId = imageIds[0];
   });
 

@@ -75,7 +75,7 @@ const testPassword = 'password123';
 const testName = 'Product Cost Test User';
 let testToken: string;
 let testUserId: number;
-let testProductId: string;
+let testProductId: number;
 let testVariantId: number;
 let testCostId: number;
 
@@ -114,9 +114,9 @@ beforeEach(async () => {
   });
 
   // Create test product
-  testProductId = randomUUID();
+  testProductId = Math.floor(Math.random() * 1000000);
   await db.insert(products).values({
-    productId: testProductId,
+    productId: testProductId.toString(),
     name: 'Test Product for Costs',
     description: 'Test Description',
     isActive: true,
@@ -126,8 +126,8 @@ beforeEach(async () => {
   testVariantId = Math.floor(Math.random() * 1000000);
   await db.insert(productVariants).values({
     id: testVariantId,
-    productId: testProductId,
-    sku: `TEST-COST-SKU-${Date.now()}`,
+    productId: testProductId.toString(),
+    sku: `TEST-COST-VARIANT-${Date.now()}`,
     variantName: 'Test Variant for Costs',
     isActive: true,
     isSellable: true,
