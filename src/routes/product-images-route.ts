@@ -1,5 +1,4 @@
 import { Elysia, t } from 'elysia';
-import { authMiddleware } from '../middleware/auth-middleware';
 import {
   addProductImages,
   getImagesByVariant,
@@ -7,27 +6,30 @@ import {
   setPrimaryImage,
   deleteProductImage,
 } from '../service/product-images-service';
+import { getUserIdFromToken } from './auth-middleware';
 
 
 
 export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product Images'] })
-  .use(authMiddleware)
   .onError(({ error, set }) => {
     if (error instanceof Error && error.name === 'ValidationError') {
       set.status = 422;
       return { error: 'Validation error' };
     }
   })
-  .onError(({ error, set }) => {
-    if (error instanceof Error && error.message === 'Unauthorized') {
+  .post('/product-images', async ({ body, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       set.status = 401;
       return { error: 'Unauthorized' };
     }
-    set.status = 500;
-    return { error: 'Internal server error' };
-  })
-  .post('/product-images', async ({ body, set, user }: any) => {
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       const result = await addProductImages({
         variantId: body.variant_id,
         images: body.images.map((img: any) => ({
@@ -37,19 +39,16 @@ export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product I
       });
       set.status = 201;
       return { data: result };
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Unauthorized') {
-          set.status = 401;
-          return { error: 'Unauthorized' };
-        }
-        if (error.message === 'Images must not be empty' || error.message === 'Exactly one image must be set as primary' || error.message === 'Variant tidak ditemukan') {
-          set.status = 422;
-          return { error: error.message };
-        }
+    } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
       }
-      set.status = 404;
-      return { error: 'Variant tidak ditemukan' };
+      if (error.message === 'Images must not be empty' || error.message === 'Exactly one image must be set as primary' || error.message === 'Variant tidak ditemukan') {
+        set.status = 422;
+        return { error: error.message };
+      }
+      throw error;
     }
   }, {
     body: t.Object({
@@ -64,11 +63,26 @@ export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product I
     },
   })
 
-  .get('/product-images/:variantId', async ({ params, set, user }: any) => {
+  .get('/product-images/:variantId', async ({ params, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       const result = await getImagesByVariant(params.variantId);
       return { data: result };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Variant tidak ditemukan') {
         set.status = 404;
         return { error: 'Variant tidak ditemukan' };
@@ -131,11 +145,26 @@ export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product I
     },
   })
 
-  .get('/product-images/:variantId/current', async ({ params, set, user }: any) => {
+  .get('/product-images/:variantId/current', async ({ params, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       const result = await getPrimaryImage(params.variantId);
       return { data: result };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Variant tidak ditemukan' || error.message === 'Gambar primary tidak ditemukan') {
         set.status = 404;
         return { error: error.message };
@@ -190,11 +219,26 @@ export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product I
     },
   })
 
-  .patch('/product-images/:imageId/primary', async ({ params, body, set, user }: any) => {
+  .patch('/product-images/:imageId/primary', async ({ params, body, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       const result = await setPrimaryImage(params.imageId, body.variant_id);
       return { data: result };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Gambar tidak ditemukan') {
         set.status = 404;
         return { error: 'Gambar tidak ditemukan' };
@@ -213,11 +257,26 @@ export const productImagesRoute = new Elysia({ prefix: '/api', tags: ['Product I
     },
   })
 
-  .delete('/product-images/:imageId', async ({ params, set, user }: any) => {
+  .delete('/product-images/:imageId', async ({ params, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       const result = await deleteProductImage(params.imageId);
       return { data: result };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Gambar tidak ditemukan') {
         set.status = 404;
         return { error: 'Gambar tidak ditemukan' };
