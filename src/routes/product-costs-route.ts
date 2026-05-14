@@ -1,5 +1,4 @@
 import { Elysia, t } from 'elysia';
-import { authMiddleware } from '../middleware/auth-middleware';
 import {
   createProductCost,
   getProductCostsByVariant,
@@ -7,19 +6,30 @@ import {
   updateProductCost,
   deleteProductCost,
 } from '../service/product-costs-service.js';
+import { getUserIdFromToken } from './auth-middleware';
 
 
 
 export const productCostsRoute = new Elysia({ prefix: '/api' })
-  .use(authMiddleware)
   .onError(({ error, set }) => {
     if (error instanceof Error && error.name === 'ValidationError') {
       set.status = 422;
       return { error: 'Validation error' };
     }
   })
-  .post('/product-costs', async ({ body, set, user }) => {
+  .post('/product-costs', async ({ body, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       const result = await createProductCost({
         variantId: body.variant_id,
         costPrice: body.cost_price,
@@ -28,6 +38,10 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
       set.status = 201;
       return { data: result };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Variant tidak ditemukan') {
         set.status = 404;
         return { error: 'Variant tidak ditemukan' };
@@ -125,23 +139,31 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
     },
   })
 
-  .get('/product-costs/:variantId', async ({ params, set, user }) => {
+  .get('/product-costs/:variantId', async ({ params, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       const result = await getProductCostsByVariant(parseInt(params.variantId));
       return { data: result };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Variant tidak ditemukan') {
         set.status = 404;
         return { error: 'Variant tidak ditemukan' };
       }
       throw error;
-    }
-    try {
-      const result = await getProductCostsByVariant(params.variantId);
-      return { data: result };
-    } catch (error) {
-      set.status = 404;
-      return { error: 'Variant tidak ditemukan' };
     }
   }, {
     params: t.Object({
@@ -194,11 +216,26 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
     },
   })
 
-  .get('/product-costs/:variantId/current', async ({ params, set, user }) => {
+  .get('/product-costs/:variantId/current', async ({ params, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       const result = await getCurrentProductCost(parseInt(params.variantId));
       return { data: result };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Variant tidak ditemukan') {
         set.status = 404;
         return { error: 'Variant tidak ditemukan' };
@@ -208,13 +245,6 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
         return { error: 'Harga pokok aktif tidak ditemukan' };
       }
       throw error;
-    }
-    try {
-      const result = await getCurrentProductCost(params.variantId);
-      return { data: result };
-    } catch (error) {
-      set.status = 404;
-      return { error: 'Harga pokok aktif tidak ditemukan' };
     }
   }, {
     params: t.Object({
@@ -265,8 +295,19 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
     },
   })
 
-  .patch('/product-costs/:id', async ({ params, body, set, user }) => {
+  .patch('/product-costs/:id', async ({ params, body, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       await updateProductCost(parseInt(params.id), {
         costPrice: body.cost_price,
         effectiveDate: body.effective_date,
@@ -274,6 +315,10 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
       set.status = 200;
       return { data: 'OK' };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Data tidak ditemukan') {
         set.status = 404;
         return { error: 'Data tidak ditemukan' };
@@ -360,24 +405,32 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
     },
   })
 
-  .delete('/product-costs/:id', async ({ params, set, user }) => {
+  .delete('/product-costs/:id', async ({ params, set, headers }) => {
+    const authHeader = headers['authorization'] || headers['Authorization'];
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const token = authHeader.substring(7);
+
     try {
+      await getUserIdFromToken(token);
+
       await deleteProductCost(parseInt(params.id));
       set.status = 200;
       return { data: 'OK' };
     } catch (error: any) {
+      if (error.message === 'Unauthorized') {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
       if (error.message === 'Data tidak ditemukan') {
         set.status = 404;
         return { error: 'Data tidak ditemukan' };
       }
       throw error;
-    }
-    try {
-      const result = await deleteProductCost(params.id);
-      return { data: result };
-    } catch (error) {
-      set.status = 404;
-      return { error: 'Data tidak ditemukan' };
     }
   }, {
     params: t.Object({
