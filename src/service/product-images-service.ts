@@ -58,14 +58,26 @@ export async function addProductImages(data: AddProductImagesData): Promise<Prod
     const results: ProductImageResponse[] = [];
 
     for (const img of data.images) {
-      const [inserted] = await tx
+      const insertResult = await tx
         .insert(productImages)
         .values({
           variantId: data.variantId,
           imageUrl: img.imageUrl,
           isPrimary: img.isPrimary,
-        })
-        .returning();
+        });
+
+      // Get the inserted record by querying for the latest insert
+      // Since we can't rely on .returning() in all environments
+      const [inserted] = await tx
+        .select()
+        .from(productImages)
+        .where(eq(productImages.variantId, data.variantId))
+        .orderBy(desc(productImages.id))
+        .limit(1);
+
+      if (!inserted) {
+        throw new Error('Failed to insert image');
+      }
 
       results.push({
         id: inserted.id,
