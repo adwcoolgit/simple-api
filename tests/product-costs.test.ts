@@ -74,8 +74,8 @@ const testEmail = 'productcosttest@example.com';
 const testPassword = 'password123';
 const testName = 'Product Cost Test User';
 let testToken: string;
-let testUserId: number;
-let testProductId: number;
+let testUserId: string;
+let testProductId: string;
 let testVariantId: number;
 let testCostId: number;
 
@@ -98,12 +98,13 @@ beforeEach(async () => {
 
   // Create test user
   const hashedPassword = await bcrypt.hash(testPassword, 12);
-  const [user] = await db.insert(users).values({
+  testUserId = randomUUID();
+  await db.insert(users).values({
+    id: testUserId,
     name: testName,
     email: testEmail,
     password: hashedPassword,
-  }).$returningId();
-  testUserId = user!.id;
+  });
 
   // Create session token
   testToken = `test-token-${Date.now()}`;
@@ -126,7 +127,7 @@ beforeEach(async () => {
   await db.insert(productVariants).values({
     id: testVariantId,
     productId: testProductId,
-    sku: `TEST-COST-VARIANT-${Date.now()}`,
+    sku: `TEST-COST-SKU-${Date.now()}`,
     variantName: 'Test Variant for Costs',
     isActive: true,
     isSellable: true,
@@ -189,7 +190,7 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
 }
 
 describe('POST /api/product-costs', () => {
-  it('should create product cost with all valid fields', async () => {
+  it('1. Buat biaya produk dengan semua field valid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -205,7 +206,7 @@ describe('POST /api/product-costs', () => {
     expect(res.json.data.created_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
 
-  it('should return 404 when variant does not exist', async () => {
+  it('2. Return 404 ketika variant tidak ditemukan', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -217,7 +218,7 @@ describe('POST /api/product-costs', () => {
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
 
-  it('should return 422 when cost_price is negative', async () => {
+  it('3. Return 422 ketika cost_price negatif', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -228,7 +229,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(422);
   });
 
-  it('should return 422 when cost_price is not provided', async () => {
+  it('4. Return 422 ketika cost_price tidak disediakan', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -238,7 +239,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(422);
   });
 
-  it('should return 422 when effective_date is not provided', async () => {
+  it('5. Return 422 ketika effective_date tidak disediakan', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/product-costs', {
@@ -248,7 +249,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(422);
   });
 
-  it('should return 401 when Authorization header is missing', async () => {
+  it('6. Return 401 ketika Authorization header tidak ada', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('POST', '/api/product-costs', {
@@ -259,7 +260,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(401);
   });
 
-  it('should return 401 when token is invalid', async () => {
+  it('7. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('POST', '/api/product-costs', {
@@ -272,7 +273,7 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(401);
   });
 
-  it('should allow multiple cost records for the same variant', async () => {
+  it('8. Izinkan beberapa record biaya untuk variant yang sama', async () => {
     if (!dbAvailable) return;
 
     // Create first cost
@@ -311,7 +312,7 @@ describe('GET /api/product-costs/:variantId', () => {
     ]);
   });
 
-  it('should return all cost records for existing variant', async () => {
+  it('9. Return semua record biaya untuk variant yang ada', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`);
@@ -324,7 +325,7 @@ describe('GET /api/product-costs/:variantId', () => {
     expect(res.json.data[0]).toHaveProperty('created_at');
   });
 
-  it('should return 404 when variant does not exist', async () => {
+  it('10. Return 404 ketika variant tidak ditemukan', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', '/api/product-costs/99999');
@@ -332,14 +333,14 @@ describe('GET /api/product-costs/:variantId', () => {
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
 
-  it('should return 401 when Authorization header is missing', async () => {
+  it('11. Return 401 ketika Authorization header tidak ada', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`);
     expect(res.status).toBe(401);
   });
 
-  it('should return 401 when token is invalid', async () => {
+  it('12. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`, undefined, {
@@ -348,7 +349,7 @@ describe('GET /api/product-costs/:variantId', () => {
     expect(res.status).toBe(401);
   });
 
-  it('should return empty array when variant exists but has no cost data', async () => {
+  it('13. Return array kosong ketika variant ada tapi tidak ada data biaya', async () => {
     if (!dbAvailable) return;
 
     // Delete costs
@@ -361,7 +362,7 @@ describe('GET /api/product-costs/:variantId', () => {
 });
 
 describe('GET /api/product-costs/:variantId/current', () => {
-  it('should return most recent cost with effective_date in the past', async () => {
+  it('14. Return biaya terbaru dengan effective_date di masa lalu', async () => {
     if (!dbAvailable) return;
 
     // Create cost with past date
@@ -377,7 +378,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
     expect(res.json.data.cost_price).toBe('150000.00');
   });
 
-  it('should return 404 when no active cost is found', async () => {
+  it('15. Return 404 ketika tidak ada biaya aktif ditemukan', async () => {
     if (!dbAvailable) return;
 
     // Create cost with future date
@@ -392,7 +393,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
     expect(res.json.error).toBe('Harga pokok aktif tidak ditemukan');
   });
 
-  it('should return 404 when variant has no cost data', async () => {
+  it('16. Return 404 ketika variant tidak ada data biaya', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`);
@@ -400,7 +401,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
     expect(res.json.error).toBe('Harga pokok aktif tidak ditemukan');
   });
 
-  it('should return 404 when variant does not exist', async () => {
+  it('17. Return 404 ketika variant tidak ditemukan', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', '/api/product-costs/99999/current');
@@ -408,14 +409,14 @@ describe('GET /api/product-costs/:variantId/current', () => {
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
 
-  it('should return 401 when Authorization header is missing', async () => {
+  it('18. Return 401 ketika Authorization header tidak ada', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`);
     expect(res.status).toBe(401);
   });
 
-  it('should return 401 when token is invalid', async () => {
+  it('19. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`, undefined, {
@@ -438,7 +439,7 @@ describe('PATCH /api/product-costs/:id', () => {
     });
   });
 
-  it('should update cost_price only', async () => {
+  it('20. Update cost_price saja', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -448,7 +449,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it('should update effective_date only', async () => {
+  it('21. Update effective_date saja', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -458,7 +459,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it('should update all fields', async () => {
+  it('22. Update semua field', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -469,7 +470,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it('should return 404 when record does not exist', async () => {
+  it('23. Return 404 ketika record tidak ditemukan', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', '/api/product-costs/99999', {
@@ -479,14 +480,14 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.json.error).toBe('Data tidak ditemukan');
   });
 
-  it('should return 422 when request body is empty', async () => {
+  it('24. Return 422 ketika request body kosong', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {});
     expect(res.status).toBe(422);
   });
 
-  it('should return 422 when cost_price is negative', async () => {
+  it('25. Return 422 ketika cost_price negatif', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -495,7 +496,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.status).toBe(422);
   });
 
-  it('should return 401 when Authorization header is missing', async () => {
+  it('26. Return 401 ketika Authorization header tidak ada', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -504,7 +505,7 @@ describe('PATCH /api/product-costs/:id', () => {
     expect(res.status).toBe(401);
   });
 
-  it('should return 401 when token is invalid', async () => {
+  it('27. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('PATCH', `/api/product-costs/${testCostId}`, {
@@ -529,7 +530,7 @@ describe('DELETE /api/product-costs/:id', () => {
     });
   });
 
-  it('should successfully delete existing record', async () => {
+  it('28. Berhasil delete record yang ada', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('DELETE', `/api/product-costs/${testCostId}`);
@@ -537,7 +538,7 @@ describe('DELETE /api/product-costs/:id', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it('should return 404 when record does not exist', async () => {
+  it('29. Return 404 ketika record tidak ditemukan', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('DELETE', '/api/product-costs/99999');
@@ -545,14 +546,14 @@ describe('DELETE /api/product-costs/:id', () => {
     expect(res.json.error).toBe('Data tidak ditemukan');
   });
 
-  it('should return 401 when Authorization header is missing', async () => {
+  it('30. Return 401 ketika Authorization header tidak ada', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('DELETE', `/api/product-costs/${testCostId}`);
     expect(res.status).toBe(401);
   });
 
-  it('should return 401 when token is invalid', async () => {
+  it('31. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('DELETE', `/api/product-costs/${testCostId}`, undefined, {
