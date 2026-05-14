@@ -308,6 +308,11 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
     try {
       await getUserIdFromToken(token);
 
+      if (body.cost_price == null && body.effective_date == null) {
+        set.status = 422;
+        return { error: 'At least one field must be provided' };
+      }
+
       await updateProductCost(parseInt(params.id), {
         costPrice: body.cost_price,
         effectiveDate: body.effective_date,

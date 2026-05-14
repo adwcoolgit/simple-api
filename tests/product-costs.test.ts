@@ -315,7 +315,7 @@ describe('GET /api/product-costs/:variantId', () => {
   it('9. Return semua record biaya untuk variant yang ada', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`);
+    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}`);
     expect(res.status).toBe(200);
     expect(Array.isArray(res.json.data)).toBe(true);
     expect(res.json.data.length).toBeGreaterThan(0);
@@ -328,7 +328,7 @@ describe('GET /api/product-costs/:variantId', () => {
   it('10. Return 404 ketika variant tidak ditemukan', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', '/api/product-costs/99999');
+    const res = await makeAuthRequest('GET', '/api/product-costs/99999');
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
@@ -355,7 +355,7 @@ describe('GET /api/product-costs/:variantId', () => {
     // Delete costs
     await db.delete(productCosts).where(sql`1=1`);
 
-    const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`);
+    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}`);
     expect(res.status).toBe(200);
     expect(res.json.data).toEqual([]);
   });
@@ -372,7 +372,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
       effectiveDate: new Date(Date.now() - 86400000), // 1 day ago
     });
 
-    const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`);
+    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}/current`);
     expect(res.status).toBe(200);
     expect(res.json.data.variant_id).toBe(testVariantId);
     expect(res.json.data.cost_price).toBe('150000.00');
@@ -388,7 +388,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
       effectiveDate: new Date(Date.now() + 86400000), // 1 day in future
     });
 
-    const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`);
+    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}/current`);
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Harga pokok aktif tidak ditemukan');
   });
@@ -396,7 +396,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
   it('16. Return 404 ketika variant tidak ada data biaya', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`);
+    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}/current`);
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Harga pokok aktif tidak ditemukan');
   });
@@ -404,7 +404,7 @@ describe('GET /api/product-costs/:variantId/current', () => {
   it('17. Return 404 ketika variant tidak ditemukan', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', '/api/product-costs/99999/current');
+    const res = await makeAuthRequest('GET', '/api/product-costs/99999/current');
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
