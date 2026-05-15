@@ -9,6 +9,7 @@ import { productPricesRoute } from './routes/product-prices-route';
 import { productCostsRoute } from './routes/product-costs-route';
 import { productImagesRoute } from './routes/product-images-route';
 import { barcodesRoute } from './routes/barcodes-route';
+import { productTaxesRoute } from './routes/product-taxes-route';
 import {
   createInventory,
   listInventory,
@@ -176,6 +177,7 @@ const app = new Elysia()
   .use(productCostsRoute)
   .use(productImagesRoute)
   .use(barcodesRoute)
+  .use(productTaxesRoute)
   .use(createInventory)
   .use(listInventory)
   .use(getInventoryDetail)
