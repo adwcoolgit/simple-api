@@ -8,6 +8,8 @@
     "start": "NODE_ENV=production bun run src/index.ts",
     "db:generate": "bun run drizzle-kit generate",
     "db:migrate": "bun run drizzle-kit migrate",
+    "db:push": "bun run drizzle-kit push",
+    "db:setup": "bun run scripts/setup-db.ts",
     "db:studio": "bun run drizzle-kit studio",
     "test": "bun run tests/test-comprehensive.ts",
     "test:current": "bun run tests/test-current.ts",

@@ -95,8 +95,8 @@ jobs:
           "
           echo "✅ Test database created"
 
-      - name: Migrate database schema
-        run: bun run db:migrate
+      - name: Setup database schema
+        run: bun run db:setup
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
