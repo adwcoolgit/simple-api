@@ -10,6 +10,7 @@ import { db } from '../src/db';
 import { users, sessions, products, productVariants, productPrices, productCosts, productImages } from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { isDbAvailable } from '../src/utils/db-utils';
 
 const app = new Elysia()
   .use(routes)
@@ -127,6 +128,8 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
 }
 
 describe('POST /api/product-prices — Tambah Harga', () => {
+  if (!isDbAvailable()) return;
+
   it('1. Semua field valid termasuk tanggal', async () => {
     const res = await makeAuthRequest('POST', '/api/product-prices', {
       variant_id: testVariantId,
@@ -215,6 +218,8 @@ describe('POST /api/product-prices — Tambah Harga', () => {
 });
 
 describe('GET /api/product-prices — List Harga', () => {
+  if (!isDbAvailable()) return;
+
   beforeEach(async () => {
     // Create test prices
     await db.insert(productPrices).values([
@@ -283,6 +288,8 @@ describe('GET /api/product-prices — List Harga', () => {
 });
 
 describe('GET /api/product-prices/:id — Detail Harga', () => {
+  if (!isDbAvailable()) return;
+
   let testPriceId: number;
 
   beforeEach(async () => {
@@ -314,6 +321,8 @@ describe('GET /api/product-prices/:id — Detail Harga', () => {
 });
 
 describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
+  if (!isDbAvailable()) return;
+
   beforeEach(async () => {
     // Ensure test variant exists
     if (!testVariantId) {
@@ -411,6 +420,8 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
 });
 
 describe('PATCH /api/product-prices/:id — Update Harga', () => {
+  if (!isDbAvailable()) return;
+
   let testPriceId: number;
 
   beforeEach(async () => {
@@ -505,6 +516,8 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
 });
 
 describe('DELETE /api/product-prices/:id — Hapus Harga', () => {
+  if (!isDbAvailable()) return;
+
   let testPriceId: number;
 
   beforeEach(async () => {

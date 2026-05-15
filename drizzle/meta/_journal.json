@@ -1,10 +1,10 @@
-{
+﻿{
   "version": "7",
   "dialect": "mysql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
+      "version": "5", 
       "when": 1778636197386,
       "tag": "0000_old_jazinda",
       "breakpoints": true
@@ -12,8 +12,15 @@
     {
       "idx": 1,
       "version": "5",
-      "when": 1778721307305,
+      "when": 1778721307305, 
       "tag": "0001_mature_thunderbolt_ross",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1778764153016,
+      "tag": "0002_next_khan",
       "breakpoints": true
     }
   ]

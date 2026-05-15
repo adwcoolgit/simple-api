@@ -8,6 +8,7 @@ import { variantAttributesRoute } from './routes/variant-attributes-route';
 import { productPricesRoute } from './routes/product-prices-route';
 import { productCostsRoute } from './routes/product-costs-route';
 import { productImagesRoute } from './routes/product-images-route';
+import { barcodesRoute } from './routes/barcodes-route';
 import {
   createInventory,
   listInventory,
@@ -174,6 +175,7 @@ const app = new Elysia()
   .use(productPricesRoute)
   .use(productCostsRoute)
   .use(productImagesRoute)
+  .use(barcodesRoute)
   .use(createInventory)
   .use(listInventory)
   .use(getInventoryDetail)

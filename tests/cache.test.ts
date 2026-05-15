@@ -6,6 +6,7 @@ import { db } from '../src/db';
 import { users, sessions } from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { redis } from '../src/cache/redis';
+import { isDbAvailable } from '../src/utils/db-utils';
 
 // Check if Redis is available
 let redisAvailable = false;
