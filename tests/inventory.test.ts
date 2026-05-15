@@ -13,7 +13,7 @@ import {
   deleteInventory,
 } from '../src/routes/inventory-route';
 import { db } from '../src/db';
-import { users, sessions, inventory, productVariants, products, warehouses, productCosts, productImages, barcodes } from '../src/db/schema';
+import { users, sessions, inventory, productVariants, products, warehouses, productCosts, productImages, barcodes, productTaxes } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import { isDbAvailable } from '../src/utils/db-utils';
 
@@ -45,6 +45,7 @@ beforeEach(async () => {
   await db.delete(productCosts).where(sql`1=1`);
   await db.delete(productImages).where(sql`1=1`);
   await db.delete(barcodes).where(sql`1=1`); // Delete barcodes first
+  await db.delete(productTaxes).where(sql`1=1`); // Delete taxes before variants
   await db.delete(productVariants).where(sql`1=1`);
   await db.delete(products).where(sql`1=1`);
 

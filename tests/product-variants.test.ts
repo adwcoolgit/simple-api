@@ -23,7 +23,7 @@ let uniqueId: string;
 let testProductId: number;
 
   beforeEach(async () => {
-    // Clean up test data in correct order: inventory -> prices -> attributes -> costs -> images -> barcodes -> variants -> products
+    // Clean up test data in correct order: inventory -> prices -> attributes -> costs -> images -> barcodes -> taxes -> variants -> products
     try {
       // Critical: Delete in reverse dependency order to avoid foreign key constraints
 
@@ -57,7 +57,12 @@ let testProductId: number;
         SELECT id FROM product_variants WHERE sku LIKE 'Test%'
       )`);
 
-      // 7. Delete test variants
+      // 7. Delete taxes for test variants
+      await db.execute(sql`DELETE FROM product_taxes WHERE variant_id IN (
+        SELECT id FROM product_variants WHERE sku LIKE 'Test%'
+      )`);
+
+      // 8. Delete test variants
       await db.delete(productVariants).where(sql`${productVariants.sku} like 'Test%'`);
 
       // 5. Get and delete test products (including variants from other tests)
@@ -86,6 +91,11 @@ let testProductId: number;
 
         // Delete any remaining barcodes for these products' variants
         await db.execute(sql`DELETE FROM barcodes WHERE variant_id IN (
+          SELECT id FROM product_variants WHERE product_id IN (${productIdList.join(',')})
+        )`);
+
+        // Delete any remaining taxes for these products' variants
+        await db.execute(sql`DELETE FROM product_taxes WHERE variant_id IN (
           SELECT id FROM product_variants WHERE product_id IN (${productIdList.join(',')})
         )`);
 
