@@ -417,15 +417,20 @@ const deleteProductVariantHandler = new Elysia()
           await getUserIdFromToken(token);
         }
 
-        const result = await deleteProductVariant(Number(params.id));
-        return { data: result };
-      } catch (err: any) {
-        if (err.message === 'Product variant tidak ditemukan') {
-          set.status = 404;
-          return { error: err.message };
-        }
-        throw err;
+      const result = await deleteProductVariant(Number(params.id));
+      return { data: result };
+    } catch (err: any) {
+      console.error('Delete product variant route error:', err);
+      if (err.message === 'Product variant tidak ditemukan') {
+        set.status = 404;
+        return { error: err.message };
       }
+      if (err.message === 'Gagal menghapus product variant') {
+        set.status = 500;
+        return { error: 'Failed to delete product variant due to database constraints' };
+      }
+      throw err;
+    }
     },
     {
       params: t.Object({
