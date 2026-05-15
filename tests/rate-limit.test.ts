@@ -5,6 +5,7 @@ import { usersRoute } from '../src/routes/users-route';
 import { db } from '../src/db';
 import { users, sessions } from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
+import { isDbAvailable } from '../src/utils/db-utils';
 
 const app = new Elysia().use(routes).use(usersRoute);
 
@@ -39,6 +40,8 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
 }
 
 describe('Rate Limiting Middleware', () => {
+  if (!isDbAvailable()) return;
+
   it('1. Request dalam batas limit → 200 atau status normal', async () => {
     // Register - should be allowed (within 10 per minute)
     const res = await makeRequest('POST', '/api/users', {

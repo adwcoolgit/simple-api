@@ -5,9 +5,10 @@ import { usersRoute } from '../src/routes/users-route';
 import { productsRoute } from '../src/routes/products-route';
 import { productVariantsRoute } from '../src/routes/product-variants-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, variantAttributes, productPrices, productCosts, productImages } from '../src/db/schema';
+import { users, sessions, products, productVariants, variantAttributes, productPrices, productCosts, productImages, barcodes } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { isDbAvailable } from '../src/utils/db-utils';
 
 const app = new Elysia().use(routes).use(usersRoute).use(productsRoute).use(productVariantsRoute);
 
@@ -22,7 +23,7 @@ let uniqueId: string;
 let testProductId: number;
 
   beforeEach(async () => {
-    // Clean up test data in correct order: inventory -> prices -> attributes -> costs -> images -> variants -> products
+    // Clean up test data in correct order: inventory -> prices -> attributes -> costs -> images -> barcodes -> variants -> products
     try {
       // Critical: Delete in reverse dependency order to avoid foreign key constraints
 
@@ -51,7 +52,12 @@ let testProductId: number;
         SELECT id FROM product_variants WHERE sku LIKE 'Test%'
       )`);
 
-      // 6. Delete test variants
+      // 6. Delete barcodes for test variants
+      await db.execute(sql`DELETE FROM barcodes WHERE variant_id IN (
+        SELECT id FROM product_variants WHERE sku LIKE 'Test%'
+      )`);
+
+      // 7. Delete test variants
       await db.delete(productVariants).where(sql`${productVariants.sku} like 'Test%'`);
 
       // 5. Get and delete test products (including variants from other tests)
@@ -75,6 +81,11 @@ let testProductId: number;
 
         // Delete any remaining images for these products' variants
         await db.execute(sql`DELETE FROM product_images WHERE variant_id IN (
+          SELECT id FROM product_variants WHERE product_id IN (${productIdList.join(',')})
+        )`);
+
+        // Delete any remaining barcodes for these products' variants
+        await db.execute(sql`DELETE FROM barcodes WHERE variant_id IN (
           SELECT id FROM product_variants WHERE product_id IN (${productIdList.join(',')})
         )`);
 
@@ -174,6 +185,8 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
 }
 
 describe('POST /api/product-variants', () => {
+  if (!isDbAvailable()) return;
+
   it('1. Semua field valid lengkap', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
@@ -307,6 +320,8 @@ describe('POST /api/product-variants', () => {
 });
 
 describe('GET /api/product-variants?product_id=', () => {
+  if (!isDbAvailable()) return;
+
   beforeEach(async () => {
     // Create test variants
     await db.insert(productVariants).values([
@@ -365,6 +380,8 @@ describe('GET /api/product-variants?product_id=', () => {
 });
 
 describe('GET /api/product-variants/:id', () => {
+  if (!isDbAvailable()) return;
+
   let testVariantId: number;
 
   beforeEach(async () => {
@@ -418,6 +435,8 @@ describe('GET /api/product-variants/:id', () => {
 });
 
 describe('PATCH /api/product-variants/:id', () => {
+  if (!isDbAvailable()) return;
+
   let testVariantId: number;
 
   beforeEach(async () => {
@@ -546,6 +565,8 @@ describe('PATCH /api/product-variants/:id', () => {
 });
 
 describe('DELETE /api/product-variants/:id', () => {
+  if (!isDbAvailable()) return;
+
   let testVariantId: number;
 
   beforeEach(async () => {

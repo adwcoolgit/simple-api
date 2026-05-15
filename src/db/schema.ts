@@ -80,6 +80,12 @@ export const productImages = mysqlTable('product_images', {
   isPrimary: boolean('is_primary').default(false).notNull(),
 });
 
+export const barcodes = mysqlTable('barcodes', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  variantId: bigint('variant_id', { mode: 'number' }).notNull().references(() => productVariants.id),
+  barcode: varchar('barcode', { length: 50 }).notNull(),
+});
+
 export const warehouses = mysqlTable('warehouses', {
   id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),

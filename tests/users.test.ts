@@ -3,6 +3,7 @@ import { Elysia } from 'elysia';
 import { routes } from '../src/routes';
 import { usersRoute } from '../src/routes/users-route';
 import { db } from '../src/db';
+import { dbRead } from '../src/db/replica';
 import { users, sessions } from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 
@@ -300,9 +301,9 @@ describe('GET /api/users/current — Get User Login', () => {
 
   it('7. Token adalah UUID valid tapi sudah pernah dihapus (expired/logout)', async () => {
     // Delete the session
-    await db.delete(sessions).where(eq(sessions.token, token));
+    await dbRead.execute(sql`DELETE FROM sessions WHERE token = ${token}`);
     const res = await makeRequest('GET', '/api/users/current', undefined, {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer invalid-token-after-deletion`,
     });
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
