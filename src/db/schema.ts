@@ -86,6 +86,13 @@ export const barcodes = mysqlTable('barcodes', {
   barcode: varchar('barcode', { length: 50 }).notNull(),
 });
 
+export const productTaxes = mysqlTable('product_taxes', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  variantId: bigint('variant_id', { mode: 'number' }).notNull().references(() => productVariants.id),
+  taxCode: varchar('tax_code', { length: 20 }),
+  isInclusive: boolean('is_inclusive').default(false).notNull(),
+});
+
 export const warehouses = mysqlTable('warehouses', {
   id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),

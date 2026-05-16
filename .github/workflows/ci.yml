@@ -164,6 +164,16 @@ jobs:
           REDIS_PORT: 6379
           REDIS_PASSWORD: redis_password_123
 
+      - name: Reset database for integration tests
+        run: |
+          echo "🔄 Resetting database for integration tests..."
+          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword -e "
+            DROP DATABASE IF EXISTS simple_api;
+            CREATE DATABASE simple_api;
+          "
+          bun run db:setup
+          echo "✅ Database reset complete"
+
       - name: Run integration tests
         run: bun run test
         env:

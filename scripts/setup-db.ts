@@ -79,6 +79,15 @@ async function setupDatabase() {
         CONSTRAINT \`barcodes_id\` PRIMARY KEY(\`id\`)
       )`,
 
+      // Product taxes table
+      `CREATE TABLE IF NOT EXISTS \`product_taxes\` (
+        \`id\` bigint AUTO_INCREMENT NOT NULL,
+        \`variant_id\` bigint NOT NULL,
+        \`tax_code\` varchar(20),
+        \`is_inclusive\` boolean NOT NULL DEFAULT false,
+        CONSTRAINT \`product_taxes_id\` PRIMARY KEY(\`id\`)
+      )`,
+
       // Warehouses table
       `CREATE TABLE IF NOT EXISTS \`warehouses\` (
         \`id\` bigint AUTO_INCREMENT NOT NULL,
@@ -154,6 +163,7 @@ async function setupDatabase() {
       `ALTER TABLE \`sessions\` ADD CONSTRAINT \`sessions_user_id_users_id_fk\` FOREIGN KEY (\`user_id\`) REFERENCES \`users\`(\`id\`) ON DELETE no action ON UPDATE no action`,
       `ALTER TABLE \`product_variants\` ADD CONSTRAINT \`product_variants_product_id_products_product_id_fk\` FOREIGN KEY (\`product_id\`) REFERENCES \`products\`(\`product_id\`) ON DELETE no action ON UPDATE no action`,
       `ALTER TABLE \`barcodes\` ADD CONSTRAINT \`barcodes_variant_id_product_variants_id_fk\` FOREIGN KEY (\`variant_id\`) REFERENCES \`product_variants\`(\`id\`) ON DELETE no action ON UPDATE no action`,
+      `ALTER TABLE \`product_taxes\` ADD CONSTRAINT \`product_taxes_variant_id_product_variants_id_fk\` FOREIGN KEY (\`variant_id\`) REFERENCES \`product_variants\`(\`id\`) ON DELETE no action ON UPDATE no action`,
       `ALTER TABLE \`inventory\` ADD CONSTRAINT \`inventory_variant_id_product_variants_id_fk\` FOREIGN KEY (\`variant_id\`) REFERENCES \`product_variants\`(\`id\`) ON DELETE no action ON UPDATE no action`,
       `ALTER TABLE \`inventory\` ADD CONSTRAINT \`inventory_warehouse_id_warehouses_id_fk\` FOREIGN KEY (\`warehouse_id\`) REFERENCES \`warehouses\`(\`id\`) ON DELETE no action ON UPDATE no action`,
       `ALTER TABLE \`product_prices\` ADD CONSTRAINT \`product_prices_variant_id_product_variants_id_fk\` FOREIGN KEY (\`variant_id\`) REFERENCES \`product_variants\`(\`id\`) ON DELETE no action ON UPDATE no action`,
