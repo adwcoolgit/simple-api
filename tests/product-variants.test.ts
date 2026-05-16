@@ -27,39 +27,17 @@ let testProductId: number;
     try {
       // Critical: Delete in reverse dependency order to avoid foreign key constraints
 
-      // First, get all test variant IDs to avoid subquery issues
-      const testVariantIds = await db
-        .select({ id: productVariants.id })
-        .from(productVariants)
-        .where(sql`${productVariants.sku} like 'Test%'`);
+      // Delete ALL dependent records first (aggressive cleanup for CI)
+      await db.delete(inventory).where(sql`1=1`);
+      await db.delete(productPrices).where(sql`1=1`);
+      await db.delete(variantAttributes).where(sql`1=1`);
+      await db.delete(productCosts).where(sql`1=1`);
+      await db.delete(productImages).where(sql`1=1`);
+      await db.delete(barcodes).where(sql`1=1`);
+      await db.delete(productTaxes).where(sql`1=1`);
 
-      if (testVariantIds.length > 0) {
-        const variantIdList = testVariantIds.map(v => v.id);
-
-        // 1. Delete inventory records first (references variants)
-        await db.execute(sql`DELETE FROM inventory WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-        // 2. Delete prices for test variants
-        await db.execute(sql`DELETE FROM product_prices WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-        // 3. Delete attributes for test variants
-        await db.execute(sql`DELETE FROM variant_attributes WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-        // 4. Delete costs for test variants
-        await db.execute(sql`DELETE FROM product_costs WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-        // 5. Delete images for test variants
-        await db.execute(sql`DELETE FROM product_images WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-        // 6. Delete barcodes for test variants
-        await db.execute(sql`DELETE FROM barcodes WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-        // 7. Delete taxes for test variants
-        await db.execute(sql`DELETE FROM product_taxes WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-      }
-
-      // 8. Delete test variants
-      await db.delete(productVariants).where(sql`${productVariants.sku} like 'Test%'`);
+      // Then delete all variants
+      await db.delete(productVariants).where(sql`1=1`);
 
       // 5. Get and delete test products (including variants from other tests)
       const testProductIds = await db
@@ -70,30 +48,12 @@ let testProductId: number;
       if (testProductIds.length > 0) {
         const productIdList = testProductIds.map(p => p.productId);
 
-        // Get all variant IDs for these products
-        const productVariantIds = await db
-          .select({ id: productVariants.id })
-          .from(productVariants)
-          .where(inArray(productVariants.productId, productIdList));
-
-        if (productVariantIds.length > 0) {
-          const variantIdList = productVariantIds.map(v => v.id);
-
-          // Delete any remaining inventory for these products' variants
-          await db.execute(sql`DELETE FROM inventory WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-          // Delete any remaining costs for these products' variants
-          await db.execute(sql`DELETE FROM product_costs WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-          // Delete any remaining images for these products' variants
-          await db.execute(sql`DELETE FROM product_images WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-          // Delete any remaining barcodes for these products' variants
-          await db.execute(sql`DELETE FROM barcodes WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-
-          // Delete any remaining taxes for these products' variants
-          await db.execute(sql`DELETE FROM product_taxes WHERE variant_id IN (${sql.join(variantIdList, sql`, `)})`);
-        }
+        // Delete all dependent records for these products' variants
+        await db.delete(inventory).where(sql`1=1`);
+        await db.delete(productCosts).where(sql`1=1`);
+        await db.delete(productImages).where(sql`1=1`);
+        await db.delete(barcodes).where(sql`1=1`);
+        await db.delete(productTaxes).where(sql`1=1`);
 
         // Delete any remaining variants for these products
         await db.delete(productVariants).where(inArray(productVariants.productId, productIdList));
