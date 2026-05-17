@@ -107,7 +107,7 @@ export async function getBarcodeById(id: number): Promise<BarcodeResponse> {
     throw new Error('Barcode tidak ditemukan');
   }
 
-  const barcode = result[0];
+  const barcode = result[0]!;
   return {
     id: barcode.id,
     variant_id: barcode.variantId,

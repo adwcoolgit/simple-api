@@ -132,14 +132,19 @@ export async function createInventory(input: CreateInventoryInput): Promise<Inve
 }
 
 export async function getInventoryList(filters?: InventoryFilters): Promise<InventoryResponse[]> {
-  let query = dbRead.select().from(inventory);
+  const conditions = [];
 
   if (filters?.warehouse_id) {
-    query = query.where(eq(inventory.warehouseId, filters.warehouse_id));
+    conditions.push(eq(inventory.warehouseId, filters.warehouse_id));
   }
 
   if (filters?.variant_id) {
-    query = query.where(eq(inventory.variantId, filters.variant_id));
+    conditions.push(eq(inventory.variantId, filters.variant_id));
+  }
+
+  let query: any = dbRead.select().from(inventory);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
   }
 
   const results = await query;
@@ -147,7 +152,7 @@ export async function getInventoryList(filters?: InventoryFilters): Promise<Inve
   let filteredResults = results;
 
   if (filters?.low_stock) {
-    filteredResults = results.filter(inv => {
+    filteredResults = results.filter((inv: any) => {
       if (!inv.minStock) return false;
       const stockQty = parseFloat(inv.stockQty);
       const minStock = parseFloat(inv.minStock);
