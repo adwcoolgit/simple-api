@@ -4,7 +4,13 @@ import { Elysia } from 'elysia';
 import { routes } from '../src/routes';
 import { barcodesRoute } from '../src/routes/barcodes-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, barcodes } from '../src/db/schema';
+import {
+  users,
+  sessions,
+  products,
+  productVariants,
+  barcodes,
+} from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -17,7 +23,7 @@ const testName = 'Test User';
 // Use pre-created token for faster tests
 let authToken: string;
 let testUserId: number;
-let testProductId: string;
+let testProductId: number;
 let testVariantId: number;
 
 // Database readiness check
@@ -42,7 +48,7 @@ beforeEach(async () => {
   if (!dbAvailable) return;
 
   // Wait for database to be ready
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   // Clean up test data in correct order
   try {
@@ -62,18 +68,34 @@ beforeEach(async () => {
   }
 
   // Check if test user and token already exist
-  const existingUser = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
+  const existingUser = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, testEmail))
+    .limit(1);
   if (existingUser.length > 0) {
     testUserId = existingUser[0]!.id;
-    const existingSession = await db.select().from(sessions).where(eq(sessions.userId, testUserId)).limit(1);
+    const existingSession = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.userId, testUserId))
+      .limit(1);
     if (existingSession.length > 0) {
       authToken = existingSession[0]!.token;
 
       // Also check if test variant exists
-      const existingProduct = await db.select().from(products).where(eq(products.name, `Test Product-${Date.now()}`)).limit(1);
+      const existingProduct = await db
+        .select()
+        .from(products)
+        .where(eq(products.name, `Test Product-${Date.now()}`))
+        .limit(1);
       if (existingProduct.length > 0) {
         testProductId = existingProduct[0]!.productId;
-        const existingVariant = await db.select().from(productVariants).where(eq(productVariants.productId, testProductId)).limit(1);
+        const existingVariant = await db
+          .select()
+          .from(productVariants)
+          .where(eq(productVariants.productId, testProductId))
+          .limit(1);
         if (existingVariant.length > 0) {
           testVariantId = existingVariant[0]!.id;
         }
@@ -93,7 +115,11 @@ beforeEach(async () => {
   }
 
   // Get user ID
-  const user = await db.select({ id: users.id }).from(users).where(eq(users.email, testEmail)).limit(1);
+  const user = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, testEmail))
+    .limit(1);
   testUserId = user[0]!.id;
 
   // Create session token directly in DB
@@ -104,21 +130,27 @@ beforeEach(async () => {
   });
 
   // Create test product
-  const [product] = await db.insert(products).values({
-    name: `Test Product-${Date.now()}`,
-    description: 'Test Description',
-    isActive: true,
-  }).$returningId();
+  const [product] = await db
+    .insert(products)
+    .values({
+      name: `Test Product-${Date.now()}`,
+      description: 'Test Description',
+      isActive: true,
+    })
+    .$returningId();
   testProductId = product!.productId;
 
   // Create test variant
-  const [variant] = await db.insert(productVariants).values({
-    productId: testProductId,
-    sku: `TEST-SKU-${Date.now()}`,
-    variantName: 'Test Variant',
-    isActive: true,
-    isSellable: true,
-  }).$returningId();
+  const [variant] = await db
+    .insert(productVariants)
+    .values({
+      productId: testProductId,
+      sku: `TEST-SKU-${Date.now()}`,
+      variantName: 'Test Variant',
+      isActive: true,
+      isSellable: true,
+    })
+    .$returningId();
   testVariantId = variant!.id;
 });
 
@@ -129,18 +161,28 @@ function makeAuthRequest(method: string, path: string, body?: any) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`,
+      Authorization: `Bearer ${authToken}`,
     },
   };
   if (body) {
     init.body = JSON.stringify(body);
   }
   const req = new Request(url, init);
-  return app.handle(req).then(res => res.json().catch(() => ({} as any)).then(json => ({ status: res.status, json })));
+  return app.handle(req).then((res) =>
+    res
+      .json()
+      .catch(() => ({} as any))
+      .then((json: any) => ({ status: res.status, json }))
+  );
 }
 
 // Helper function to make requests without auth
-function makeRequest(method: string, path: string, body?: any, headers?: Record<string, string>) {
+function makeRequest(
+  method: string,
+  path: string,
+  body?: any,
+  headers?: Record<string, string>
+) {
   const url = `http://localhost${path}`;
   const init: RequestInit = {
     method,
@@ -153,7 +195,12 @@ function makeRequest(method: string, path: string, body?: any, headers?: Record<
     init.body = JSON.stringify(body);
   }
   const req = new Request(url, init);
-  return app.handle(req).then(res => res.json().catch(() => ({} as any)).then(json => ({ status: res.status, json })));
+  return app.handle(req).then((res) =>
+    res
+      .json()
+      .catch(() => ({} as any))
+      .then((json: any) => ({ status: res.status, json }))
+  );
 }
 
 describe('POST /api/barcodes — Tambah Barcode', () => {
@@ -253,12 +300,17 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
   it('9. Token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('POST', '/api/barcodes', {
-      variant_id: testVariantId,
-      barcode: '8991234567890',
-    }, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'POST',
+      '/api/barcodes',
+      {
+        variant_id: testVariantId,
+        barcode: '8991234567890',
+      },
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
     expect(res.json.error).toBe('Unauthorized');
   });
@@ -290,7 +342,10 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
       barcode: '8991234567890',
     });
 
-    const res = await makeAuthRequest('GET', `/api/barcodes/variant/${testVariantId}`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/barcodes/variant/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(Array.isArray(res.json.data)).toBe(true);
     expect(res.json.data.length).toBeGreaterThan(0);
@@ -302,7 +357,10 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
   it('12. Variant ada tapi belum punya barcode', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('GET', `/api/barcodes/variant/${testVariantId}`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/barcodes/variant/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toEqual([]);
   });
@@ -325,7 +383,10 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
   it('15. Tanpa header Authorization', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', `/api/barcodes/variant/${testVariantId}`);
+    const res = await makeRequest(
+      'GET',
+      `/api/barcodes/variant/${testVariantId}`
+    );
     expect(res.status).toBe(401);
     expect(res.json.error).toBe('Unauthorized');
   });
@@ -333,9 +394,14 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
   it('16. Token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', `/api/barcodes/variant/${testVariantId}`, undefined, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'GET',
+      `/api/barcodes/variant/${testVariantId}`,
+      undefined,
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
     expect(res.json.error).toBe('Unauthorized');
   });
@@ -344,13 +410,16 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
     if (!dbAvailable) return;
 
     // Create another variant
-    const [otherVariant] = await db.insert(productVariants).values({
-      productId: testProductId,
-      sku: `TEST-OTHER-${Date.now()}`,
-      variantName: 'Other Variant',
-      isActive: true,
-      isSellable: true,
-    }).$returningId();
+    const [otherVariant] = await db
+      .insert(productVariants)
+      .values({
+        productId: testProductId,
+        sku: `TEST-OTHER-${Date.now()}`,
+        variantName: 'Other Variant',
+        isActive: true,
+        isSellable: true,
+      })
+      .$returningId();
     const otherVariantId = otherVariant!.id;
 
     // Create barcodes for both variants
@@ -363,7 +432,10 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
       barcode: '8991234567891',
     });
 
-    const res = await makeAuthRequest('GET', `/api/barcodes/variant/${testVariantId}`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/barcodes/variant/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data.length).toBe(1);
     expect(res.json.data[0].variant_id).toBe(testVariantId);
@@ -421,9 +493,14 @@ describe('GET /api/barcodes/:id — Ambil Barcode by ID', () => {
   it('22. Token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', `/api/barcodes/${testBarcodeId}`, undefined, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'GET',
+      `/api/barcodes/${testBarcodeId}`,
+      undefined,
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
     expect(res.json.error).toBe('Unauthorized');
   });
@@ -446,7 +523,10 @@ describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
   it('23. ID valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('DELETE', `/api/barcodes/${testBarcodeId}`);
+    const res = await makeAuthRequest(
+      'DELETE',
+      `/api/barcodes/${testBarcodeId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toBe('OK');
   });
@@ -456,17 +536,26 @@ describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
 
     await makeAuthRequest('DELETE', `/api/barcodes/${testBarcodeId}`);
 
-    const barcodesInDb = await db.select().from(barcodes).where(eq(barcodes.id, testBarcodeId));
+    const barcodesInDb = await db
+      .select()
+      .from(barcodes)
+      .where(eq(barcodes.id, testBarcodeId));
     expect(barcodesInDb.length).toBe(0);
   });
 
   it('25. Hapus dua kali dengan ID yang sama', async () => {
     if (!dbAvailable) return;
 
-    const res1 = await makeAuthRequest('DELETE', `/api/barcodes/${testBarcodeId}`);
+    const res1 = await makeAuthRequest(
+      'DELETE',
+      `/api/barcodes/${testBarcodeId}`
+    );
     expect(res1.status).toBe(200);
 
-    const res2 = await makeAuthRequest('DELETE', `/api/barcodes/${testBarcodeId}`);
+    const res2 = await makeAuthRequest(
+      'DELETE',
+      `/api/barcodes/${testBarcodeId}`
+    );
     expect(res2.status).toBe(404);
     expect(res2.json.error).toBe('Barcode tidak ditemukan');
   });
@@ -497,9 +586,14 @@ describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
   it('29. Token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('DELETE', `/api/barcodes/${testBarcodeId}`, undefined, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'DELETE',
+      `/api/barcodes/${testBarcodeId}`,
+      undefined,
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
     expect(res.json.error).toBe('Unauthorized');
   });

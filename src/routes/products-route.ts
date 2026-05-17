@@ -223,7 +223,7 @@ const getProductByProductIdHandler = new Elysia()
       params: t.Object({
         productId: t.Number(),
       }),
-      detail: {
+        detail: {
         summary: 'Get product details by product ID',
         tags: ['Products'],
         security: [{ bearerAuth: [] }],
@@ -235,13 +235,31 @@ const getProductByProductIdHandler = new Elysia()
                 example: {
                   data: {
                     product_id: 1,
-                    name: 'Indomie Goreng',
-                    description: 'Mie instan rasa goreng',
+                    name: 'Laptop Pro X1',
+                    description: '15-inch high-performance laptop',
                     category_id: 1,
-                    department_id: 2,
+                    department_id: 10,
                     is_active: true,
-                    created_at: '2024-01-01T00:00:00.000Z',
-                    updated_at: '2024-01-01T00:00:00.000Z',
+                    created_at: '2025-01-01T00:00:00.000Z',
+                    updated_at: '2025-01-01T00:00:00.000Z',
+                    variants: [
+                      {
+                        id: 1,
+                        product_id: 1,
+                        sku: 'LAPTOP-X1-16',
+                        variant_name: '16GB/512GB',
+                        uom: 'pcs',
+                        is_active: true,
+                        is_sellable: true,
+                        prices: [{ id: 1, variant_id: 1, price_type: 'retail', price: '1499.99' }],
+                        costs: [{ id: 1, variant_id: 1, cost_price: '1050.00' }],
+                        taxes: [{ id: 1, variant_id: 1, tax_code: 'VAT20', is_inclusive: true }],
+                        barcodes: [{ id: 1, variant_id: 1, barcode: '5901234123457' }],
+                        images: [{ id: 1, variant_id: 1, image_url: 'https://cdn.acme.com/laptop-x1-gray.jpg', is_primary: true }],
+                        attributes: [{ id: 1, variant_id: 1, attribute_name: 'Color', attribute_value: 'Space Gray' }],
+                        inventory: [{ id: 1, variant_id: 1, warehouse_id: 1, stock_qty: '120.00', reserved_qty: '15.00' }]
+                      }
+                    ]
                   },
                 },
               },
@@ -333,7 +351,7 @@ const updateProductHandler = new Elysia()
         department_id: t.Optional(t.Number()),
         is_active: t.Optional(t.Boolean()),
       }),
-      detail: {
+        detail: {
         summary: 'Update product by product ID',
         tags: ['Products'],
         security: [{ bearerAuth: [] }],

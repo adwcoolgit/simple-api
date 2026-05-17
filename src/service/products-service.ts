@@ -1,4 +1,15 @@
-import { products } from '../db/schema';
+import {
+  products,
+  productVariants,
+  productPrices,
+  productCosts,
+  inventory,
+  barcodes,
+  productTaxes,
+  productImages,
+  variantAttributes,
+  warehouses,
+} from '../db/schema';
 import { db, dbRead } from '../db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 
@@ -45,13 +56,16 @@ export async function createProduct(input: CreateProductInput) {
   }
 
   try {
-    const [newProduct] = await db.insert(products).values({
-      name: input.name,
-      description: input.description,
-      categoryId: input.categoryId,
-      departmentId: input.departmentId,
-      isActive: input.isActive ?? true,
-    }).$returningId();
+    const [newProduct] = await db
+      .insert(products)
+      .values({
+        name: input.name,
+        description: input.description,
+        categoryId: input.categoryId,
+        departmentId: input.departmentId,
+        isActive: input.isActive ?? true,
+      })
+      .$returningId();
 
     if (!newProduct) {
       throw new Error('Failed to create product');
@@ -105,7 +119,8 @@ export async function getProducts(filters: GetProductsFilters = {}) {
       whereConditions.push(eq(products.departmentId, filters.departmentId));
     }
 
-    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
     // Get total count
     const countResult = await dbRead
@@ -145,27 +160,93 @@ export async function getProductByProductId(productId: number) {
       .from(products)
       .where(eq(products.productId, productId));
 
-    if (!product) {
-      throw new Error('Product tidak ditemukan');
-    }
+    if (!product) throw new Error('Product tidak ditemukan');
+    if (product.isActive === false) throw new Error('Product tidak ditemukan');
 
-    if (product.isActive === false) {
-      throw new Error('Product tidak ditemukan');
-    }
+    // Fetch variants with full details
+    const variants = await dbRead
+      .select()
+      .from(productVariants)
+      .where(eq(productVariants.productId, productId));
 
-    return product;
+    const variantIds = variants.map((v) => v.id);
+
+    // Related data for variants
+    const prices = variantIds.length
+      ? await dbRead
+          .select()
+          .from(productPrices)
+          .where(sql`${productPrices.variant_id} IN (${variantIds.join(',')})`)
+      : [];
+    const costs = variantIds.length
+      ? await dbRead
+          .select()
+          .from(productCosts)
+          .where(sql`${productCosts.variantId} IN (${variantIds.join(',')})`)
+      : [];
+    const taxes = variantIds.length
+      ? await dbRead
+          .select()
+          .from(productTaxes)
+          .where(sql`${productTaxes.variantId} IN (${variantIds.join(',')})`)
+      : [];
+    const barcs = variantIds.length
+      ? await dbRead
+          .select()
+          .from(barcodes)
+          .where(sql`${barcodes.variantId} IN (${variantIds.join(',')})`)
+      : [];
+    const imgs = variantIds.length
+      ? await dbRead
+          .select()
+          .from(productImages)
+          .where(sql`${productImages.variantId} IN (${variantIds.join(',')})`)
+      : [];
+    const attrs = variantIds.length
+      ? await dbRead
+          .select()
+          .from(variantAttributes)
+          .where(
+            sql`${variantAttributes.variantId} IN (${variantIds.join(',')})`
+          )
+      : [];
+    const inv = variantIds.length
+      ? await dbRead
+          .select({
+            stockQty: inventory.stockQty,
+            variantId: inventory.variantId,
+          })
+          .from(inventory)
+          .where(sql`${inventory.variantId} IN (${variantIds.join(',')})`)
+      : [];
+
+    // Attach to variants
+    const variantsWithDetails = variants.map((variant) => ({
+      ...variant,
+      prices: prices.filter((p) => {
+        return p.variant_id === variant.id && p.price_type === 'retail';
+      }),
+      costs: costs.filter((c) => c.variantId === variant.id),
+      taxes: taxes.filter((t) => t.variantId === variant.id),
+      barcodes: barcs.filter((b) => b.variantId === variant.id),
+      images: imgs.filter((i) => i.variantId === variant.id),
+      attributes: attrs.filter((a) => a.variantId === variant.id),
+      inventory: inv.filter((i) => i.variantId === variant.id),
+    }));
+
+    return { ...product, variants: variantsWithDetails };
   } catch (error: any) {
     console.error('Get product by product ID error:', error);
-
-    if (error instanceof Error && error.message === 'Product tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Product tidak ditemukan')
       throw error;
-    }
-
     throw new Error('Gagal mengambil data product');
   }
 }
 
-export async function updateProduct(productId: number, input: UpdateProductInput) {
+export async function updateProduct(
+  productId: number,
+  input: UpdateProductInput
+) {
   // Input validation
   if (input.name !== undefined) {
     if (!input.name || input.name.trim().length === 0) {
@@ -191,7 +272,13 @@ export async function updateProduct(productId: number, input: UpdateProductInput
     }
 
     // Prepare update data
-    const updateData: any = {};
+    const updateData: {
+      name?: string;
+      description?: string;
+      categoryId?: number;
+      departmentId?: number;
+      isActive?: boolean;
+    } = {};
 
     if (input.name !== undefined) {
       updateData.name = input.name;
@@ -210,7 +297,10 @@ export async function updateProduct(productId: number, input: UpdateProductInput
     }
 
     // Perform partial update
-    await db.update(products).set(updateData).where(eq(products.productId, productId));
+    await db
+      .update(products)
+      .set(updateData)
+      .where(eq(products.productId, productId));
 
     // Return updated product
     const [updatedProduct] = await dbRead
@@ -257,9 +347,12 @@ export async function deleteProduct(productId: number) {
     }
 
     // Soft delete - set is_active to false
-    await db.update(products).set({
-      isActive: false,
-    }).where(eq(products.productId, productId));
+    await db
+      .update(products)
+      .set({
+        isActive: false,
+      })
+      .where(eq(products.productId, productId));
 
     return 'OK';
   } catch (error: any) {

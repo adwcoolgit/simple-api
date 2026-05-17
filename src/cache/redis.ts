@@ -6,10 +6,8 @@ const redis = new Redis({
   port: parseInt(Bun.env.REDIS_PORT || '6379'),
   password: Bun.env.REDIS_PASSWORD || undefined,
   lazyConnect: true,
-  retryDelayOnFailover: 100,
   enableReadyCheck: false,
   maxRetriesPerRequest: 3,
-  retryDelayOnClusterDown: 100,
   reconnectOnError: (err) => {
     console.warn('Redis reconnect on error:', err.message);
     return err.message.includes('READONLY');

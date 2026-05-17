@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 
 export const authMiddleware = new Elysia()
   .derive(async ({ headers, cookie }) => {
-    const token = cookie.auth_token || headers.authorization?.replace('Bearer ', '');
+    const token = (cookie.auth_token?.value || headers.authorization?.replace('Bearer ', '')) as string;
     if (!token) {
       throw new Error('Unauthorized');
     }

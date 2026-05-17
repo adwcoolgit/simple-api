@@ -18,7 +18,9 @@ export interface ProductTaxResponse {
 /**
  * Create a new product tax configuration
  */
-export async function createProductTax(data: CreateProductTaxData): Promise<ProductTaxResponse> {
+export async function createProductTax(
+  data: CreateProductTaxData
+): Promise<ProductTaxResponse> {
   // Validate that variant exists
   const existingVariant = await db
     .select()
@@ -42,13 +44,11 @@ export async function createProductTax(data: CreateProductTaxData): Promise<Prod
   }
 
   // Insert new tax configuration
-  await db
-    .insert(productTaxes)
-    .values({
-      variantId: data.variantId,
-      taxCode: data.tax_code || null,
-      isInclusive: data.is_inclusive !== undefined ? data.is_inclusive : false,
-    });
+  await db.insert(productTaxes).values({
+    variantId: data.variantId,
+    taxCode: data.tax_code || null,
+    isInclusive: data.is_inclusive !== undefined ? data.is_inclusive : false,
+  });
 
   // Get the inserted record
   const [inserted] = await db
@@ -73,7 +73,9 @@ export async function createProductTax(data: CreateProductTaxData): Promise<Prod
 /**
  * Get product tax configuration by variant ID
  */
-export async function getProductTaxByVariantId(variantId: number): Promise<ProductTaxResponse> {
+export async function getProductTaxByVariantId(
+  variantId: number
+): Promise<ProductTaxResponse> {
   const result = await db
     .select()
     .from(productTaxes)
@@ -84,7 +86,7 @@ export async function getProductTaxByVariantId(variantId: number): Promise<Produ
     throw new Error('Konfigurasi pajak tidak ditemukan');
   }
 
-  const tax = result[0];
+  const tax = result[0]!;
   return {
     id: tax.id,
     variant_id: tax.variantId,
@@ -96,7 +98,10 @@ export async function getProductTaxByVariantId(variantId: number): Promise<Produ
 /**
  * Update product tax configuration
  */
-export async function updateProductTax(id: number, data: Partial<CreateProductTaxData>): Promise<ProductTaxResponse> {
+export async function updateProductTax(
+  id: number,
+  data: Partial<CreateProductTaxData>
+): Promise<ProductTaxResponse> {
   // Check if tax configuration exists
   const existingTax = await db
     .select()
@@ -118,10 +123,7 @@ export async function updateProductTax(id: number, data: Partial<CreateProductTa
   }
 
   // Update the record
-  await db
-    .update(productTaxes)
-    .set(updateData)
-    .where(eq(productTaxes.id, id));
+  await db.update(productTaxes).set(updateData).where(eq(productTaxes.id, id));
 
   // Get the updated record
   const [updated] = await db
@@ -158,7 +160,5 @@ export async function deleteProductTax(id: number): Promise<void> {
   }
 
   // Delete the record
-  await db
-    .delete(productTaxes)
-    .where(eq(productTaxes.id, id));
+  await db.delete(productTaxes).where(eq(productTaxes.id, id));
 }

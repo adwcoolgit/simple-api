@@ -6,11 +6,24 @@ import { productsRoute } from '../src/routes/products-route';
 import { productVariantsRoute } from '../src/routes/product-variants-route';
 import { variantAttributesRoute } from '../src/routes/variant-attributes-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, variantAttributes, productCosts, productImages } from '../src/db/schema';
+import {
+  users,
+  sessions,
+  products,
+  productVariants,
+  variantAttributes,
+  productCosts,
+  productImages,
+} from '../src/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
-const app = new Elysia().use(routes).use(usersRoute).use(productsRoute).use(productVariantsRoute).use(variantAttributesRoute);
+const app = new Elysia()
+  .use(routes)
+  .use(usersRoute)
+  .use(productsRoute)
+  .use(productVariantsRoute)
+  .use(variantAttributesRoute);
 
 const testEmail = `test-variant-${Date.now()}@example.com`;
 const testPassword = 'password123';
@@ -60,14 +73,22 @@ beforeEach(async () => {
   const hashedPassword = await bcrypt.hash(testPassword, 12);
 
   // Create or get test user
-  let user = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
+  let user = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, testEmail))
+    .limit(1);
   if (user.length === 0) {
     await db.insert(users).values({
       name: testName,
       email: testEmail,
       password: hashedPassword,
     });
-    user = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
+    user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, testEmail))
+      .limit(1);
   }
   testUserId = user[0]!.id;
 
@@ -81,21 +102,27 @@ beforeEach(async () => {
   const timestamp = Date.now();
 
   // Create test product
-  const [product] = await db.insert(products).values({
-    name: `Test Product-${timestamp}`,
-    description: 'Test product for variants',
-    isActive: true,
-  }).$returningId();
+  const [product] = await db
+    .insert(products)
+    .values({
+      name: `Test Product-${timestamp}`,
+      description: 'Test product for variants',
+      isActive: true,
+    })
+    .$returningId();
   testProductId = product!.productId;
 
   // Create test variant
-  const [variant] = await db.insert(productVariants).values({
-    productId: testProductId,
-    sku: `Test-Variant-SKU-${timestamp}`,
-    variantName: 'Test Variant',
-    isActive: true,
-    isSellable: true,
-  }).$returningId();
+  const [variant] = await db
+    .insert(productVariants)
+    .values({
+      productId: testProductId,
+      sku: `Test-Variant-SKU-${timestamp}`,
+      variantName: 'Test Variant',
+      isActive: true,
+      isSellable: true,
+    })
+    .$returningId();
   testVariantId = variant!.id;
 });
 
@@ -106,7 +133,7 @@ async function makeAuthRequest(method: string, path: string, body?: any) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`,
+      Authorization: `Bearer ${authToken}`,
     },
   };
   if (body) {
@@ -114,12 +141,17 @@ async function makeAuthRequest(method: string, path: string, body?: any) {
   }
   const req = new Request(url, init);
   const res = await app.handle(req);
-  const json = await res.json().catch(() => ({} as any)) as any;
+  const json = (await res.json().catch(() => ({}) as any)) as any;
   return { status: res.status, json };
 }
 
 // Helper function to make requests without auth
-async function makeRequest(method: string, path: string, body?: any, headers?: Record<string, string>) {
+async function makeRequest(
+  method: string,
+  path: string,
+  body?: any,
+  headers?: Record<string, string>
+) {
   const url = `http://localhost${path}`;
   const init: RequestInit = {
     method,
@@ -133,7 +165,7 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
   }
   const req = new Request(url, init);
   const res = await app.handle(req);
-  const json = await res.json().catch(() => ({} as any)) as any;
+  const json = (await res.json().catch(() => ({}) as any)) as any;
   return { status: res.status, json };
 }
 
@@ -192,13 +224,18 @@ describe('POST /api/variant-attributes', () => {
 
   it('5. Token tidak valid', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('POST', '/api/variant-attributes', {
-      variant_id: testVariantId,
-      attribute_name: 'Test Attr',
-      attribute_value: 'Test Val',
-    }, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'POST',
+      '/api/variant-attributes',
+      {
+        variant_id: testVariantId,
+        attribute_name: 'Test Attr',
+        attribute_value: 'Test Val',
+      },
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
 
     if (process.env.NODE_ENV === 'test') {
       expect(res.status).toBe(201);
@@ -246,14 +283,25 @@ describe('GET /api/variant-attributes/:variantId', () => {
   beforeEach(async () => {
     // Create test attributes
     await db.insert(variantAttributes).values([
-      { variantId: testVariantId, attributeName: 'Test Color 1', attributeValue: 'Red' },
-      { variantId: testVariantId, attributeName: 'Test Size 1', attributeValue: 'M' },
+      {
+        variantId: testVariantId,
+        attributeName: 'Test Color 1',
+        attributeValue: 'Red',
+      },
+      {
+        variantId: testVariantId,
+        attributeName: 'Test Size 1',
+        attributeValue: 'M',
+      },
     ]);
   });
 
   it('10. Variant ada dan memiliki attribute', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('GET', `/api/variant-attributes/${testVariantId}`);
+    const res = await makeRequest(
+      'GET',
+      `/api/variant-attributes/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(Array.isArray(res.json.data)).toBe(true);
     expect(res.json.data.length).toBeGreaterThanOrEqual(2);
@@ -262,13 +310,19 @@ describe('GET /api/variant-attributes/:variantId', () => {
   it('11. Variant ada tapi belum punya attribute', async () => {
     if (!dbAvailable) return;
     // Create another variant without attributes
-    const [otherVariant] = await db.insert(productVariants).values({
-      productId: testProductId,
-      sku: 'Test-Other-Variant',
-      isActive: true,
-      isSellable: true,
-    }).$returningId();
-    const res = await makeRequest('GET', `/api/variant-attributes/${otherVariant.id}`);
+    const [otherVariant] = await db
+      .insert(productVariants)
+      .values({
+        productId: testProductId,
+        sku: 'Test-Other-Variant',
+        isActive: true,
+        isSellable: true,
+      })
+      .$returningId();
+    const res = await makeRequest(
+      'GET',
+      `/api/variant-attributes/${otherVariant!.id}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toEqual([]);
   });
@@ -282,16 +336,24 @@ describe('GET /api/variant-attributes/:variantId', () => {
 
   it('13. Tanpa token pun bisa diakses', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('GET', `/api/variant-attributes/${testVariantId}`);
+    const res = await makeRequest(
+      'GET',
+      `/api/variant-attributes/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(Array.isArray(res.json.data)).toBe(true);
   });
 
   it('14. Data yang dikembalikan hanya milik variant yang diminta', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('GET', `/api/variant-attributes/${testVariantId}`);
+    const res = await makeRequest(
+      'GET',
+      `/api/variant-attributes/${testVariantId}`
+    );
     expect(res.status).toBe(200);
-    expect(res.json.data.every((attr: any) => attr.variantId === testVariantId)).toBe(true);
+    expect(
+      res.json.data.every((attr: any) => attr.variantId === testVariantId)
+    ).toBe(true);
   });
 });
 
@@ -299,17 +361,23 @@ describe('GET /api/variant-attributes/detail/:id', () => {
   let testAttributeId: number;
 
   beforeEach(async () => {
-    const [attribute] = await db.insert(variantAttributes).values({
-      variantId: testVariantId,
-      attributeName: 'Test Detail Attr',
-      attributeValue: 'Test Detail Val',
-    }).$returningId();
+    const [attribute] = await db
+      .insert(variantAttributes)
+      .values({
+        variantId: testVariantId,
+        attributeName: 'Test Detail Attr',
+        attributeValue: 'Test Detail Val',
+      })
+      .$returningId();
     testAttributeId = attribute!.id;
   });
 
   it('15. id valid dan ada', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('GET', `/api/variant-attributes/detail/${testAttributeId}`);
+    const res = await makeRequest(
+      'GET',
+      `/api/variant-attributes/detail/${testAttributeId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data.id).toBe(testAttributeId);
     expect(res.json.data.attributeName).toBe('Test Detail Attr');
@@ -317,14 +385,20 @@ describe('GET /api/variant-attributes/detail/:id', () => {
 
   it('16. id tidak ditemukan', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('GET', '/api/variant-attributes/detail/99999');
+    const res = await makeRequest(
+      'GET',
+      '/api/variant-attributes/detail/99999'
+    );
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Attribute tidak ditemukan' });
   });
 
   it('17. Tanpa token pun bisa diakses', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('GET', `/api/variant-attributes/detail/${testAttributeId}`);
+    const res = await makeRequest(
+      'GET',
+      `/api/variant-attributes/detail/${testAttributeId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data.id).toBe(testAttributeId);
   });
@@ -334,19 +408,26 @@ describe('PATCH /api/variant-attributes/:id', () => {
   let testAttributeId: number;
 
   beforeEach(async () => {
-    const [attribute] = await db.insert(variantAttributes).values({
-      variantId: testVariantId,
-      attributeName: 'Test Update Attr',
-      attributeValue: 'Original Value',
-    }).$returningId();
+    const [attribute] = await db
+      .insert(variantAttributes)
+      .values({
+        variantId: testVariantId,
+        attributeName: 'Test Update Attr',
+        attributeValue: 'Original Value',
+      })
+      .$returningId();
     testAttributeId = attribute!.id;
   });
 
   it('18. Update attribute_name saja', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('PATCH', `/api/variant-attributes/${testAttributeId}`, {
-      attribute_name: 'Updated Name',
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/variant-attributes/${testAttributeId}`,
+      {
+        attribute_name: 'Updated Name',
+      }
+    );
     expect(res.status).toBe(200);
     expect(res.json.data.attributeName).toBe('Updated Name');
     expect(res.json.data.attributeValue).toBe('Original Value');
@@ -354,19 +435,27 @@ describe('PATCH /api/variant-attributes/:id', () => {
 
   it('19. Update attribute_value saja', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('PATCH', `/api/variant-attributes/${testAttributeId}`, {
-      attribute_value: 'Updated Value',
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/variant-attributes/${testAttributeId}`,
+      {
+        attribute_value: 'Updated Value',
+      }
+    );
     expect(res.status).toBe(200);
     expect(res.json.data.attributeValue).toBe('Updated Value');
   });
 
   it('20. Update kedua field sekaligus', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('PATCH', `/api/variant-attributes/${testAttributeId}`, {
-      attribute_name: 'Updated Name',
-      attribute_value: 'Updated Value',
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/variant-attributes/${testAttributeId}`,
+      {
+        attribute_name: 'Updated Name',
+        attribute_value: 'Updated Value',
+      }
+    );
     expect(res.status).toBe(200);
     expect(res.json.data.attributeName).toBe('Updated Name');
     expect(res.json.data.attributeValue).toBe('Updated Value');
@@ -374,29 +463,42 @@ describe('PATCH /api/variant-attributes/:id', () => {
 
   it('21. id tidak ditemukan', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('PATCH', '/api/variant-attributes/99999', {
-      attribute_name: 'Test Update',
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      '/api/variant-attributes/99999',
+      {
+        attribute_name: 'Test Update',
+      }
+    );
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Attribute tidak ditemukan' });
   });
 
   it('22. Token tidak ada', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('PATCH', `/api/variant-attributes/${testAttributeId}`, {
-      attribute_name: 'Test Update',
-    });
+    const res = await makeRequest(
+      'PATCH',
+      `/api/variant-attributes/${testAttributeId}`,
+      {
+        attribute_name: 'Test Update',
+      }
+    );
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
   it('23. Token tidak valid', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('PATCH', `/api/variant-attributes/${testAttributeId}`, {
-      attribute_name: 'Test Update',
-    }, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'PATCH',
+      `/api/variant-attributes/${testAttributeId}`,
+      {
+        attribute_name: 'Test Update',
+      },
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
 
     if (process.env.NODE_ENV === 'test') {
       expect(res.status).toBe(200);
@@ -409,17 +511,29 @@ describe('PATCH /api/variant-attributes/:id', () => {
 
   it('24. Body kosong', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('PATCH', `/api/variant-attributes/${testAttributeId}`, {});
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/variant-attributes/${testAttributeId}`,
+      {}
+    );
     expect(res.status).toBe(422);
     expect(res.json).toEqual({ error: 'At least one field must be provided' });
   });
 
   it('25. Nilai di DB benar-benar berubah setelah update', async () => {
     if (!dbAvailable) return;
-    await makeAuthRequest('PATCH', `/api/variant-attributes/${testAttributeId}`, {
-      attribute_name: 'DB Check Name',
-    });
-    const updatedAttr = await db.select().from(variantAttributes).where(eq(variantAttributes.id, testAttributeId)).limit(1);
+    await makeAuthRequest(
+      'PATCH',
+      `/api/variant-attributes/${testAttributeId}`,
+      {
+        attribute_name: 'DB Check Name',
+      }
+    );
+    const updatedAttr = await db
+      .select()
+      .from(variantAttributes)
+      .where(eq(variantAttributes.id, testAttributeId))
+      .limit(1);
     expect(updatedAttr[0]!.attributeName).toBe('DB Check Name');
   });
 });
@@ -428,62 +542,97 @@ describe('DELETE /api/variant-attributes/:id', () => {
   let testAttributeId: number;
 
   beforeEach(async () => {
-    const [attribute] = await db.insert(variantAttributes).values({
-      variantId: testVariantId,
-      attributeName: 'Test Delete Attr',
-      attributeValue: 'Test Delete Val',
-    }).$returningId();
+    const [attribute] = await db
+      .insert(variantAttributes)
+      .values({
+        variantId: testVariantId,
+        attributeName: 'Test Delete Attr',
+        attributeValue: 'Test Delete Val',
+      })
+      .$returningId();
     testAttributeId = attribute!.id;
   });
 
   it('26. id valid, token valid', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('DELETE', `/api/variant-attributes/${testAttributeId}`);
+    const res = await makeAuthRequest(
+      'DELETE',
+      `/api/variant-attributes/${testAttributeId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json).toEqual({ data: 'OK' });
   });
 
   it('27. Record benar-benar terhapus dari DB', async () => {
     if (!dbAvailable) return;
-    await makeAuthRequest('DELETE', `/api/variant-attributes/${testAttributeId}`);
-    const deletedAttr = await db.select().from(variantAttributes).where(eq(variantAttributes.id, testAttributeId));
+    await makeAuthRequest(
+      'DELETE',
+      `/api/variant-attributes/${testAttributeId}`
+    );
+    const deletedAttr = await db
+      .select()
+      .from(variantAttributes)
+      .where(eq(variantAttributes.id, testAttributeId));
     expect(deletedAttr.length).toBe(0);
   });
 
   it('28. GET detail setelah delete → tidak ditemukan', async () => {
     if (!dbAvailable) return;
-    await makeAuthRequest('DELETE', `/api/variant-attributes/${testAttributeId}`);
-    const getRes = await makeRequest('GET', `/api/variant-attributes/detail/${testAttributeId}`);
+    await makeAuthRequest(
+      'DELETE',
+      `/api/variant-attributes/${testAttributeId}`
+    );
+    const getRes = await makeRequest(
+      'GET',
+      `/api/variant-attributes/detail/${testAttributeId}`
+    );
     expect(getRes.status).toBe(404);
   });
 
   it('29. Delete dua kali dengan id yang sama', async () => {
     if (!dbAvailable) return;
-    const res1 = await makeAuthRequest('DELETE', `/api/variant-attributes/${testAttributeId}`);
-    const res2 = await makeAuthRequest('DELETE', `/api/variant-attributes/${testAttributeId}`);
+    const res1 = await makeAuthRequest(
+      'DELETE',
+      `/api/variant-attributes/${testAttributeId}`
+    );
+    const res2 = await makeAuthRequest(
+      'DELETE',
+      `/api/variant-attributes/${testAttributeId}`
+    );
     expect(res1.status).toBe(200);
     expect(res2.status).toBe(404);
   });
 
   it('30. id tidak ditemukan', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('DELETE', '/api/variant-attributes/99999');
+    const res = await makeAuthRequest(
+      'DELETE',
+      '/api/variant-attributes/99999'
+    );
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Attribute tidak ditemukan' });
   });
 
   it('31. Token tidak ada', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('DELETE', `/api/variant-attributes/${testAttributeId}`);
+    const res = await makeRequest(
+      'DELETE',
+      `/api/variant-attributes/${testAttributeId}`
+    );
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
   it('32. Token tidak valid', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('DELETE', `/api/variant-attributes/${testAttributeId}`, undefined, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'DELETE',
+      `/api/variant-attributes/${testAttributeId}`,
+      undefined,
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
 
     if (process.env.NODE_ENV === 'test') {
       expect(res.status).toBe(200);

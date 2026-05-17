@@ -4,7 +4,13 @@ import { Elysia } from 'elysia';
 import { routes } from '../src/routes';
 import { productImagesRoute } from '../src/routes/product-images-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, productImages } from '../src/db/schema';
+import {
+  users,
+  sessions,
+  products,
+  productVariants,
+  productImages,
+} from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -40,7 +46,7 @@ beforeEach(async () => {
   if (!dbAvailable) return;
 
   // Wait for database to be ready
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   // Clean up test data in correct order
   try {
@@ -60,10 +66,18 @@ beforeEach(async () => {
   }
 
   // Check if test user and token already exist
-  const existingUser = await db.select().from(users).where(eq(users.email, testEmail)).limit(1);
+  const existingUser = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, testEmail))
+    .limit(1);
   if (existingUser.length > 0) {
     testUserId = existingUser[0]!.id;
-    const existingSession = await db.select().from(sessions).where(eq(sessions.userId, testUserId)).limit(1);
+    const existingSession = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.userId, testUserId))
+      .limit(1);
     if (existingSession.length > 0) {
       authToken = existingSession[0]!.token;
       return; // Skip setup if already exists
@@ -81,7 +95,11 @@ beforeEach(async () => {
   }
 
   // Get user ID
-  const user = await db.select({ id: users.id }).from(users).where(eq(users.email, testEmail)).limit(1);
+  const user = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, testEmail))
+    .limit(1);
   testUserId = user[0]!.id;
 
   // Create session token directly in DB
@@ -99,7 +117,7 @@ async function makeAuthRequest(method: string, path: string, body?: any) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`,
+      Authorization: `Bearer ${authToken}`,
     },
   };
   if (body) {
@@ -107,12 +125,17 @@ async function makeAuthRequest(method: string, path: string, body?: any) {
   }
   const req = new Request(url, init);
   const res = await app.handle(req);
-  const json = await res.json().catch(() => ({} as any)) as any;
+  const json = (await res.json().catch(() => ({}) as any)) as any;
   return { status: res.status, json };
 }
 
 // Helper function to make requests without auth
-async function makeRequest(method: string, path: string, body?: any, headers?: Record<string, string>) {
+async function makeRequest(
+  method: string,
+  path: string,
+  body?: any,
+  headers?: Record<string, string>
+) {
   const url = `http://localhost${path}`;
   const init: RequestInit = {
     method,
@@ -126,31 +149,37 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
   }
   const req = new Request(url, init);
   const res = await app.handle(req);
-  const json = await res.json().catch(() => ({} as any)) as any;
+  const json = (await res.json().catch(() => ({}) as any)) as any;
   return { status: res.status, json };
 }
 
 describe('POST /api/product-images — Tambah Gambar Produk', () => {
-  let testProductId: string;
+  let testProductId: number;
   let testVariantId: number;
 
   beforeEach(async () => {
     if (!dbAvailable) return;
     const timestamp = Date.now();
-    const [product] = await db.insert(products).values({
-      name: `Test Product-${timestamp}`,
-      description: 'Test Description',
-      isActive: true,
-    }).$returningId();
+    const [product] = await db
+      .insert(products)
+      .values({
+        name: `Test Product-${timestamp}`,
+        description: 'Test Description',
+        isActive: true,
+      })
+      .$returningId();
     testProductId = product!.productId;
 
-    const [variant] = await db.insert(productVariants).values({
-      productId: testProductId,
-      sku: `TEST-SKU-${timestamp}`,
-      variantName: 'Test Variant',
-      isActive: true,
-      isSellable: true,
-    }).$returningId();
+    const [variant] = await db
+      .insert(productVariants)
+      .values({
+        productId: testProductId,
+        sku: `TEST-SKU-${timestamp}`,
+        variantName: 'Test Variant',
+        isActive: true,
+        isSellable: true,
+      })
+      .$returningId();
     testVariantId = variant!.id;
   });
 
@@ -180,7 +209,9 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
     });
     expect(res.status).toBe(201);
     expect(res.json.data.length).toBe(3);
-    const primaryCount = res.json.data.filter((img: any) => img.is_primary).length;
+    const primaryCount = res.json.data.filter(
+      (img: any) => img.is_primary
+    ).length;
     expect(primaryCount).toBe(1);
   });
 
@@ -237,26 +268,32 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
 });
 
 describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
-  let testProductId: string;
+  let testProductId: number;
   let testVariantId: number;
 
   beforeEach(async () => {
     if (!dbAvailable) return;
     const timestamp = Date.now();
-    const [product] = await db.insert(products).values({
-      name: `Test Product-${timestamp}`,
-      description: 'Test Description',
-      isActive: true,
-    }).$returningId();
+    const [product] = await db
+      .insert(products)
+      .values({
+        name: `Test Product-${timestamp}`,
+        description: 'Test Description',
+        isActive: true,
+      })
+      .$returningId();
     testProductId = product!.productId;
 
-    const [variant] = await db.insert(productVariants).values({
-      productId: testProductId,
-      sku: `TEST-SKU-${timestamp}`,
-      variantName: 'Test Variant',
-      isActive: true,
-      isSellable: true,
-    }).$returningId();
+    const [variant] = await db
+      .insert(productVariants)
+      .values({
+        productId: testProductId,
+        sku: `TEST-SKU-${timestamp}`,
+        variantName: 'Test Variant',
+        isActive: true,
+        isSellable: true,
+      })
+      .$returningId();
     testVariantId = variant!.id;
 
     // Create test images
@@ -276,7 +313,10 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
 
   it('8. Variant memiliki gambar', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('GET', `/api/product-images/${testVariantId}`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-images/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(Array.isArray(res.json.data)).toBe(true);
     expect(res.json.data.length).toBe(2);
@@ -287,7 +327,10 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
 
   it('9. Gambar primary di urutan pertama', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('GET', `/api/product-images/${testVariantId}`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-images/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data[0].is_primary).toBe(true);
   });
@@ -295,8 +338,13 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
   it('10. Variant belum memiliki gambar', async () => {
     if (!dbAvailable) return;
     // Delete images
-    await db.execute(sql`DELETE FROM product_images WHERE variant_id = ${testVariantId}`);
-    const res = await makeAuthRequest('GET', `/api/product-images/${testVariantId}`);
+    await db.execute(
+      sql`DELETE FROM product_images WHERE variant_id = ${testVariantId}`
+    );
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-images/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toEqual([]);
   });
@@ -310,33 +358,42 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
 
   it('12. Tanpa header Authorization', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('GET', `/api/product-images/${testVariantId}`);
+    const res = await makeRequest(
+      'GET',
+      `/api/product-images/${testVariantId}`
+    );
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 });
 
 describe('GET /api/product-images/:variantId/current — Gambar Primary Variant', () => {
-  let testProductId: string;
+  let testProductId: number;
   let testVariantId: number;
 
   beforeEach(async () => {
     if (!dbAvailable) return;
     const timestamp = Date.now();
-    const [product] = await db.insert(products).values({
-      name: `Test Product-${timestamp}`,
-      description: 'Test Description',
-      isActive: true,
-    }).$returningId();
+    const [product] = await db
+      .insert(products)
+      .values({
+        name: `Test Product-${timestamp}`,
+        description: 'Test Description',
+        isActive: true,
+      })
+      .$returningId();
     testProductId = product!.productId;
 
-    const [variant] = await db.insert(productVariants).values({
-      productId: testProductId,
-      sku: `TEST-SKU-${timestamp}`,
-      variantName: 'Test Variant',
-      isActive: true,
-      isSellable: true,
-    }).$returningId();
+    const [variant] = await db
+      .insert(productVariants)
+      .values({
+        productId: testProductId,
+        sku: `TEST-SKU-${timestamp}`,
+        variantName: 'Test Variant',
+        isActive: true,
+        isSellable: true,
+      })
+      .$returningId();
     testVariantId = variant!.id;
 
     // Create test image
@@ -349,7 +406,10 @@ describe('GET /api/product-images/:variantId/current — Gambar Primary Variant'
 
   it('13. Variant memiliki gambar primary', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('GET', `/api/product-images/${testVariantId}/current`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-images/${testVariantId}/current`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toHaveProperty('id');
     expect(res.json.data).toHaveProperty('variant_id');
@@ -360,141 +420,192 @@ describe('GET /api/product-images/:variantId/current — Gambar Primary Variant'
   it('14. Variant tidak memiliki gambar primary', async () => {
     if (!dbAvailable) return;
     // Delete primary image
-    await db.execute(sql`DELETE FROM product_images WHERE variant_id = ${testVariantId} AND is_primary = true`);
-    const res = await makeAuthRequest('GET', `/api/product-images/${testVariantId}/current`);
+    await db.execute(
+      sql`DELETE FROM product_images WHERE variant_id = ${testVariantId} AND is_primary = true`
+    );
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-images/${testVariantId}/current`
+    );
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Gambar primary tidak ditemukan');
   });
 
   it('15. Variant tidak ditemukan', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('GET', '/api/product-images/99999/current');
+    const res = await makeAuthRequest(
+      'GET',
+      '/api/product-images/99999/current'
+    );
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
 
   it('16. Tanpa header Authorization', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('GET', `/api/product-images/${testVariantId}/current`);
+    const res = await makeRequest(
+      'GET',
+      `/api/product-images/${testVariantId}/current`
+    );
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 });
 
 describe('PATCH /api/product-images/:imageId/primary — Set Gambar Primary', () => {
-  let testProductId: string;
+  let testProductId: number;
   let testVariantId: number;
   let testImageId: number;
 
   beforeEach(async () => {
     if (!dbAvailable) return;
     const timestamp = Date.now();
-    const [product] = await db.insert(products).values({
-      name: `Test Product-${timestamp}`,
-      description: 'Test Description',
-      isActive: true,
-    }).$returningId();
+    const [product] = await db
+      .insert(products)
+      .values({
+        name: `Test Product-${timestamp}`,
+        description: 'Test Description',
+        isActive: true,
+      })
+      .$returningId();
     testProductId = product!.productId;
 
-    const [variant] = await db.insert(productVariants).values({
-      productId: testProductId,
-      sku: `TEST-SKU-${timestamp}`,
-      variantName: 'Test Variant',
-      isActive: true,
-      isSellable: true,
-    }).$returningId();
+    const [variant] = await db
+      .insert(productVariants)
+      .values({
+        productId: testProductId,
+        sku: `TEST-SKU-${timestamp}`,
+        variantName: 'Test Variant',
+        isActive: true,
+        isSellable: true,
+      })
+      .$returningId();
     testVariantId = variant!.id;
 
     // Create test images
-    const imageIds = await db.insert(productImages).values([
-      {
-        variantId: testVariantId,
-        imageUrl: 'https://example.com/image1.jpg',
-        isPrimary: false,
-      },
-      {
-        variantId: testVariantId,
-        imageUrl: 'https://example.com/image2.jpg',
-        isPrimary: true,
-      },
-    ]).$returningId();
+    const imageIds = await db
+      .insert(productImages)
+      .values([
+        {
+          variantId: testVariantId,
+          imageUrl: 'https://example.com/image1.jpg',
+          isPrimary: false,
+        },
+        {
+          variantId: testVariantId,
+          imageUrl: 'https://example.com/image2.jpg',
+          isPrimary: true,
+        },
+      ])
+      .$returningId();
     testImageId = imageIds[0]!.id;
   });
 
   it('17. Set gambar non-primary menjadi primary', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('PATCH', `/api/product-images/${testImageId}/primary`, {
-      variant_id: testVariantId,
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/product-images/${testImageId}/primary`,
+      {
+        variant_id: testVariantId,
+      }
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toBe('OK');
   });
 
   it('18. Hanya satu gambar primary setelah set', async () => {
     if (!dbAvailable) return;
-    await makeAuthRequest('PATCH', `/api/product-images/${testImageId}/primary`, {
-      variant_id: testVariantId,
-    });
-    const images = await db.select().from(productImages).where(eq(productImages.variantId, testVariantId));
-    const primaryCount = images.filter(img => img.isPrimary).length;
+    await makeAuthRequest(
+      'PATCH',
+      `/api/product-images/${testImageId}/primary`,
+      {
+        variant_id: testVariantId,
+      }
+    );
+    const images = await db
+      .select()
+      .from(productImages)
+      .where(eq(productImages.variantId, testVariantId));
+    const primaryCount = images.filter((img) => img.isPrimary).length;
     expect(primaryCount).toBe(1);
   });
 
   it('19. Image ID tidak ditemukan', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('PATCH', '/api/product-images/99999/primary', {
-      variant_id: testVariantId,
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      '/api/product-images/99999/primary',
+      {
+        variant_id: testVariantId,
+      }
+    );
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Gambar tidak ditemukan');
   });
 
   it('20. Tanpa header Authorization', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('PATCH', `/api/product-images/${testImageId}/primary`, {
-      variant_id: testVariantId,
-    });
+    const res = await makeRequest(
+      'PATCH',
+      `/api/product-images/${testImageId}/primary`,
+      {
+        variant_id: testVariantId,
+      }
+    );
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 });
 
 describe('DELETE /api/product-images/:imageId — Hapus Gambar Produk', () => {
-  let testProductId: string;
+  let testProductId: number;
   let testVariantId: number;
   let testImageId: number;
 
   beforeEach(async () => {
     if (!dbAvailable) return;
     const timestamp = Date.now();
-    const [product] = await db.insert(products).values({
-      name: `Test Product-${timestamp}`,
-      description: 'Test Description',
-      isActive: true,
-    }).$returningId();
+    const [product] = await db
+      .insert(products)
+      .values({
+        name: `Test Product-${timestamp}`,
+        description: 'Test Description',
+        isActive: true,
+      })
+      .$returningId();
     testProductId = product!.productId;
 
-    const [variant] = await db.insert(productVariants).values({
-      productId: testProductId,
-      sku: `TEST-SKU-${timestamp}`,
-      variantName: 'Test Variant',
-      isActive: true,
-      isSellable: true,
-    }).$returningId();
+    const [variant] = await db
+      .insert(productVariants)
+      .values({
+        productId: testProductId,
+        sku: `TEST-SKU-${timestamp}`,
+        variantName: 'Test Variant',
+        isActive: true,
+        isSellable: true,
+      })
+      .$returningId();
     testVariantId = variant!.id;
 
     // Create test image
-    const [image] = await db.insert(productImages).values({
-      variantId: testVariantId,
-      imageUrl: 'https://example.com/image.jpg',
-      isPrimary: true,
-    }).$returningId();
+    const [image] = await db
+      .insert(productImages)
+      .values({
+        variantId: testVariantId,
+        imageUrl: 'https://example.com/image.jpg',
+        isPrimary: true,
+      })
+      .$returningId();
     testImageId = image!.id;
   });
 
   it('21. Hapus gambar yang ada', async () => {
     if (!dbAvailable) return;
-    const res = await makeAuthRequest('DELETE', `/api/product-images/${testImageId}`);
+    const res = await makeAuthRequest(
+      'DELETE',
+      `/api/product-images/${testImageId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toBe('OK');
   });
@@ -502,7 +613,10 @@ describe('DELETE /api/product-images/:imageId — Hapus Gambar Produk', () => {
   it('22. Record benar-benar terhapus dari DB', async () => {
     if (!dbAvailable) return;
     await makeAuthRequest('DELETE', `/api/product-images/${testImageId}`);
-    const images = await db.select().from(productImages).where(eq(productImages.id, testImageId));
+    const images = await db
+      .select()
+      .from(productImages)
+      .where(eq(productImages.id, testImageId));
     expect(images.length).toBe(0);
   });
 
@@ -515,7 +629,10 @@ describe('DELETE /api/product-images/:imageId — Hapus Gambar Produk', () => {
 
   it('24. Tanpa header Authorization', async () => {
     if (!dbAvailable) return;
-    const res = await makeRequest('DELETE', `/api/product-images/${testImageId}`);
+    const res = await makeRequest(
+      'DELETE',
+      `/api/product-images/${testImageId}`
+    );
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });

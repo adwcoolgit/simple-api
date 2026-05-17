@@ -34,7 +34,11 @@ export async function createProductPrice(input: CreateProductPriceInput) {
   if (input.price <= 0) {
     throw new Error('Price must be greater than 0');
   }
-  if (input.start_date && input.end_date && new Date(input.start_date) >= new Date(input.end_date)) {
+  if (
+    input.start_date &&
+    input.end_date &&
+    new Date(input.start_date) >= new Date(input.end_date)
+  ) {
     throw new Error('start_date must be before end_date');
   }
 
@@ -50,15 +54,23 @@ export async function createProductPrice(input: CreateProductPriceInput) {
     }
 
     // Check for overlap
-    await checkOverlap(input.variant_id, input.price_type, input.start_date, input.end_date);
+    await checkOverlap(
+      input.variant_id,
+      input.price_type,
+      input.start_date,
+      input.end_date
+    );
 
-    const [newPrice] = await db.insert(productPrices).values({
-      variant_id: input.variant_id,
-      price_type: input.price_type,
-      price: input.price.toString(),
-      start_date: input.start_date ? new Date(input.start_date) : null,
-      end_date: input.end_date ? new Date(input.end_date) : null,
-    }).$returningId();
+    const [newPrice] = await db
+      .insert(productPrices)
+      .values({
+        variant_id: input.variant_id,
+        price_type: input.price_type,
+        price: input.price.toString(),
+        start_date: input.start_date ? new Date(input.start_date) : null,
+        end_date: input.end_date ? new Date(input.end_date) : null,
+      })
+      .$returningId();
 
     if (!newPrice) {
       throw new Error('Failed to create product price');
@@ -80,7 +92,8 @@ export async function createProductPrice(input: CreateProductPriceInput) {
 
     if (
       error instanceof Error &&
-      (error.message === 'Variant tidak ditemukan' || error.message.includes('overlap'))
+      (error.message === 'Variant tidak ditemukan' ||
+        error.message.includes('overlap'))
     ) {
       throw error;
     }
@@ -105,7 +118,8 @@ export async function getProductPrices(filters: GetProductPricesFilters = {}) {
       whereConditions.push(eq(productPrices.price_type, filters.price_type));
     }
 
-    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
     // Get total count
     const countResult = await dbRead
@@ -161,36 +175,44 @@ export async function getProductPriceById(id: number) {
   }
 }
 
-export async function getActiveProductPrices(filters: Omit<GetProductPricesFilters, 'page' | 'limit'> = {}) {
+export async function getActiveProductPrices(
+  filters: Omit<GetProductPricesFilters, 'page' | 'limit'> = {}
+) {
   try {
     const now = new Date();
 
     // Simple query to get all prices first, then filter in memory
-    let query = dbRead
+    const conditions = [];
+    if (filters.variant_id !== undefined) {
+      conditions.push(eq(productPrices.variant_id, filters.variant_id));
+    }
+    if (filters.price_type !== undefined) {
+      conditions.push(eq(productPrices.price_type, filters.price_type));
+    }
+
+    let query: any = dbRead
       .select()
       .from(productPrices)
       .orderBy(asc(productPrices.variant_id), asc(productPrices.price_type));
 
-    if (filters.variant_id !== undefined) {
-      query = query.where(eq(productPrices.variant_id, filters.variant_id));
-    }
-
-    if (filters.price_type !== undefined) {
-      query = query.where(eq(productPrices.price_type, filters.price_type));
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
     }
 
     const allPrices = await query;
 
     // Filter for active prices in memory
-    const activePrices = allPrices.filter(price => {
-      const startDate = price.start_date;
-      const endDate = price.end_date;
+    const activePrices = allPrices.filter(
+      (price: { start_date: Date | null; end_date: Date | null }) => {
+        const startDate = price.start_date;
+        const endDate = price.end_date;
 
-      const startValid = startDate === null || startDate <= now;
-      const endValid = endDate === null || endDate >= now;
+        const startValid = startDate === null || startDate <= now;
+        const endValid = endDate === null || endDate >= now;
 
-      return startValid && endValid;
-    });
+        return startValid && endValid;
+      }
+    );
 
     return {
       data: activePrices,
@@ -201,12 +223,19 @@ export async function getActiveProductPrices(filters: Omit<GetProductPricesFilte
   }
 }
 
-export async function updateProductPrice(id: number, input: UpdateProductPriceInput) {
+export async function updateProductPrice(
+  id: number,
+  input: UpdateProductPriceInput
+) {
   // Input validation
   if (input.price !== undefined && input.price <= 0) {
     throw new Error('Price must be greater than 0');
   }
-  if (input.start_date && input.end_date && new Date(input.start_date) >= new Date(input.end_date)) {
+  if (
+    input.start_date &&
+    input.end_date &&
+    new Date(input.start_date) >= new Date(input.end_date)
+  ) {
     throw new Error('start_date must be before end_date');
   }
 
@@ -222,9 +251,21 @@ export async function updateProductPrice(id: number, input: UpdateProductPriceIn
     }
 
     // Check for overlap, excluding self
-    const startDate = input.start_date !== undefined ? input.start_date : existingPrice.start_date?.toISOString();
-    const endDate = input.end_date !== undefined ? input.end_date : existingPrice.end_date?.toISOString();
-    await checkOverlap(existingPrice.variant_id, existingPrice.price_type, startDate, endDate, id);
+    const startDate =
+      input.start_date !== undefined
+        ? input.start_date
+        : existingPrice.start_date?.toISOString();
+    const endDate =
+      input.end_date !== undefined
+        ? input.end_date
+        : existingPrice.end_date?.toISOString();
+    await checkOverlap(
+      existingPrice.variant_id,
+      existingPrice.price_type,
+      startDate,
+      endDate,
+      id
+    );
 
     // Prepare update data
     const updateData: any = {};
@@ -233,14 +274,19 @@ export async function updateProductPrice(id: number, input: UpdateProductPriceIn
       updateData.price = input.price.toString();
     }
     if (input.start_date !== undefined) {
-      updateData.start_date = input.start_date ? new Date(input.start_date) : null;
+      updateData.start_date = input.start_date
+        ? new Date(input.start_date)
+        : null;
     }
     if (input.end_date !== undefined) {
       updateData.end_date = input.end_date ? new Date(input.end_date) : null;
     }
 
     // Perform partial update
-    await db.update(productPrices).set(updateData).where(eq(productPrices.id, id));
+    await db
+      .update(productPrices)
+      .set(updateData)
+      .where(eq(productPrices.id, id));
 
     return 'OK';
   } catch (error: any) {
@@ -248,7 +294,8 @@ export async function updateProductPrice(id: number, input: UpdateProductPriceIn
 
     if (
       error instanceof Error &&
-      (error.message === 'Harga tidak ditemukan' || error.message.includes('overlap'))
+      (error.message === 'Harga tidak ditemukan' ||
+        error.message.includes('overlap'))
     ) {
       throw error;
     }
@@ -283,21 +330,30 @@ export async function deleteProductPrice(id: number) {
   }
 }
 
-async function checkOverlap(variant_id: number, price_type: string, startDate?: string, endDate?: string, excludeId?: number) {
+async function checkOverlap(
+  variant_id: number,
+  price_type: string,
+  startDate?: string,
+  endDate?: string,
+  excludeId?: number
+) {
   const start = startDate ? new Date(startDate) : null;
   const end = endDate ? new Date(endDate) : null;
+  const priceType: 'retail' | 'member' | 'reseller' = price_type as any;
 
   // Query existing prices for same variant and type
-  let query = dbRead
+  let query: any = dbRead
     .select()
     .from(productPrices)
-    .where(and(
-      eq(productPrices.variant_id, variant_id),
-      eq(productPrices.price_type, price_type)
-    ));
+    .where(
+      and(
+        eq(productPrices.variant_id, variant_id as number),
+        eq(productPrices.price_type, price_type as typeof priceType)
+      )
+    );
 
   if (excludeId) {
-    query = query.where(sql`${productPrices.id} != ${excludeId}`);
+    query = query.where(sql`${productPrices.id} != ${excludeId}` as any);
   }
 
   const existingPrices = await query;
@@ -308,10 +364,9 @@ async function checkOverlap(variant_id: number, price_type: string, startDate?: 
 
     // Overlap if:
     // (start <= existingEnd or existingEnd is null) and (end >= existingStart or existingStart is null)
-    const overlap = (
+    const overlap =
       (start === null || existingEnd === null || start <= existingEnd) &&
-      (existingStart === null || end === null || existingStart <= end)
-    );
+      (existingStart === null || end === null || existingStart <= end);
 
     if (overlap) {
       throw new Error('Sudah ada harga untuk tipe dan rentang tanggal ini');

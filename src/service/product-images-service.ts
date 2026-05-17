@@ -20,13 +20,15 @@ export interface ProductImageResponse {
 /**
  * Add multiple product images for a variant
  */
-export async function addProductImages(data: AddProductImagesData): Promise<ProductImageResponse[]> {
+export async function addProductImages(
+  data: AddProductImagesData
+): Promise<ProductImageResponse[]> {
   // Validate business logic
   if (!data.images || data.images.length === 0) {
     throw new Error('Images must not be empty');
   }
 
-  const primaryCount = data.images.filter(img => img.isPrimary).length;
+  const primaryCount = data.images.filter((img) => img.isPrimary).length;
   if (primaryCount !== 1) {
     throw new Error('Exactly one image must be set as primary');
   }
@@ -58,13 +60,11 @@ export async function addProductImages(data: AddProductImagesData): Promise<Prod
     const results: ProductImageResponse[] = [];
 
     for (const img of data.images) {
-      const insertResult = await tx
-        .insert(productImages)
-        .values({
-          variantId: data.variantId,
-          imageUrl: img.imageUrl,
-          isPrimary: img.isPrimary,
-        });
+      const insertResult = await tx.insert(productImages).values({
+        variantId: data.variantId,
+        imageUrl: img.imageUrl,
+        isPrimary: img.isPrimary,
+      });
 
       // Get the inserted record by querying for the latest insert
       // Since we can't rely on .returning() in all environments
@@ -81,8 +81,8 @@ export async function addProductImages(data: AddProductImagesData): Promise<Prod
 
       results.push({
         id: inserted.id,
-        variant_id: inserted.variantId,
-        image_url: inserted.imageUrl,
+        variant_id: inserted.variantId ?? undefined,
+        image_url: inserted.imageUrl ?? undefined,
         is_primary: inserted.isPrimary,
       });
     }
@@ -94,7 +94,9 @@ export async function addProductImages(data: AddProductImagesData): Promise<Prod
 /**
  * Get all images for a specific variant
  */
-export async function getImagesByVariant(variantId: number): Promise<ProductImageResponse[]> {
+export async function getImagesByVariant(
+  variantId: number
+): Promise<ProductImageResponse[]> {
   // Validate that variant exists
   const existingVariant = await db
     .select()
@@ -113,23 +115,28 @@ export async function getImagesByVariant(variantId: number): Promise<ProductImag
     .where(eq(productImages.variantId, variantId))
     .orderBy(desc(productImages.isPrimary), desc(productImages.id));
 
-    return images.map(img => ({
-      id: img.id,
-      variant_id: img.variantId,
-      image_url: img.imageUrl,
-      is_primary: img.isPrimary,
-    }));
+  return images.map((img) => ({
+    id: img.id,
+    variant_id: img.variantId ?? undefined,
+    image_url: img.imageUrl ?? undefined,
+    is_primary: img.isPrimary,
+  }));
 }
 
 /**
  * Set an image as primary for its variant
  */
-export async function setPrimaryImage(imageId: number, variantId: number): Promise<string> {
+export async function setPrimaryImage(
+  imageId: number,
+  variantId: number
+): Promise<string> {
   // Check if image exists and belongs to the variant
   const existingImage = await db
     .select()
     .from(productImages)
-    .where(and(eq(productImages.id, imageId), eq(productImages.variantId, variantId)))
+    .where(
+      and(eq(productImages.id, imageId), eq(productImages.variantId, variantId))
+    )
     .limit(1);
 
   if (!existingImage.length) {
@@ -157,7 +164,9 @@ export async function setPrimaryImage(imageId: number, variantId: number): Promi
 /**
  * Get the primary image for a variant
  */
-export async function getPrimaryImage(variantId: number): Promise<ProductImageResponse> {
+export async function getPrimaryImage(
+  variantId: number
+): Promise<ProductImageResponse> {
   // Validate that variant exists
   const existingVariant = await db
     .select()
@@ -173,19 +182,24 @@ export async function getPrimaryImage(variantId: number): Promise<ProductImageRe
   const [primaryImage] = await db
     .select()
     .from(productImages)
-    .where(and(eq(productImages.variantId, variantId), eq(productImages.isPrimary, true)))
+    .where(
+      and(
+        eq(productImages.variantId, variantId),
+        eq(productImages.isPrimary, true)
+      )
+    )
     .limit(1);
 
   if (!primaryImage) {
     throw new Error('Gambar primary tidak ditemukan');
   }
 
-    return {
-      id: primaryImage.id,
-      variant_id: primaryImage.variantId,
-      image_url: primaryImage.imageUrl,
-      is_primary: primaryImage.isPrimary,
-    };
+  return {
+    id: primaryImage.id,
+    variant_id: primaryImage.variantId ?? undefined,
+    image_url: primaryImage.imageUrl ?? undefined,
+    is_primary: primaryImage.isPrimary,
+  };
 }
 
 /**
@@ -204,9 +218,7 @@ export async function deleteProductImage(imageId: number): Promise<string> {
   }
 
   // Delete the image
-  await db
-    .delete(productImages)
-    .where(eq(productImages.id, imageId));
+  await db.delete(productImages).where(eq(productImages.id, imageId));
 
   return 'OK';
 }

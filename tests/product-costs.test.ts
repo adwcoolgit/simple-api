@@ -1,14 +1,29 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, mock } from 'bun:test';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  mock,
+} from 'bun:test';
 import { Elysia } from 'elysia';
 import { productCostsRoute } from '../src/routes/product-costs-route';
 import { db } from '../src/db';
-import { users, sessions, products, productVariants, productCosts, productImages } from '../src/db/schema';
+import {
+  users,
+  sessions,
+  products,
+  productVariants,
+  productCosts,
+  productImages,
+} from '../src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 
 // Mock Redis
-mock('ioredis', () => ({
+mock.module('ioredis', () => ({
   default: class MockRedis {
     constructor() {
       // Mock constructor
@@ -45,11 +60,11 @@ mock('ioredis', () => ({
       // Do nothing
     }
     // Add more methods as needed
-  }
+  },
 }));
 
 // Mock rate limit
-mock('../src/middleware/rate-limit', () => ({
+mock.module('../src/middleware/rate-limit', () => ({
   rateLimit: () => (app: any) => app, // no-op middleware
 }));
 
@@ -67,8 +82,7 @@ beforeAll(async () => {
   }
 });
 
-const app = new Elysia()
-  .use(productCostsRoute);
+const app = new Elysia().use(productCostsRoute);
 
 const testEmail = 'productcosttest@example.com';
 const testPassword = 'password123';
@@ -100,7 +114,7 @@ beforeEach(async () => {
   const hashedPassword = await bcrypt.hash(testPassword, 12);
   testUserId = Math.floor(Math.random() * 1000000);
   await db.insert(users).values({
-    id: testUserId.toString(),
+    id: testUserId,
     name: testName,
     email: testEmail,
     password: hashedPassword,
@@ -110,13 +124,13 @@ beforeEach(async () => {
   testToken = `test-token-${Date.now()}`;
   await db.insert(sessions).values({
     token: testToken,
-    userId: testUserId.toString(),
+    userId: testUserId,
   });
 
   // Create test product
   testProductId = Math.floor(Math.random() * 1000000);
   await db.insert(products).values({
-    productId: testProductId.toString(),
+    productId: testProductId,
     name: 'Test Product for Costs',
     description: 'Test Description',
     isActive: true,
@@ -126,7 +140,7 @@ beforeEach(async () => {
   testVariantId = Math.floor(Math.random() * 1000000);
   await db.insert(productVariants).values({
     id: testVariantId,
-    productId: testProductId.toString(),
+    productId: testProductId,
     sku: `TEST-COST-VARIANT-${Date.now()}`,
     variantName: 'Test Variant for Costs',
     isActive: true,
@@ -158,7 +172,7 @@ async function makeAuthRequest(method: string, path: string, body?: any) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${testToken}`,
+      Authorization: `Bearer ${testToken}`,
     },
   };
   if (body) {
@@ -166,12 +180,17 @@ async function makeAuthRequest(method: string, path: string, body?: any) {
   }
   const req = new Request(url, init);
   const res = await app.handle(req);
-  const json = await res.json().catch(() => ({} as any)) as any;
+  const json = (await res.json().catch(() => ({}) as any)) as any;
   return { status: res.status, json };
 }
 
 // Helper function to make requests without auth
-async function makeRequest(method: string, path: string, body?: any, headers?: Record<string, string>): Promise<{ status: number; json: any }> {
+async function makeRequest(
+  method: string,
+  path: string,
+  body?: any,
+  headers?: Record<string, string>
+): Promise<{ status: number; json: any }> {
   const url = `http://localhost${path}`;
   const init: RequestInit = {
     method,
@@ -185,7 +204,7 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
   }
   const req = new Request(url, init);
   const res = await app.handle(req);
-  const json = await res.json().catch(() => ({} as any)) as any;
+  const json = (await res.json().catch(() => ({}) as any)) as any;
   return { status: res.status, json };
 }
 
@@ -201,9 +220,11 @@ describe('POST /api/product-costs', () => {
     expect(res.status).toBe(201);
     expect(res.json.data).toHaveProperty('id');
     expect(res.json.data.variant_id).toBe(testVariantId);
-    expect(res.json.data.cost_price).toBe('150000.00');
+    expect(Number(res.json.data.cost_price)).toBe(150000);
     expect(res.json.data.effective_date).toBe('2026-01-01T00:00:00.000Z');
-    expect(res.json.data.created_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    expect(res.json.data.created_at).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+    );
   });
 
   it('2. Return 404 ketika variant tidak ditemukan', async () => {
@@ -263,13 +284,18 @@ describe('POST /api/product-costs', () => {
   it('7. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('POST', '/api/product-costs', {
-      variant_id: testVariantId,
-      cost_price: 150000.0,
-      effective_date: '2026-01-01T00:00:00.000Z',
-    }, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'POST',
+      '/api/product-costs',
+      {
+        variant_id: testVariantId,
+        cost_price: 150000.0,
+        effective_date: '2026-01-01T00:00:00.000Z',
+      },
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
   });
 
@@ -315,7 +341,10 @@ describe('GET /api/product-costs/:variantId', () => {
   it('9. Return semua record biaya untuk variant yang ada', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-costs/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(Array.isArray(res.json.data)).toBe(true);
     expect(res.json.data.length).toBeGreaterThan(0);
@@ -343,9 +372,14 @@ describe('GET /api/product-costs/:variantId', () => {
   it('12. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', `/api/product-costs/${testVariantId}`, undefined, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'GET',
+      `/api/product-costs/${testVariantId}`,
+      undefined,
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
   });
 
@@ -355,7 +389,10 @@ describe('GET /api/product-costs/:variantId', () => {
     // Delete costs
     await db.delete(productCosts).where(sql`1=1`);
 
-    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-costs/${testVariantId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toEqual([]);
   });
@@ -372,10 +409,13 @@ describe('GET /api/product-costs/:variantId/current', () => {
       effectiveDate: new Date(Date.now() - 86400000), // 1 day ago
     });
 
-    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}/current`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-costs/${testVariantId}/current`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data.variant_id).toBe(testVariantId);
-    expect(res.json.data.cost_price).toBe('150000.00');
+    expect(Number(res.json.data.cost_price)).toBe(150000);
   });
 
   it('15. Return 404 ketika tidak ada biaya aktif ditemukan', async () => {
@@ -388,7 +428,10 @@ describe('GET /api/product-costs/:variantId/current', () => {
       effectiveDate: new Date(Date.now() + 86400000), // 1 day in future
     });
 
-    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}/current`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-costs/${testVariantId}/current`
+    );
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Harga pokok aktif tidak ditemukan');
   });
@@ -396,7 +439,10 @@ describe('GET /api/product-costs/:variantId/current', () => {
   it('16. Return 404 ketika variant tidak ada data biaya', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('GET', `/api/product-costs/${testVariantId}/current`);
+    const res = await makeAuthRequest(
+      'GET',
+      `/api/product-costs/${testVariantId}/current`
+    );
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Harga pokok aktif tidak ditemukan');
   });
@@ -404,7 +450,10 @@ describe('GET /api/product-costs/:variantId/current', () => {
   it('17. Return 404 ketika variant tidak ditemukan', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('GET', '/api/product-costs/99999/current');
+    const res = await makeAuthRequest(
+      'GET',
+      '/api/product-costs/99999/current'
+    );
     expect(res.status).toBe(404);
     expect(res.json.error).toBe('Variant tidak ditemukan');
   });
@@ -412,16 +461,24 @@ describe('GET /api/product-costs/:variantId/current', () => {
   it('18. Return 401 ketika Authorization header tidak ada', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`);
+    const res = await makeRequest(
+      'GET',
+      `/api/product-costs/${testVariantId}/current`
+    );
     expect(res.status).toBe(401);
   });
 
   it('19. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('GET', `/api/product-costs/${testVariantId}/current`, undefined, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'GET',
+      `/api/product-costs/${testVariantId}/current`,
+      undefined,
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
   });
 });
@@ -442,9 +499,13 @@ describe('PATCH /api/product-costs/:id', () => {
   it('20. Update cost_price saja', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
-      cost_price: 175000.0,
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/product-costs/${testCostId}`,
+      {
+        cost_price: 175000.0,
+      }
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toBe('OK');
   });
@@ -452,9 +513,13 @@ describe('PATCH /api/product-costs/:id', () => {
   it('21. Update effective_date saja', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
-      effective_date: '2026-06-01T00:00:00.000Z',
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/product-costs/${testCostId}`,
+      {
+        effective_date: '2026-06-01T00:00:00.000Z',
+      }
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toBe('OK');
   });
@@ -462,10 +527,14 @@ describe('PATCH /api/product-costs/:id', () => {
   it('22. Update semua field', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
-      cost_price: 175000.0,
-      effective_date: '2026-06-01T00:00:00.000Z',
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/product-costs/${testCostId}`,
+      {
+        cost_price: 175000.0,
+        effective_date: '2026-06-01T00:00:00.000Z',
+      }
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toBe('OK');
   });
@@ -483,16 +552,24 @@ describe('PATCH /api/product-costs/:id', () => {
   it('24. Return 422 ketika request body kosong', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {});
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/product-costs/${testCostId}`,
+      {}
+    );
     expect(res.status).toBe(422);
   });
 
   it('25. Return 422 ketika cost_price negatif', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('PATCH', `/api/product-costs/${testCostId}`, {
-      cost_price: -1000.0,
-    });
+    const res = await makeAuthRequest(
+      'PATCH',
+      `/api/product-costs/${testCostId}`,
+      {
+        cost_price: -1000.0,
+      }
+    );
     expect(res.status).toBe(422);
   });
 
@@ -508,11 +585,16 @@ describe('PATCH /api/product-costs/:id', () => {
   it('27. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('PATCH', `/api/product-costs/${testCostId}`, {
-      cost_price: 200000.0,
-    }, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'PATCH',
+      `/api/product-costs/${testCostId}`,
+      {
+        cost_price: 200000.0,
+      },
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
   });
 });
@@ -533,7 +615,10 @@ describe('DELETE /api/product-costs/:id', () => {
   it('28. Berhasil delete record yang ada', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeAuthRequest('DELETE', `/api/product-costs/${testCostId}`);
+    const res = await makeAuthRequest(
+      'DELETE',
+      `/api/product-costs/${testCostId}`
+    );
     expect(res.status).toBe(200);
     expect(res.json.data).toBe('OK');
   });
@@ -556,9 +641,14 @@ describe('DELETE /api/product-costs/:id', () => {
   it('31. Return 401 ketika token tidak valid', async () => {
     if (!dbAvailable) return;
 
-    const res = await makeRequest('DELETE', `/api/product-costs/${testCostId}`, undefined, {
-      'Authorization': 'Bearer invalid-token',
-    });
+    const res = await makeRequest(
+      'DELETE',
+      `/api/product-costs/${testCostId}`,
+      undefined,
+      {
+        Authorization: 'Bearer invalid-token',
+      }
+    );
     expect(res.status).toBe(401);
   });
 });
