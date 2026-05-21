@@ -66,7 +66,7 @@ describe('POST /api/users — Registrasi', () => {
       password: 'anotherpass123',
     });
     expect(res.status).toBe(409);
-    expect(res.json).toEqual({ error: 'Email sudah terdaftar' });
+    expect(res.json).toEqual({ error: 'Email already registered' });
   });
 
   it('3. `email` field not provided', async () => {

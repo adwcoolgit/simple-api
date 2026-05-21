@@ -164,7 +164,7 @@ describe('POST /api/product-taxes — Add Tax Configuration', () => {
       tax_code: 'PPN-11',
     });
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Variant tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Variant not found' });
   });
 
   it('5. variant_id already has tax configuration', async () => {
@@ -180,7 +180,7 @@ describe('POST /api/product-taxes — Add Tax Configuration', () => {
       tax_code: 'PPN-12',
     });
     expect(res.status).toBe(409);
-    expect(res.json).toEqual({ error: 'Variant sudah memiliki konfigurasi pajak' });
+    expect(res.json).toEqual({ error: 'Variant already has a tax configuration' });
   });
 
   it('6. variant_id field not provided', async () => {
@@ -257,13 +257,13 @@ describe('GET /api/product-taxes/:variantId — Get Tax by Variant', () => {
   it('2. variantId valid but has no tax configuration yet', async () => {
     const res = await makeAuthRequest('GET', `/api/product-taxes/${testVariantId}`);
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Konfigurasi pajak tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Tax configuration not found for this variant' });
   });
 
   it('3. variantId does not exist in product_variants', async () => {
     const res = await makeAuthRequest('GET', '/api/product-taxes/99999');
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Konfigurasi pajak tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Tax configuration not found for this variant' });
   });
 
   it('4. variantId bukan integer (misal string acak)', async () => {
@@ -355,7 +355,7 @@ describe('PATCH /api/product-taxes/:id — Update Tax Configuration', () => {
       tax_code: 'PPN-12',
     });
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Konfigurasi pajak tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Tax configuration not found for this variant' });
   });
 
   it('6. Empty body', async () => {
@@ -438,7 +438,7 @@ describe('DELETE /api/product-taxes/:id — Delete Tax Configuration', () => {
   it('5. id not found', async () => {
     const res = await makeAuthRequest('DELETE', '/api/product-taxes/99999');
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Konfigurasi pajak tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Tax configuration not found for this variant' });
   });
 
   it('6. id bukan integer', async () => {

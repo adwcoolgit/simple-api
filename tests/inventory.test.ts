@@ -234,7 +234,7 @@ describe('POST /api/inventory — Create Inventory Record', () => {
     );
     expect(res.status).toBe(409);
     expect(res.json.error).toBe(
-      'Inventory untuk varian dan gudang ini sudah ada'
+      'The inventory for this variant and warehouse already exists'
     );
   });
 
@@ -481,7 +481,7 @@ describe('GET /api/inventory/:variantId/:warehouseId — Detail Inventory', () =
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Inventory tidak ditemukan');
+    expect(res.json.error).toBe('Inventory not found');
   });
 
   it('3. Parameter bukan angka', async () => {
@@ -589,7 +589,7 @@ describe('PATCH /api/inventory/:variantId/:warehouseId — Update Stock Settings
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Inventory tidak ditemukan');
+    expect(res.json.error).toBe('Inventory not found');
   });
 
   it('7. Tanpa token', async () => {
@@ -661,7 +661,7 @@ describe('POST /api/inventory/:variantId/:warehouseId/adjust — Stock Adjustmen
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(422);
-    expect(res.json.error).toBe('Stok tidak mencukupi');
+    expect(res.json.error).toBe('Insufficient stock for this adjustment');
   });
 
   it('4. Decrease exceeding stock (result < 0)', async () => {
@@ -674,7 +674,7 @@ describe('POST /api/inventory/:variantId/:warehouseId/adjust — Stock Adjustmen
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(422);
-    expect(res.json.error).toBe('Stok tidak mencukupi');
+    expect(res.json.error).toBe('Insufficient stock for this adjustment');
   });
 
   it('5. qty bernilai 0', async () => {
@@ -699,7 +699,7 @@ describe('POST /api/inventory/:variantId/:warehouseId/adjust — Stock Adjustmen
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Inventory tidak ditemukan');
+    expect(res.json.error).toBe('Inventory not found');
   });
 
   it('7. Tanpa token', async () => {
@@ -767,7 +767,7 @@ describe('POST /api/inventory/:variantId/:warehouseId/reserve — Reserve Stock'
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(422);
-    expect(res.json.error).toBe('Stok tidak mencukupi untuk direservasi');
+    expect(res.json.error).toBe('Insufficient stock for reservation');
   });
 
   it('4. Reserve gradually until exhausted', async () => {
@@ -824,7 +824,7 @@ describe('POST /api/inventory/:variantId/:warehouseId/reserve — Reserve Stock'
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Inventory tidak ditemukan');
+    expect(res.json.error).toBe('Inventory not found');
   });
 
   it('7. Tanpa token', async () => {
@@ -895,7 +895,7 @@ describe('POST /api/inventory/:variantId/:warehouseId/release — Release Reserv
     );
     expect(res.status).toBe(422);
     expect(res.json.error).toBe(
-      'Jumlah pelepasan melebihi stok yang direservasi'
+      'Release quantity exceeds the reserved amount'
     );
   });
 
@@ -943,7 +943,7 @@ describe('POST /api/inventory/:variantId/:warehouseId/release — Release Reserv
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Inventory tidak ditemukan');
+    expect(res.json.error).toBe('Inventory not found');
   });
 
   it('7. Tanpa token', async () => {
@@ -1004,7 +1004,7 @@ describe('DELETE /api/inventory/:variantId/:warehouseId — Delete Inventory Rec
     );
     expect(res.status).toBe(422);
     expect(res.json.error).toBe(
-      'Tidak dapat menghapus inventory yang masih memiliki reservasi aktif'
+      'Cannot delete inventory that still has active reservations'
     );
   });
 
@@ -1032,7 +1032,7 @@ describe('DELETE /api/inventory/:variantId/:warehouseId — Delete Inventory Rec
       { Authorization: `Bearer ${token}` }
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Inventory tidak ditemukan');
+    expect(res.json.error).toBe('Inventory not found');
   });
 
   it('5. Tanpa token', async () => {

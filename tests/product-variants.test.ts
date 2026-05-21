@@ -612,7 +612,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ error: 'Product variant not found' });
   });
 
-  it('9. Body kosong', async () => {
+  it('9. Empty body', async () => {
     const res = await makeAuthRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,

@@ -311,7 +311,7 @@ describe('GET /api/product-prices/:id — Price Details', () => {
 
   it('24. ID does not exist', async () => {
     const res = await makeRequest('GET', '/api/product-prices/99999');
-    expect(res.json).toEqual({ error: 'Harga tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Price not found' });
   });
 
   it('25. ID bukan integer', async () => {

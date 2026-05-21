@@ -319,7 +319,7 @@ describe('GET /api/products/:productId — Detail Product', () => {
   it('18. `productId` does not exist in DB', async () => {
     const res = await makeAuthRequest('GET', '/api/products/99999');
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Product not found' });
   });
 
   it('19. `productId` bukan angka', async () => {
@@ -393,7 +393,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
       name: 'Nonexistent Product',
     });
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Product not found' });
   });
 
   it('26. Empty body', async () => {
@@ -475,7 +475,7 @@ describe('DELETE /api/products/:productId — Soft Delete Product', () => {
   it('34. `productId` does not exist in DB', async () => {
     const res = await makeAuthRequest('DELETE', '/api/products/99999');
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Product not found' });
   });
 
   it('35. `productId` bukan angka', async () => {
