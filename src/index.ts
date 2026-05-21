@@ -162,6 +162,45 @@ async function initializeDatabase() {
 }
 
 const app = new Elysia()
+  .onError(({ error, set }) => {
+    if (error instanceof Error) {
+      const msg = error.message;
+
+      // Not found cases
+      if (
+        msg === 'Product not found' ||
+        msg === 'Variant not found' ||
+        msg === 'Product variant not found' ||
+        msg === 'Attribute not found' ||
+        msg === 'Inventory not found' ||
+        msg === 'Tax configuration not found for this variant' ||
+        msg === 'Price not found' ||
+        msg === 'Barcode not found' ||
+        msg.includes('not found')
+      ) {
+        set.status = 404;
+        return { error: msg };
+      }
+
+      // Conflict / already exists
+      if (
+        msg === 'Email already registered' ||
+        msg === 'SKU is already in use' ||
+        msg === 'Variant already has a tax configuration' ||
+        msg === 'The inventory for this variant and warehouse already exists' ||
+        msg.includes('already')
+      ) {
+        set.status = 409;
+        return { error: msg };
+      }
+
+      // Unauthorized
+      if (msg === 'Unauthorized' || msg === 'Email or password is incorrect') {
+        set.status = 401;
+        return { error: msg };
+      }
+    }
+  })
   .use(loggerMiddleware)
   .use(
     swagger({

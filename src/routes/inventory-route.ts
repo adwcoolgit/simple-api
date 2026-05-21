@@ -619,7 +619,7 @@ const deleteInventoryRoute = new Elysia().delete(
         return { error: err.message };
       }
       if (
-        err.message.includes('Cannot delete inventory with active reservations')
+        err.message.includes('Cannot delete inventory that still has active reservations')
       ) {
         set.status = 422;
         return { error: err.message };

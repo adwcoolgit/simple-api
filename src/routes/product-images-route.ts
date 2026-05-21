@@ -266,7 +266,7 @@ export const productImagesRoute = new Elysia({
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Image not found') {
+        if (error.message === 'Image not found' || error.message.includes('Image not found for the specified variant')) {
           set.status = 404;
           return { error: 'Image not found' };
         }
@@ -308,7 +308,7 @@ export const productImagesRoute = new Elysia({
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Image not found') {
+        if (error.message === 'Image not found' || error.message.includes('Image not found for the specified variant')) {
           set.status = 404;
           return { error: 'Image not found' };
         }

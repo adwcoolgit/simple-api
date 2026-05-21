@@ -37,9 +37,9 @@ const createVariantAttributeHandler = new Elysia()
         set.status = 201;
         return { data: attribute };
       } catch (err: any) {
-        if (err.message === 'Variant not found') {
+        if (err.message === 'Variant not found' || err.message.includes('Variant not found')) {
           set.status = 404;
-          return { error: err.message };
+          return { error: 'Variant not found' };
         }
         if (
           err.message.includes('too long') ||
@@ -114,9 +114,9 @@ const getVariantAttributesHandler = new Elysia()
         const attributes = await getVariantAttributes(Number(params.variantId));
         return { data: attributes };
       } catch (err: any) {
-        if (err.message === 'Variant not found') {
+        if (err.message === 'Variant not found' || err.message.includes('Variant not found')) {
           set.status = 404;
-          return { error: err.message };
+          return { error: 'Variant not found' };
         }
         throw err;
       }
@@ -170,9 +170,9 @@ const getVariantAttributeByIdHandler = new Elysia()
         const attribute = await getVariantAttributeById(Number(params.id));
         return { data: attribute };
       } catch (err: any) {
-        if (err.message === 'Attribute not found') {
+        if (err.message === 'Attribute not found' || err.message.includes('Attribute not found')) {
           set.status = 404;
-          return { error: err.message };
+          return { error: 'Attribute not found' };
         }
         throw err;
       }
@@ -260,9 +260,9 @@ const updateVariantAttributeHandler = new Elysia()
         );
         return { data: updatedAttribute };
       } catch (err: any) {
-        if (err.message === 'Attribute not found') {
+        if (err.message === 'Attribute not found' || err.message.includes('Attribute not found')) {
           set.status = 404;
-          return { error: err.message };
+          return { error: 'Attribute not found' };
         }
         if (
           err.message.includes('too long') ||
@@ -360,9 +360,9 @@ const deleteVariantAttributeHandler = new Elysia()
         await deleteVariantAttribute(Number(params.id));
         return { data: 'OK' };
       } catch (err: any) {
-        if (err.message === 'Attribute not found') {
+        if (err.message === 'Attribute not found' || err.message.includes('Attribute not found')) {
           set.status = 404;
-          return { error: err.message };
+          return { error: 'Attribute not found' };
         }
         throw err;
       }
@@ -426,4 +426,16 @@ export const variantAttributesRoute = new Elysia()
   .use(getVariantAttributesHandler)
   .use(getVariantAttributeByIdHandler)
   .use(updateVariantAttributeHandler)
-  .use(deleteVariantAttributeHandler);
+  .use(deleteVariantAttributeHandler)
+  .onError(({ error, set }) => {
+    if (error instanceof Error) {
+      if (error.message === 'Variant not found' || error.message.includes('Variant not found')) {
+        set.status = 404;
+        return { error: 'Variant not found' };
+      }
+      if (error.message === 'Attribute not found' || error.message.includes('Attribute not found')) {
+        set.status = 404;
+        return { error: 'Attribute not found' };
+      }
+    }
+  });

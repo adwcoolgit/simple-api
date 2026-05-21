@@ -161,7 +161,7 @@ describe('POST /api/users/login — Login', () => {
       password: 'wrongpassword',
     });
     expect(res.status).toBe(401);
-    expect(res.json).toEqual({ error: 'Email atau password salah' });
+    expect(res.json).toEqual({ error: 'Email or password is incorrect' });
   });
 
   it('3. Email not registered', async () => {
@@ -170,7 +170,7 @@ describe('POST /api/users/login — Login', () => {
       password: testPassword,
     });
     expect(res.status).toBe(401);
-    expect(res.json).toEqual({ error: 'Email atau password salah' });
+    expect(res.json).toEqual({ error: 'Email or password is incorrect' });
   });
 
   it('4. `email` field not provided', async () => {
@@ -226,7 +226,7 @@ describe('POST /api/users/login — Login', () => {
       password: hashedPassword, // Send hash as plain text
     });
     expect(res.status).toBe(401);
-    expect(res.json).toEqual({ error: 'Email atau password salah' });
+    expect(res.json).toEqual({ error: 'Email or password is incorrect' });
   });
 });
 

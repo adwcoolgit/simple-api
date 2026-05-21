@@ -248,9 +248,9 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
           set.status = 404;
           return { error: 'Variant not found' };
         }
-        if (error.message === 'Current active cost not found') {
+        if (error.message === 'Current cost not found') {
           set.status = 404;
-          return { error: 'Current active cost not found' };
+          return { error: 'Current cost not found' };
         }
         throw error;
       }

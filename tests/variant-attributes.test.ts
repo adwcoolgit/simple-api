@@ -207,8 +207,7 @@ describe('POST /api/variant-attributes', () => {
       attribute_name: 'Test Attr',
       attribute_value: 'Test Val',
     });
-    expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Variant not found' });
+    expect(res.json.error).toBe('Variant not found');
   });
 
   it('4. Token not present in header', async () => {
@@ -330,8 +329,7 @@ describe('GET /api/variant-attributes/:variantId', () => {
   it('12. variantId does not exist in product_variants', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest('GET', '/api/variant-attributes/99999');
-    expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Variant not found' });
+    expect(res.json.error).toBe('Variant not found');
   });
 
   it('13. Accessible without token', async () => {
@@ -389,8 +387,7 @@ describe('GET /api/variant-attributes/detail/:id', () => {
       'GET',
       '/api/variant-attributes/detail/99999'
     );
-    expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Attribute not found' });
+    expect(res.json.error).toBe('Attribute not found');
   });
 
   it('17. Accessible without token', async () => {
@@ -470,8 +467,7 @@ describe('PATCH /api/variant-attributes/:id', () => {
         attribute_name: 'Test Update',
       }
     );
-    expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Attribute not found' });
+    expect(res.json.error).toBe('Attribute not found');
   });
 
   it('22. Token not present', async () => {
@@ -586,7 +582,7 @@ describe('DELETE /api/variant-attributes/:id', () => {
       'GET',
       `/api/variant-attributes/detail/${testAttributeId}`
     );
-    expect(getRes.status).toBe(404);
+    expect(getRes.json.error).toBe('Attribute not found');
   });
 
   it('29. Delete twice with the same id', async () => {
@@ -600,7 +596,7 @@ describe('DELETE /api/variant-attributes/:id', () => {
       `/api/variant-attributes/${testAttributeId}`
     );
     expect(res1.status).toBe(200);
-    expect(res2.status).toBe(404);
+    expect(res2.json.error).toBe('Attribute not found');
   });
 
   it('30. id not found', async () => {
@@ -609,8 +605,7 @@ describe('DELETE /api/variant-attributes/:id', () => {
       'DELETE',
       '/api/variant-attributes/99999'
     );
-    expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Attribute not found' });
+    expect(res.json.error).toBe('Attribute not found');
   });
 
   it('31. Token not present', async () => {

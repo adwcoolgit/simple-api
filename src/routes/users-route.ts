@@ -21,9 +21,9 @@ const registerRoute = new Elysia()
         const user = await registerUser(body);
         return { data: 'Success' };
       } catch (err: any) {
-        if (err.message === 'Email is already registered') {
+        if (err.message === 'Email already registered') {
           set.status = 409;
-          return { error: 'Email is already registered' };
+          return { error: 'Email already registered' };
         }
         throw err;
       }

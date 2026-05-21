@@ -50,7 +50,7 @@ export const productTaxesRoute = new Elysia({
           set.status = 404;
           return { error: error.message };
         }
-        if (error.message === 'Variant already has tax configuration') {
+        if (error.message === 'Variant already has a tax configuration') {
           set.status = 409;
           return { error: error.message };
         }
@@ -166,6 +166,10 @@ export const productTaxesRoute = new Elysia({
           set.status = 404;
           return { error: error.message };
         }
+        if (error.message === 'Tax configuration not found for this variant') {
+          set.status = 404;
+          return { error: error.message };
+        }
         throw error;
       }
     },
@@ -259,7 +263,7 @@ export const productTaxesRoute = new Elysia({
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Tax configuration not found') {
+        if (error.message === 'Tax configuration not found for this variant') {
           set.status = 404;
           return { error: error.message };
         }
@@ -362,7 +366,7 @@ export const productTaxesRoute = new Elysia({
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Tax configuration not found') {
+        if (error.message === 'Tax configuration not found for this variant') {
           set.status = 404;
           return { error: error.message };
         }

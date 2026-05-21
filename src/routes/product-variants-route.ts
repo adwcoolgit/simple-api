@@ -44,7 +44,7 @@ const createProductVariantHandler = new Elysia()
           set.status = 404;
           return { error: err.message };
         }
-        if (err.message === 'SKU already used') {
+        if (err.message === 'SKU is already in use') {
           set.status = 409;
           return { error: err.message };
         }
@@ -111,11 +111,11 @@ const createProductVariantHandler = new Elysia()
             },
           },
           409: {
-            description: 'SKU already used',
+            description: 'SKU is already in use',
             content: {
               'application/json': {
                 example: {
-                  error: 'SKU already used',
+                  error: 'SKU is already in use',
                 },
               },
             },
@@ -331,7 +331,7 @@ const updateProductVariantHandler = new Elysia()
           set.status = 404;
           return { error: err.message };
         }
-        if (err.message === 'SKU already used') {
+        if (err.message === 'SKU is already in use') {
           set.status = 409;
           return { error: err.message };
         }
@@ -392,11 +392,11 @@ const updateProductVariantHandler = new Elysia()
             },
           },
           409: {
-            description: 'SKU already used by another variant',
+            description: 'SKU is already in use by another variant',
             content: {
               'application/json': {
                 example: {
-                  error: 'SKU already used',
+                  error: 'SKU is already in use',
                 },
               },
             },
