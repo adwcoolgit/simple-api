@@ -257,7 +257,37 @@ const updateInventorySettingsRoute = new Elysia()
       const variantId = parseInt(params.variantId);
       const warehouseId = parseInt(params.warehouseId);
 
+<<<<<<< HEAD
       if (isNaN(variantId) || variantId <= 0 || isNaN(warehouseId) || warehouseId <= 0) {
+=======
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const variantId = parseInt(params.variantId);
+    const warehouseId = parseInt(params.warehouseId);
+
+    if (
+      isNaN(variantId) ||
+      variantId <= 0 ||
+      isNaN(warehouseId) ||
+      warehouseId <= 0
+    ) {
+      set.status = 422;
+      return { error: 'Invalid parameters' };
+    }
+
+    try {
+      const result = await releaseStockSvc(variantId, warehouseId, body);
+      return { data: result };
+    } catch (err: any) {
+      if (err.message.includes('Inventory not found')) {
+        set.status = 404;
+        return { error: err.message };
+      }
+      if (err.message.includes('Release quantity exceeds the reserved amount')) {
+>>>>>>> 321ea32 (Fix inventory release error message mismatch causing 500 instead of 422)
         set.status = 422;
         return { error: 'Invalid parameters' };
       }
