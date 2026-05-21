@@ -19,13 +19,13 @@ export async function createVariantAttribute(input: CreateVariantAttributeInput)
     throw new Error('attribute_name is required');
   }
   if (input.attributeName.length > 50) {
-    throw new Error('attribute_name terlalu panjang, maksimal 50 karakter');
+    throw new Error('Attribute name is too long, maximum 50 characters');
   }
   if (!input.attributeValue || input.attributeValue.trim().length === 0) {
     throw new Error('attribute_value is required');
   }
   if (input.attributeValue.length > 50) {
-    throw new Error('attribute_value terlalu panjang, maksimal 50 karakter');
+    throw new Error('Attribute value is too long, maximum 50 characters');
   }
 
   try {
@@ -36,7 +36,7 @@ export async function createVariantAttribute(input: CreateVariantAttributeInput)
       .where(eq(productVariants.id, input.variantId));
 
     if (!existingVariant) {
-      throw new Error('Variant tidak ditemukan');
+      throw new Error('Variant not found');
     }
 
     const [newAttribute] = await db.insert(variantAttributes).values({
@@ -70,14 +70,14 @@ export async function createVariantAttribute(input: CreateVariantAttributeInput)
       error?.code === 'ER_DATA_TOO_LONG' ||
       error?.message?.includes('Data too long')
     ) {
-      throw new Error('Input terlalu panjang');
+      throw new Error('Input is too long');
     }
 
-    if (error instanceof Error && error.message === 'Variant tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Variant not found') {
       throw error;
     }
 
-    throw new Error('Gagal membuat variant attribute');
+    throw new Error('Failed to create variant attribute');
   }
 }
 
@@ -90,7 +90,7 @@ export async function getVariantAttributes(variantId: number) {
       .where(eq(productVariants.id, variantId));
 
     if (!existingVariant) {
-      throw new Error('Variant tidak ditemukan');
+      throw new Error('Variant not found');
     }
 
     const attributes = await dbRead
@@ -102,11 +102,11 @@ export async function getVariantAttributes(variantId: number) {
   } catch (error: any) {
     console.error('Get variant attributes error:', error);
 
-    if (error instanceof Error && error.message === 'Variant tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Variant not found') {
       throw error;
     }
 
-    throw new Error('Gagal mengambil data variant attributes');
+    throw new Error('Failed to retrieve variant attributes');
   }
 }
 
@@ -118,18 +118,18 @@ export async function getVariantAttributeById(id: number) {
       .where(eq(variantAttributes.id, id));
 
     if (!attribute) {
-      throw new Error('Attribute tidak ditemukan');
+      throw new Error('Attribute not found');
     }
 
     return attribute;
   } catch (error: any) {
     console.error('Get variant attribute by ID error:', error);
 
-    if (error instanceof Error && error.message === 'Attribute tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Attribute not found') {
       throw error;
     }
 
-    throw new Error('Gagal mengambil data variant attribute');
+    throw new Error('Failed to retrieve variant attribute');
   }
 }
 
@@ -140,7 +140,7 @@ export async function updateVariantAttribute(id: number, input: UpdateVariantAtt
       throw new Error('attribute_name is required');
     }
     if (input.attributeName.length > 50) {
-      throw new Error('attribute_name terlalu panjang, maksimal 50 karakter');
+      throw new Error('Attribute name is too long, maximum 50 characters');
     }
   }
   if (input.attributeValue !== undefined) {
@@ -148,7 +148,7 @@ export async function updateVariantAttribute(id: number, input: UpdateVariantAtt
       throw new Error('attribute_value is required');
     }
     if (input.attributeValue.length > 50) {
-      throw new Error('attribute_value terlalu panjang, maksimal 50 karakter');
+      throw new Error('Attribute value is too long, maximum 50 characters');
     }
   }
 
@@ -160,7 +160,7 @@ export async function updateVariantAttribute(id: number, input: UpdateVariantAtt
       .where(eq(variantAttributes.id, id));
 
     if (!existingAttribute) {
-      throw new Error('Attribute tidak ditemukan');
+      throw new Error('Attribute not found');
     }
 
     // Prepare update data
@@ -197,14 +197,14 @@ export async function updateVariantAttribute(id: number, input: UpdateVariantAtt
       error?.code === 'ER_DATA_TOO_LONG' ||
       error?.message?.includes('Data too long')
     ) {
-      throw new Error('Input terlalu panjang');
+      throw new Error('Input is too long');
     }
 
-    if (error instanceof Error && error.message === 'Attribute tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Attribute not found') {
       throw error;
     }
 
-    throw new Error('Gagal memperbarui variant attribute');
+    throw new Error('Failed to update variant attribute');
   }
 }
 
@@ -217,7 +217,7 @@ export async function deleteVariantAttribute(id: number) {
       .where(eq(variantAttributes.id, id));
 
     if (!existingAttribute) {
-      throw new Error('Attribute tidak ditemukan');
+      throw new Error('Attribute not found');
     }
 
     // Delete the attribute
@@ -225,10 +225,10 @@ export async function deleteVariantAttribute(id: number) {
   } catch (error: any) {
     console.error('Delete variant attribute error:', error);
 
-    if (error instanceof Error && error.message === 'Attribute tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Attribute not found') {
       throw error;
     }
 
-    throw new Error('Gagal menghapus variant attribute');
+    throw new Error('Failed to delete variant attribute');
   }
 }

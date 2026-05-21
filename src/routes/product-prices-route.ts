@@ -41,7 +41,7 @@ const createProductPriceHandler = new Elysia()
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (err.message === 'Variant tidak ditemukan') {
+        if (err.message === 'Variant not found') {
           set.status = 404;
           return { error: err.message };
         }
@@ -49,7 +49,10 @@ const createProductPriceHandler = new Elysia()
           set.status = 409;
           return { error: err.message };
         }
-        if (err.message.includes('must be greater than 0') || err.message.includes('start_date must be before')) {
+        if (
+          err.message.includes('must be greater than 0') ||
+          err.message.includes('start_date must be before')
+        ) {
           set.status = 422;
           return { error: err.message };
         }
@@ -59,7 +62,11 @@ const createProductPriceHandler = new Elysia()
     {
       body: t.Object({
         variant_id: t.Number(),
-        price_type: t.Union([t.Literal('retail'), t.Literal('member'), t.Literal('reseller')]),
+        price_type: t.Union([
+          t.Literal('retail'),
+          t.Literal('member'),
+          t.Literal('reseller'),
+        ]),
         price: t.Number({ minimum: 0.01 }),
         start_date: t.Optional(t.String()),
         end_date: t.Optional(t.String()),
@@ -101,7 +108,7 @@ const createProductPriceHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Variant tidak ditemukan',
+                  error: 'Variant not found',
                 },
               },
             },
@@ -111,7 +118,8 @@ const createProductPriceHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Sudah ada harga untuk tipe dan rentang tanggal ini',
+                  error:
+                    'There is already a price for this type and date range',
                 },
               },
             },
@@ -124,95 +132,53 @@ const createProductPriceHandler = new Elysia()
     }
   );
 
-const getProductPricesHandler = new Elysia()
-  .get(
-    '/api/product-prices',
-    async ({ query, set }: any) => {
-      try {
-        const filters = {
-          variant_id: query.variant_id ? Number(query.variant_id) : undefined,
-          price_type: query.price_type as 'retail' | 'member' | 'reseller' | undefined,
-          page: query.page ? Number(query.page) : undefined,
-          limit: query.limit ? Number(query.limit) : undefined,
-        };
+const getProductPricesHandler = new Elysia().get(
+  '/api/product-prices',
+  async ({ query, set }: any) => {
+    try {
+      const filters = {
+        variant_id: query.variant_id ? Number(query.variant_id) : undefined,
+        price_type: query.price_type as
+          | 'retail'
+          | 'member'
+          | 'reseller'
+          | undefined,
+        page: query.page ? Number(query.page) : undefined,
+        limit: query.limit ? Number(query.limit) : undefined,
+      };
 
-        const result = await getProductPrices(filters);
-        return { data: result.data, meta: result.meta };
-      } catch (err: any) {
-        throw err;
-      }
-    },
-    {
-      query: t.Optional(
-        t.Object({
-          variant_id: t.Optional(t.Number()),
-          price_type: t.Optional(t.Union([t.Literal('retail'), t.Literal('member'), t.Literal('reseller')])),
-          page: t.Optional(t.Number({ minimum: 1 })),
-          limit: t.Optional(t.Number({ minimum: 1, maximum: 100 })),
-        })
-      ),
-      detail: {
-        summary: 'List all product prices with optional filters and pagination',
-        tags: ['Product Prices'],
-        responses: {
-          200: {
-            description: 'Product prices list retrieved successfully',
-            content: {
-              'application/json': {
-                example: {
-                  data: [
-                    {
-                      id: 1,
-                      variant_id: 1,
-                      price_type: 'retail',
-                      price: '150000.00',
-                      start_date: '2026-01-01T00:00:00.000Z',
-                      end_date: '2026-12-31T23:59:59.000Z',
-                    },
-                  ],
-                  meta: {
-                    total: 1,
-                    page: 1,
-                    limit: 10,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      const result = await getProductPrices(filters);
+      return { data: result.data, meta: result.meta };
+    } catch (err: any) {
+      throw err;
     }
-  );
-
-const getProductPriceByIdHandler = new Elysia()
-  .get(
-    '/api/product-prices/:id',
-    async ({ params, set }: any) => {
-      try {
-        const price = await getProductPriceById(Number(params.id));
-        return { data: price };
-      } catch (err: any) {
-        if (err.message === 'Harga tidak ditemukan') {
-          set.status = 404;
-          return { error: err.message };
-        }
-        throw err;
-      }
-    },
-    {
-      params: t.Object({
-        id: t.Number(),
-      }),
-      detail: {
-        summary: 'Get product price details by ID',
-        tags: ['Product Prices'],
-        responses: {
-          200: {
-            description: 'Product price details retrieved successfully',
-            content: {
-              'application/json': {
-                example: {
-                  data: {
+  },
+  {
+    query: t.Optional(
+      t.Object({
+        variant_id: t.Optional(t.Number()),
+        price_type: t.Optional(
+          t.Union([
+            t.Literal('retail'),
+            t.Literal('member'),
+            t.Literal('reseller'),
+          ])
+        ),
+        page: t.Optional(t.Number({ minimum: 1 })),
+        limit: t.Optional(t.Number({ minimum: 1, maximum: 100 })),
+      })
+    ),
+    detail: {
+      summary: 'List all product prices with optional filters and pagination',
+      tags: ['Product Prices'],
+      responses: {
+        200: {
+          description: 'Product prices list retrieved successfully',
+          content: {
+            'application/json': {
+              example: {
+                data: [
+                  {
                     id: 1,
                     variant_id: 1,
                     price_type: 'retail',
@@ -220,78 +186,137 @@ const getProductPriceByIdHandler = new Elysia()
                     start_date: '2026-01-01T00:00:00.000Z',
                     end_date: '2026-12-31T23:59:59.000Z',
                   },
+                ],
+                meta: {
+                  total: 1,
+                  page: 1,
+                  limit: 10,
                 },
               },
             },
-          },
-          404: {
-            description: 'Product price not found',
-            content: {
-              'application/json': {
-                example: {
-                  error: 'Harga tidak ditemukan',
-                },
-              },
-            },
-          },
-          422: {
-            description: 'Invalid ID',
           },
         },
       },
-    }
-  );
-
-const getActiveProductPricesHandler = new Elysia()
-  .get(
-    '/api/product-prices-active',
-    async ({ query }: any) => {
-      try {
-        const filters = {
-          variant_id: query.variant_id ? Number(query.variant_id) : undefined,
-          price_type: query.price_type as 'retail' | 'member' | 'reseller' | undefined,
-        };
-
-        const result = await getActiveProductPrices(filters);
-        return { data: result.data };
-      } catch (err: any) {
-        throw err;
-      }
     },
-    {
-      query: t.Optional(
-        t.Object({
-          variant_id: t.Optional(t.Number()),
-          price_type: t.Optional(t.Union([t.Literal('retail'), t.Literal('member'), t.Literal('reseller')])),
-        })
-      ),
-      detail: {
-        summary: 'List active product prices',
-        tags: ['Product Prices'],
-        responses: {
-          200: {
-            description: 'Active product prices retrieved successfully',
-            content: {
-              'application/json': {
-                example: {
-                  data: [
-                    {
-                      id: 1,
-                      variant_id: 1,
-                      price_type: 'member',
-                      price: '120000.00',
-                      start_date: '2026-01-01T00:00:00.000Z',
-                      end_date: null,
-                    },
-                  ],
+  }
+);
+
+const getProductPriceByIdHandler = new Elysia().get(
+  '/api/product-prices/:id',
+  async ({ params, set }: any) => {
+    try {
+      const price = await getProductPriceById(Number(params.id));
+      return { data: price };
+    } catch (err: any) {
+      if (err.message === 'Price not found') {
+        set.status = 404;
+        return { error: err.message };
+      }
+      throw err;
+    }
+  },
+  {
+    params: t.Object({
+      id: t.Number(),
+    }),
+    detail: {
+      summary: 'Get product price details by ID',
+      tags: ['Product Prices'],
+      responses: {
+        200: {
+          description: 'Product price details retrieved successfully',
+          content: {
+            'application/json': {
+              example: {
+                data: {
+                  id: 1,
+                  variant_id: 1,
+                  price_type: 'retail',
+                  price: '150000.00',
+                  start_date: '2026-01-01T00:00:00.000Z',
+                  end_date: '2026-12-31T23:59:59.000Z',
                 },
               },
             },
           },
         },
+        404: {
+          description: 'Product price not found',
+          content: {
+            'application/json': {
+              example: {
+                error: 'Price not found',
+              },
+            },
+          },
+        },
+        422: {
+          description: 'Invalid ID',
+        },
       },
+    },
+  }
+);
+
+const getActiveProductPricesHandler = new Elysia().get(
+  '/api/product-prices-active',
+  async ({ query }: any) => {
+    try {
+      const filters = {
+        variant_id: query.variant_id ? Number(query.variant_id) : undefined,
+        price_type: query.price_type as
+          | 'retail'
+          | 'member'
+          | 'reseller'
+          | undefined,
+      };
+
+      const result = await getActiveProductPrices(filters);
+      return { data: result.data };
+    } catch (err: any) {
+      throw err;
     }
-  );
+  },
+  {
+    query: t.Optional(
+      t.Object({
+        variant_id: t.Optional(t.Number()),
+        price_type: t.Optional(
+          t.Union([
+            t.Literal('retail'),
+            t.Literal('member'),
+            t.Literal('reseller'),
+          ])
+        ),
+      })
+    ),
+    detail: {
+      summary: 'List active product prices',
+      tags: ['Product Prices'],
+      responses: {
+        200: {
+          description: 'Active product prices retrieved successfully',
+          content: {
+            'application/json': {
+              example: {
+                data: [
+                  {
+                    id: 1,
+                    variant_id: 1,
+                    price_type: 'member',
+                    price: '120000.00',
+                    start_date: '2026-01-01T00:00:00.000Z',
+                    end_date: null,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+  }
+);
 
 const updateProductPriceHandler = new Elysia()
   // .use(rateLimit({ windowMs: 60000, max: 30 }))
@@ -308,7 +333,11 @@ const updateProductPriceHandler = new Elysia()
       const token = authHeader.substring(7);
 
       // Check if at least one field is provided
-      if (body.price === undefined && body.start_date === undefined && body.end_date === undefined) {
+      if (
+        body.price === undefined &&
+        body.start_date === undefined &&
+        body.end_date === undefined
+      ) {
         set.status = 422;
         return { error: 'At least one field must be provided' };
       }
@@ -327,15 +356,18 @@ const updateProductPriceHandler = new Elysia()
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (err.message === 'Harga tidak ditemukan') {
+        if (err.message === 'Price not found') {
           set.status = 404;
           return { error: err.message };
         }
-        if (err.message.includes('Sudah ada harga')) {
+        if (err.message.includes('There is already a price')) {
           set.status = 409;
           return { error: err.message };
         }
-        if (err.message.includes('must be greater than 0') || err.message.includes('start_date must be before')) {
+        if (
+          err.message.includes('must be greater than 0') ||
+          err.message.includes('start_date must be before')
+        ) {
           set.status = 422;
           return { error: err.message };
         }
@@ -381,7 +413,7 @@ const updateProductPriceHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Harga tidak ditemukan',
+                  error: 'Price not found',
                 },
               },
             },
@@ -391,7 +423,8 @@ const updateProductPriceHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Sudah ada harga untuk tipe dan rentang tanggal ini',
+                  error:
+                    'There is already a price for this type and date range',
                 },
               },
             },
@@ -428,7 +461,7 @@ const deleteProductPriceHandler = new Elysia()
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (err.message === 'Harga tidak ditemukan') {
+        if (err.message === 'Price not found') {
           set.status = 404;
           return { error: err.message };
         }
@@ -469,7 +502,7 @@ const deleteProductPriceHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Harga tidak ditemukan',
+                  error: 'Price not found',
                 },
               },
             },

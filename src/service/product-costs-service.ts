@@ -35,7 +35,7 @@ export async function createProductCost(
     .limit(1);
 
   if (!existingVariant.length) {
-    throw new Error('Variant tidak ditemukan');
+    throw new Error('Variant not found');
   }
 
   // Insert the new record
@@ -81,7 +81,7 @@ export async function getProductCostsByVariant(
     .limit(1);
 
   if (!existingVariant.length) {
-    throw new Error('Variant tidak ditemukan');
+    throw new Error('Variant not found');
   }
 
   // Get all cost records ordered by effective_date DESC
@@ -114,7 +114,7 @@ export async function getCurrentProductCost(
     .limit(1);
 
   if (!existingVariant.length) {
-    throw new Error('Variant tidak ditemukan');
+    throw new Error('Variant not found');
   }
 
   // Get the most recent cost where effective_date <= NOW()
@@ -131,7 +131,7 @@ export async function getCurrentProductCost(
     .limit(1);
 
   if (!currentCost) {
-    throw new Error('Harga pokok aktif tidak ditemukan');
+    throw new Error('Current cost not found');
   }
 
   return {
@@ -158,7 +158,7 @@ export async function updateProductCost(
     .limit(1);
 
   if (!existingRecord.length) {
-    throw new Error('Data tidak ditemukan');
+    throw new Error('Data not found');
   }
 
   // Prepare update data (only include fields that are provided)
@@ -188,7 +188,7 @@ export async function deleteProductCost(id: number): Promise<string> {
     .limit(1);
 
   if (!existingRecord.length) {
-    throw new Error('Data tidak ditemukan');
+    throw new Error('Data not found');
   }
 
   // Delete the record

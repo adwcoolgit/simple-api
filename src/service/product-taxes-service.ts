@@ -29,7 +29,7 @@ export async function createProductTax(
     .limit(1);
 
   if (!existingVariant.length) {
-    throw new Error('Variant tidak ditemukan');
+    throw new Error('Variant not found');
   }
 
   // Check if variant already has tax configuration
@@ -40,7 +40,7 @@ export async function createProductTax(
     .limit(1);
 
   if (existingTax.length) {
-    throw new Error('Variant sudah memiliki konfigurasi pajak');
+    throw new Error('Variant already has a tax configuration');
   }
 
   // Insert new tax configuration
@@ -83,7 +83,7 @@ export async function getProductTaxByVariantId(
     .limit(1);
 
   if (!result.length) {
-    throw new Error('Konfigurasi pajak tidak ditemukan');
+    throw new Error('Tax configuration not found for this variant');
   }
 
   const tax = result[0]!;
@@ -110,7 +110,7 @@ export async function updateProductTax(
     .limit(1);
 
   if (!existingTax.length) {
-    throw new Error('Konfigurasi pajak tidak ditemukan');
+    throw new Error('Tax configuration not found for this variant');
   }
 
   // Prepare update data
@@ -133,7 +133,7 @@ export async function updateProductTax(
     .limit(1);
 
   if (!updated) {
-    throw new Error('Konfigurasi pajak tidak ditemukan');
+    throw new Error('Tax configuration not found for this variant');
   }
 
   return {
@@ -156,7 +156,7 @@ export async function deleteProductTax(id: number): Promise<void> {
     .limit(1);
 
   if (!existingTax.length) {
-    throw new Error('Konfigurasi pajak tidak ditemukan');
+    throw new Error('Tax configuration not found for this variant');
   }
 
   // Delete the record

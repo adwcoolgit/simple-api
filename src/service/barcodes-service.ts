@@ -16,7 +16,9 @@ export interface BarcodeResponse {
 /**
  * Create a new barcode
  */
-export async function createBarcode(data: CreateBarcodeData): Promise<BarcodeResponse> {
+export async function createBarcode(
+  data: CreateBarcodeData
+): Promise<BarcodeResponse> {
   // Validate that variant exists
   const existingVariant = await db
     .select()
@@ -25,7 +27,7 @@ export async function createBarcode(data: CreateBarcodeData): Promise<BarcodeRes
     .limit(1);
 
   if (!existingVariant.length) {
-    throw new Error('Variant tidak ditemukan');
+    throw new Error('Variant not found');
   }
 
   // Check if barcode already exists
@@ -36,16 +38,14 @@ export async function createBarcode(data: CreateBarcodeData): Promise<BarcodeRes
     .limit(1);
 
   if (existingBarcode.length) {
-    throw new Error('Barcode sudah digunakan');
+    throw new Error('Barcode already in use');
   }
 
   // Insert new barcode
-  await db
-    .insert(barcodes)
-    .values({
-      variantId: data.variantId,
-      barcode: data.barcode,
-    });
+  await db.insert(barcodes).values({
+    variantId: data.variantId,
+    barcode: data.barcode,
+  });
 
   // Get the inserted record
   const [inserted] = await db
@@ -68,7 +68,9 @@ export async function createBarcode(data: CreateBarcodeData): Promise<BarcodeRes
 /**
  * Get all barcodes for a variant
  */
-export async function getBarcodesByVariant(variantId: number): Promise<BarcodeResponse[]> {
+export async function getBarcodesByVariant(
+  variantId: number
+): Promise<BarcodeResponse[]> {
   // Validate that variant exists
   const existingVariant = await db
     .select()
@@ -77,7 +79,7 @@ export async function getBarcodesByVariant(variantId: number): Promise<BarcodeRe
     .limit(1);
 
   if (!existingVariant.length) {
-    throw new Error('Variant tidak ditemukan');
+    throw new Error('Variant not found');
   }
 
   // Get all barcodes for this variant
@@ -86,7 +88,7 @@ export async function getBarcodesByVariant(variantId: number): Promise<BarcodeRe
     .from(barcodes)
     .where(eq(barcodes.variantId, variantId));
 
-  return result.map(barcode => ({
+  return result.map((barcode) => ({
     id: barcode.id,
     variant_id: barcode.variantId,
     barcode: barcode.barcode,
@@ -104,7 +106,7 @@ export async function getBarcodeById(id: number): Promise<BarcodeResponse> {
     .limit(1);
 
   if (!result.length) {
-    throw new Error('Barcode tidak ditemukan');
+    throw new Error('Barcode not found');
   }
 
   const barcode = result[0]!;
@@ -127,13 +129,11 @@ export async function deleteBarcode(id: number): Promise<string> {
     .limit(1);
 
   if (!existingBarcode.length) {
-    throw new Error('Barcode tidak ditemukan');
+    throw new Error('Barcode not found');
   }
 
   // Delete the barcode
-  await db
-    .delete(barcodes)
-    .where(eq(barcodes.id, id));
+  await db.delete(barcodes).where(eq(barcodes.id, id));
 
   return 'OK';
 }

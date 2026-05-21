@@ -37,11 +37,14 @@ const createVariantAttributeHandler = new Elysia()
         set.status = 201;
         return { data: attribute };
       } catch (err: any) {
-        if (err.message === 'Variant tidak ditemukan') {
+        if (err.message === 'Variant not found') {
           set.status = 404;
           return { error: err.message };
         }
-        if (err.message.includes('terlalu panjang') || err.message.includes('required')) {
+        if (
+          err.message.includes('too long') ||
+          err.message.includes('required')
+        ) {
           set.status = 422;
           return { error: err.message };
         }
@@ -89,7 +92,7 @@ const createVariantAttributeHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Variant tidak ditemukan',
+                  error: 'Variant not found',
                 },
               },
             },
@@ -111,7 +114,7 @@ const getVariantAttributesHandler = new Elysia()
         const attributes = await getVariantAttributes(Number(params.variantId));
         return { data: attributes };
       } catch (err: any) {
-        if (err.message === 'Variant tidak ditemukan') {
+        if (err.message === 'Variant not found') {
           set.status = 404;
           return { error: err.message };
         }
@@ -148,7 +151,7 @@ const getVariantAttributesHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Variant tidak ditemukan',
+                  error: 'Variant not found',
                 },
               },
             },
@@ -167,7 +170,7 @@ const getVariantAttributeByIdHandler = new Elysia()
         const attribute = await getVariantAttributeById(Number(params.id));
         return { data: attribute };
       } catch (err: any) {
-        if (err.message === 'Attribute tidak ditemukan') {
+        if (err.message === 'Attribute not found') {
           set.status = 404;
           return { error: err.message };
         }
@@ -202,7 +205,17 @@ const getVariantAttributeByIdHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Attribute tidak ditemukan',
+                  error: 'Attribute not found',
+                },
+              },
+            },
+          },
+          422: {
+            description: 'Validation error or empty body',
+            content: {
+              'application/json': {
+                example: {
+                  error: 'Validation error',
                 },
               },
             },
@@ -238,17 +251,23 @@ const updateVariantAttributeHandler = new Elysia()
           await getUserIdFromToken(token);
         }
 
-        const updatedAttribute = await updateVariantAttribute(Number(params.id), {
-          attributeName: body.attribute_name,
-          attributeValue: body.attribute_value,
-        });
+        const updatedAttribute = await updateVariantAttribute(
+          Number(params.id),
+          {
+            attributeName: body.attribute_name,
+            attributeValue: body.attribute_value,
+          }
+        );
         return { data: updatedAttribute };
       } catch (err: any) {
-        if (err.message === 'Attribute tidak ditemukan') {
+        if (err.message === 'Attribute not found') {
           set.status = 404;
           return { error: err.message };
         }
-        if (err.message.includes('terlalu panjang') || err.message.includes('required')) {
+        if (
+          err.message.includes('too long') ||
+          err.message.includes('required')
+        ) {
           set.status = 422;
           return { error: err.message };
         }
@@ -298,13 +317,20 @@ const updateVariantAttributeHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Attribute tidak ditemukan',
+                  error: 'Attribute not found',
                 },
               },
             },
           },
           422: {
             description: 'Validation error or empty body',
+            content: {
+              'application/json': {
+                example: {
+                  error: 'Validation error',
+                },
+              },
+            },
           },
         },
       },
@@ -334,7 +360,7 @@ const deleteVariantAttributeHandler = new Elysia()
         await deleteVariantAttribute(Number(params.id));
         return { data: 'OK' };
       } catch (err: any) {
-        if (err.message === 'Attribute tidak ditemukan') {
+        if (err.message === 'Attribute not found') {
           set.status = 404;
           return { error: err.message };
         }
@@ -375,7 +401,17 @@ const deleteVariantAttributeHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Attribute tidak ditemukan',
+                  error: 'Attribute not found',
+                },
+              },
+            },
+          },
+          422: {
+            description: 'Validation error or empty body',
+            content: {
+              'application/json': {
+                example: {
+                  error: 'Validation error',
                 },
               },
             },

@@ -50,7 +50,7 @@ export async function createProductPrice(input: CreateProductPriceInput) {
       .where(eq(productVariants.id, input.variant_id));
 
     if (!variant) {
-      throw new Error('Variant tidak ditemukan');
+      throw new Error('Variant not found');
     }
 
     // Check for overlap
@@ -92,13 +92,13 @@ export async function createProductPrice(input: CreateProductPriceInput) {
 
     if (
       error instanceof Error &&
-      (error.message === 'Variant tidak ditemukan' ||
+      (error.message === 'Variant not found' ||
         error.message.includes('overlap'))
     ) {
       throw error;
     }
 
-    throw new Error('Gagal membuat harga produk');
+    throw new Error('Failed to create product price');
   }
 }
 
@@ -148,7 +148,7 @@ export async function getProductPrices(filters: GetProductPricesFilters = {}) {
     };
   } catch (error: any) {
     console.error('Get product prices error:', error);
-    throw new Error('Gagal mengambil data harga produk');
+    throw new Error('Failed to retrieve product price data');
   }
 }
 
@@ -160,18 +160,18 @@ export async function getProductPriceById(id: number) {
       .where(eq(productPrices.id, id));
 
     if (!price) {
-      throw new Error('Harga tidak ditemukan');
+      throw new Error('Price not found');
     }
 
     return price;
   } catch (error: any) {
     console.error('Get product price by ID error:', error);
 
-    if (error instanceof Error && error.message === 'Harga tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Price not found') {
       throw error;
     }
 
-    throw new Error('Gagal mengambil data harga produk');
+    throw new Error('Failed to fetch product price by ID');
   }
 }
 
@@ -219,7 +219,7 @@ export async function getActiveProductPrices(
     };
   } catch (error: any) {
     console.error('Get active product prices error:', error);
-    throw new Error('Gagal mengambil data harga aktif');
+    throw new Error('Failed to fetch active product prices');
   }
 }
 
@@ -247,7 +247,7 @@ export async function updateProductPrice(
       .where(eq(productPrices.id, id));
 
     if (!existingPrice) {
-      throw new Error('Harga tidak ditemukan');
+      throw new Error('Price not found');
     }
 
     // Check for overlap, excluding self
@@ -294,13 +294,12 @@ export async function updateProductPrice(
 
     if (
       error instanceof Error &&
-      (error.message === 'Harga tidak ditemukan' ||
-        error.message.includes('overlap'))
+      (error.message === 'Price not found' || error.message.includes('overlap'))
     ) {
       throw error;
     }
 
-    throw new Error('Gagal memperbarui harga produk');
+    throw new Error('Failed to update product price');
   }
 }
 
@@ -313,7 +312,7 @@ export async function deleteProductPrice(id: number) {
       .where(eq(productPrices.id, id));
 
     if (!existingPrice) {
-      throw new Error('Harga tidak ditemukan');
+      throw new Error('Price not found');
     }
 
     await db.delete(productPrices).where(eq(productPrices.id, id));
@@ -322,11 +321,11 @@ export async function deleteProductPrice(id: number) {
   } catch (error: any) {
     console.error('Delete product price error:', error);
 
-    if (error instanceof Error && error.message === 'Harga tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Price not found') {
       throw error;
     }
 
-    throw new Error('Gagal menghapus harga produk');
+    throw new Error('Failed to delete product price');
   }
 }
 
@@ -369,7 +368,7 @@ async function checkOverlap(
       (existingStart === null || end === null || existingStart <= end);
 
     if (overlap) {
-      throw new Error('Sudah ada harga untuk tipe dan rentang tanggal ini');
+      throw new Error('There is already a price for this type and date range');
     }
   }
 }

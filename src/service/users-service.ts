@@ -27,19 +27,19 @@ export async function registerUser(input: RegisterUserInput) {
     throw new Error('Name is required');
   }
   if (input.name.length > 255) {
-    throw new Error('Nama terlalu panjang, maksimal 255 karakter');
+    throw new Error('Name is too long, maximum 255 characters');
   }
   if (!input.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
     throw new Error('Valid email is required');
   }
   if (input.email.length > 255) {
-    throw new Error('Email terlalu panjang, maksimal 255 karakter');
+    throw new Error('Email is too long, maximum 255 characters');
   }
   if (!input.password || input.password.length < 8) {
     throw new Error('Password must be at least 8 characters');
   }
   if (input.password.length > 255) {
-    throw new Error('Password terlalu panjang, maksimal 255 karakter');
+    throw new Error('Password is too long, maximum 255 characters');
   }
 
   try {
@@ -49,7 +49,7 @@ export async function registerUser(input: RegisterUserInput) {
       .where(eq(users.email, input.email))
       .limit(1);
     if (existingUser.length > 0) {
-      throw new Error('Email sudah terdaftar');
+      throw new Error('Email already registered');
     }
 
     const hashedPassword = await bcrypt.hash(input.password, 12);
@@ -81,27 +81,27 @@ export async function registerUser(input: RegisterUserInput) {
       error?.code === 'ER_DATA_TOO_LONG' ||
       error?.message?.includes('Data too long')
     ) {
-      throw new Error('Input terlalu panjang, maksimal 255 karakter');
+      throw new Error('Input is too long, maximum 255 characters');
     }
 
     if (
       error instanceof Error &&
-      error.message.includes('Email sudah terdaftar')
+      error.message.includes('Email already registered')
     ) {
       throw error;
     }
 
-    throw new Error('Gagal mendaftarkan user');
+    throw new Error('Failed to register user');
   }
 }
 
 export async function loginUser(input: LoginUserInput) {
   // Input validation
   if (!input.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
-    throw new Error('Email atau password salah');
+    throw new Error('Email or password is incorrect');
   }
   if (!input.password) {
-    throw new Error('Email atau password salah');
+    throw new Error('Email or password is incorrect');
   }
 
   try {
@@ -111,13 +111,13 @@ export async function loginUser(input: LoginUserInput) {
       .where(eq(users.email, input.email));
 
     if (!user) {
-      throw new Error('Email atau password salah');
+      throw new Error('Email or password is incorrect');
     }
 
     const isPasswordValid = await bcrypt.compare(input.password, user.password);
 
     if (!isPasswordValid) {
-      throw new Error('Email atau password salah');
+      throw new Error('Email or password is incorrect');
     }
 
     const token = crypto.randomUUID();
@@ -138,7 +138,7 @@ export async function loginUser(input: LoginUserInput) {
     return { token };
   } catch (error) {
     console.error('Login error:', error);
-    throw new Error('Email atau password salah');
+    throw new Error('Email or password is incorrect');
   }
 }
 export async function getCurrentUser(token: string) {
@@ -229,7 +229,7 @@ export async function updateUser(userId: number, input: UpdateUserInput) {
       throw new Error('Name is required');
     }
     if (input.name.length > 255) {
-      throw new Error('Nama terlalu panjang, maksimal 255 karakter');
+    throw new Error('Name is too long, maximum 255 characters');
     }
   }
   if (input.email !== undefined) {
@@ -237,7 +237,7 @@ export async function updateUser(userId: number, input: UpdateUserInput) {
       throw new Error('Valid email is required');
     }
     if (input.email.length > 255) {
-      throw new Error('Email terlalu panjang, maksimal 255 karakter');
+    throw new Error('Email is too long, maximum 255 characters');
     }
 
     // Check if email is already used by another user
@@ -247,7 +247,7 @@ export async function updateUser(userId: number, input: UpdateUserInput) {
       .where(eq(users.email, input.email))
       .limit(1);
     if (existingUser.length > 0 && existingUser[0]?.id !== userId) {
-      throw new Error('Email sudah digunakan');
+      throw new Error('Email already in use');
     }
   }
   if (input.password !== undefined) {
@@ -255,7 +255,7 @@ export async function updateUser(userId: number, input: UpdateUserInput) {
       throw new Error('Password must be at least 8 characters');
     }
     if (input.password.length > 255) {
-      throw new Error('Password terlalu panjang, maksimal 255 karakter');
+    throw new Error('Password is too long, maximum 255 characters');
     }
   }
 
@@ -286,16 +286,16 @@ export async function updateUser(userId: number, input: UpdateUserInput) {
       error?.code === 'ER_DATA_TOO_LONG' ||
       error?.message?.includes('Data too long')
     ) {
-      throw new Error('Input terlalu panjang, maksimal 255 karakter');
+      throw new Error('Input is too long, maximum 255 characters');
     }
 
     if (
       error instanceof Error &&
-      error.message.includes('Email sudah digunakan')
+      error.message.includes('Email already in use')
     ) {
       throw error;
     }
 
-    throw new Error('Gagal memperbarui user');
+    throw new Error('Failed to update user');
   }
 }

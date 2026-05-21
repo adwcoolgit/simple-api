@@ -40,7 +40,7 @@ const createProductHandler = new Elysia()
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (err.message.includes('terlalu panjang')) {
+        if (err.message.includes('too long')) {
           set.status = 422;
           return { error: err.message };
         }
@@ -119,7 +119,9 @@ const getProductsHandler = new Elysia()
           limit: query.limit ? Number(query.limit) : undefined,
           isActive: query.is_active !== undefined ? query.is_active : undefined,
           categoryId: query.category_id ? Number(query.category_id) : undefined,
-          departmentId: query.department_id ? Number(query.department_id) : undefined,
+          departmentId: query.department_id
+            ? Number(query.department_id)
+            : undefined,
         };
 
         const result = await getProducts(filters);
@@ -212,7 +214,7 @@ const getProductByProductIdHandler = new Elysia()
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (err.message === 'Product tidak ditemukan') {
+        if (err.message === 'Product not found') {
           set.status = 404;
           return { error: err.message };
         }
@@ -223,7 +225,7 @@ const getProductByProductIdHandler = new Elysia()
       params: t.Object({
         productId: t.Number(),
       }),
-        detail: {
+      detail: {
         summary: 'Get product details by product ID',
         tags: ['Products'],
         security: [{ bearerAuth: [] }],
@@ -251,15 +253,56 @@ const getProductByProductIdHandler = new Elysia()
                         uom: 'pcs',
                         is_active: true,
                         is_sellable: true,
-                        prices: [{ id: 1, variant_id: 1, price_type: 'retail', price: '1499.99' }],
-                        costs: [{ id: 1, variant_id: 1, cost_price: '1050.00' }],
-                        taxes: [{ id: 1, variant_id: 1, tax_code: 'VAT20', is_inclusive: true }],
-                        barcodes: [{ id: 1, variant_id: 1, barcode: '5901234123457' }],
-                        images: [{ id: 1, variant_id: 1, image_url: 'https://cdn.acme.com/laptop-x1-gray.jpg', is_primary: true }],
-                        attributes: [{ id: 1, variant_id: 1, attribute_name: 'Color', attribute_value: 'Space Gray' }],
-                        inventory: [{ id: 1, variant_id: 1, warehouse_id: 1, stock_qty: '120.00', reserved_qty: '15.00' }]
-                      }
-                    ]
+                        prices: [
+                          {
+                            id: 1,
+                            variant_id: 1,
+                            price_type: 'retail',
+                            price: '1499.99',
+                          },
+                        ],
+                        costs: [
+                          { id: 1, variant_id: 1, cost_price: '1050.00' },
+                        ],
+                        taxes: [
+                          {
+                            id: 1,
+                            variant_id: 1,
+                            tax_code: 'VAT20',
+                            is_inclusive: true,
+                          },
+                        ],
+                        barcodes: [
+                          { id: 1, variant_id: 1, barcode: '5901234123457' },
+                        ],
+                        images: [
+                          {
+                            id: 1,
+                            variant_id: 1,
+                            image_url:
+                              'https://cdn.acme.com/laptop-x1-gray.jpg',
+                            is_primary: true,
+                          },
+                        ],
+                        attributes: [
+                          {
+                            id: 1,
+                            variant_id: 1,
+                            attribute_name: 'Color',
+                            attribute_value: 'Space Gray',
+                          },
+                        ],
+                        inventory: [
+                          {
+                            id: 1,
+                            variant_id: 1,
+                            warehouse_id: 1,
+                            stock_qty: '120.00',
+                            reserved_qty: '15.00',
+                          },
+                        ],
+                      },
+                    ],
                   },
                 },
               },
@@ -280,7 +323,7 @@ const getProductByProductIdHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Product tidak ditemukan',
+                  error: 'Product not found',
                 },
               },
             },
@@ -308,7 +351,13 @@ const updateProductHandler = new Elysia()
       const token = authHeader.substring(7);
 
       // Check if at least one field is provided
-      if (!body.name && !body.description && body.category_id === undefined && body.department_id === undefined && body.is_active === undefined) {
+      if (
+        !body.name &&
+        !body.description &&
+        body.category_id === undefined &&
+        body.department_id === undefined &&
+        body.is_active === undefined
+      ) {
         set.status = 422;
         return { error: 'At least one field must be provided' };
       }
@@ -319,7 +368,10 @@ const updateProductHandler = new Elysia()
         const updatedProduct = await updateProduct(Number(params.productId), {
           name: body.name,
           description: body.description,
-          categoryId: body.category_id !== undefined ? parseInt(body.category_id) : undefined,
+          categoryId:
+            body.category_id !== undefined
+              ? parseInt(body.category_id)
+              : undefined,
           departmentId: body.department_id,
           isActive: body.is_active,
         });
@@ -329,11 +381,11 @@ const updateProductHandler = new Elysia()
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (err.message === 'Product tidak ditemukan') {
+        if (err.message === 'Product not found') {
           set.status = 404;
           return { error: err.message };
         }
-        if (err.message.includes('terlalu panjang')) {
+        if (err.message.includes('too long')) {
           set.status = 422;
           return { error: err.message };
         }
@@ -351,7 +403,7 @@ const updateProductHandler = new Elysia()
         department_id: t.Optional(t.Number()),
         is_active: t.Optional(t.Boolean()),
       }),
-        detail: {
+      detail: {
         summary: 'Update product by product ID',
         tags: ['Products'],
         security: [{ bearerAuth: [] }],
@@ -390,7 +442,7 @@ const updateProductHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Product tidak ditemukan',
+                  error: 'Product not found',
                 },
               },
             },
@@ -423,7 +475,7 @@ const deleteProductHandler = new Elysia()
         const result = await deleteProduct(Number(params.productId));
         return { data: result };
       } catch (err: any) {
-        if (err.message === 'Product tidak ditemukan') {
+        if (err.message === 'Product not found') {
           set.status = 404;
           return { error: err.message };
         }
@@ -464,7 +516,7 @@ const deleteProductHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Product tidak ditemukan',
+                  error: 'Product not found',
                 },
               },
             },

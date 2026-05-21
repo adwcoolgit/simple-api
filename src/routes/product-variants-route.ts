@@ -40,15 +40,18 @@ const createProductVariantHandler = new Elysia()
         set.status = 201;
         return { data: variant };
       } catch (err: any) {
-        if (err.message === 'Product tidak ditemukan') {
+        if (err.message === 'Product not found') {
           set.status = 404;
           return { error: err.message };
         }
-        if (err.message === 'SKU sudah digunakan') {
+        if (err.message === 'SKU already used') {
           set.status = 409;
           return { error: err.message };
         }
-        if (err.message.includes('terlalu panjang') || err.message.includes('required')) {
+        if (
+          err.message.includes('too long') ||
+          err.message.includes('required')
+        ) {
           set.status = 422;
           return { error: err.message };
         }
@@ -102,7 +105,7 @@ const createProductVariantHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Product tidak ditemukan',
+                  error: 'Product not found',
                 },
               },
             },
@@ -112,7 +115,7 @@ const createProductVariantHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'SKU sudah digunakan',
+                  error: 'SKU already used',
                 },
               },
             },
@@ -221,7 +224,7 @@ const getProductVariantByIdHandler = new Elysia()
         const variant = await getProductVariantById(Number(params.id));
         return { data: variant };
       } catch (err: any) {
-        if (err.message === 'Product variant tidak ditemukan') {
+        if (err.message === 'Product variant not found') {
           set.status = 404;
           return { error: err.message };
         }
@@ -270,7 +273,7 @@ const getProductVariantByIdHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Product variant tidak ditemukan',
+                  error: 'Product variant not found',
                 },
               },
             },
@@ -298,7 +301,13 @@ const updateProductVariantHandler = new Elysia()
       const token = authHeader.substring(7);
 
       // Check if at least one field is provided
-      if (!body.sku && !body.variant_name && body.uom === undefined && body.is_active === undefined && body.is_sellable === undefined) {
+      if (
+        !body.sku &&
+        !body.variant_name &&
+        body.uom === undefined &&
+        body.is_active === undefined &&
+        body.is_sellable === undefined
+      ) {
         set.status = 422;
         return { error: 'At least one field must be provided' };
       }
@@ -318,15 +327,18 @@ const updateProductVariantHandler = new Elysia()
         });
         return { data: result };
       } catch (err: any) {
-        if (err.message === 'Product variant tidak ditemukan') {
+        if (err.message === 'Product variant not found') {
           set.status = 404;
           return { error: err.message };
         }
-        if (err.message === 'SKU sudah digunakan') {
+        if (err.message === 'SKU already used') {
           set.status = 409;
           return { error: err.message };
         }
-        if (err.message.includes('terlalu panjang') || err.message.includes('required')) {
+        if (
+          err.message.includes('too long') ||
+          err.message.includes('required')
+        ) {
           set.status = 422;
           return { error: err.message };
         }
@@ -374,7 +386,7 @@ const updateProductVariantHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Product variant tidak ditemukan',
+                  error: 'Product variant not found',
                 },
               },
             },
@@ -384,7 +396,7 @@ const updateProductVariantHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'SKU sudah digunakan',
+                  error: 'SKU already used',
                 },
               },
             },
@@ -417,20 +429,26 @@ const deleteProductVariantHandler = new Elysia()
           await getUserIdFromToken(token);
         }
 
-      const result = await deleteProductVariant(Number(params.id));
-      return { data: result };
-    } catch (err: any) {
-      console.error('Delete product variant route error:', err);
-      if (err.message === 'Product variant tidak ditemukan') {
-        set.status = 404;
-        return { error: err.message };
+        const result = await deleteProductVariant(Number(params.id));
+        return { data: result };
+      } catch (err: any) {
+        console.error('Delete product variant route error:', err);
+        if (err.message === 'Product variant not found') {
+          set.status = 404;
+          return { error: err.message };
+        }
+        if (
+          err.message ===
+          'Failed to delete product variant due to database constraints'
+        ) {
+          set.status = 500;
+          return {
+            error:
+              'Failed to delete product variant due to database constraints',
+          };
+        }
+        throw err;
       }
-      if (err.message === 'Gagal menghapus product variant') {
-        set.status = 500;
-        return { error: 'Failed to delete product variant due to database constraints' };
-      }
-      throw err;
-    }
     },
     {
       params: t.Object({
@@ -466,7 +484,7 @@ const deleteProductVariantHandler = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Product variant tidak ditemukan',
+                  error: 'Product variant not found',
                 },
               },
             },
