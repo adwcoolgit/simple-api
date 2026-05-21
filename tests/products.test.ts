@@ -135,7 +135,7 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
   return { status: res.status, json };
 }
 
-describe('POST /api/products — Buat Product Baru', () => {
+describe('POST /api/products — Create New Product', () => {
   it('1. Semua field valid', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/products', {
@@ -154,7 +154,7 @@ describe('POST /api/products — Buat Product Baru', () => {
     expect(res.json.data.isActive).toBe(true);
   });
 
-  it('2. Hanya `product_name` (field lain opsional tidak dikirim)', async () => {
+  it('2. Only `product_name` (other optional fields not provided)', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/products', {
       name: 'Test Product Only Name',
@@ -167,7 +167,7 @@ describe('POST /api/products — Buat Product Baru', () => {
     expect(res.json.data.isActive).toBe(true);
   });
 
-  it('3. `name` tidak dikirim', async () => {
+  it('3. `name` not provided', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/products', {
       description: 'Test Description',
@@ -175,7 +175,7 @@ describe('POST /api/products — Buat Product Baru', () => {
     expect(res.status).toBe(422);
   });
 
-  it('4. `name` string kosong', async () => {
+  it('4. `name` empty string', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/products', {
       name: '',
@@ -192,7 +192,7 @@ describe('POST /api/products — Buat Product Baru', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('6. Token tidak valid', async () => {
+  it('6. Invalid token', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest('POST', '/api/products', {
       name: 'Test Product',
@@ -204,7 +204,7 @@ describe('POST /api/products — Buat Product Baru', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('7. `is_active` tidak dikirim → default `true` di DB', async () => {
+  it('7. `is_active` not provided → defaults to `true` in DB', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/products', {
       name: 'Test Product Default Active',
@@ -214,7 +214,7 @@ describe('POST /api/products — Buat Product Baru', () => {
   });
 });
 
-describe('GET /api/products — List Semua Product', () => {
+describe('GET /api/products — List All Products', () => {
   beforeEach(async () => {
     const timestamp = Date.now();
     // Create test products with unique names
@@ -225,7 +225,7 @@ describe('GET /api/products — List Semua Product', () => {
     ]);
   });
 
-  it('8. List semua product (ada data)', async () => {
+  it('8. List all products (data exists)', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('GET', '/api/products');
     expect(res.status).toBe(200);
@@ -237,7 +237,7 @@ describe('GET /api/products — List Semua Product', () => {
     expect(res.json.meta).toHaveProperty('limit');
   });
 
-  it('9. List saat tidak ada data', async () => {
+  it('9. List when no data', async () => {
     if (!dbAvailable) return;
     // More aggressive cleanup - delete all products including those from other tests
     // Delete dependent records first
@@ -284,7 +284,7 @@ describe('GET /api/products — List Semua Product', () => {
     expect(res.json.meta.limit).toBe(2);
   });
 
-  it('15. `limit` melebihi total data', async () => {
+  it('15. `limit` exceeds total data', async () => {
     const res = await makeAuthRequest('GET', '/api/products?limit=100');
     expect(res.status).toBe(200);
     expect(res.json.data.length).toBeLessThanOrEqual(3);
@@ -309,14 +309,14 @@ describe('GET /api/products/:productId — Detail Product', () => {
     testProductId = product!.productId;
   });
 
-  it('17. `productId` valid dan ada', async () => {
+  it('17. `productId` valid and exists', async () => {
     const res = await makeAuthRequest('GET', `/api/products/${testProductId}`);
     expect(res.status).toBe(200);
     expect(res.json.data.productId).toBe(testProductId);
     expect(res.json.data.name).toBe('Test Detail Product');
   });
 
-  it('18. `productId` tidak ada di DB', async () => {
+  it('18. `productId` does not exist in DB', async () => {
     const res = await makeAuthRequest('GET', '/api/products/99999');
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
@@ -347,7 +347,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
     testProductId = product!.productId;
   });
 
-  it('21. Update `name` saja', async () => {
+  it('21. Update `name` only', async () => {
     const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
       name: 'Updated Product Name',
     });
@@ -356,7 +356,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
     expect(res.json.data.description).toBe('Original Description');
   });
 
-  it('22. Update `description` saja', async () => {
+  it('22. Update `description` only', async () => {
     const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
       description: 'Updated Description',
     });
@@ -364,7 +364,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
     expect(res.json.data.description).toBe('Updated Description');
   });
 
-  it('23. Update `is_active` dari `true` ke `false`', async () => {
+  it('23. Update `is_active` from `true` to `false`', async () => {
     const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
       is_active: false,
     });
@@ -372,7 +372,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
     expect(res.json.data.isActive).toBe(false);
   });
 
-  it('24. Update semua field sekaligus', async () => {
+  it('24. Update all fields at once', async () => {
     const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
       name: 'Fully Updated Product',
       description: 'Fully Updated Description',
@@ -388,7 +388,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
     expect(res.json.data.isActive).toBe(false);
   });
 
-  it('25. `productId` tidak ada di DB', async () => {
+  it('25. `productId` does not exist in DB', async () => {
     const res = await makeAuthRequest('PATCH', '/api/products/99999', {
       name: 'Nonexistent Product',
     });
@@ -396,7 +396,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
     expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
   });
 
-  it('26. Body kosong', async () => {
+  it('26. Empty body', async () => {
     const res = await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {});
     expect(res.status).toBe(422);
     expect(res.json).toEqual({ error: 'At least one field must be provided' });
@@ -417,7 +417,7 @@ describe('PATCH /api/products/:productId — Update Product', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('29. `updated_at` berubah setelah update', async () => {
+  it('29. `updated_at` changes after update', async () => {
     const beforeUpdate = await db.select({ updatedAt: products.updatedAt }).from(products).where(eq(products.productId, testProductId));
     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
     await makeAuthRequest('PATCH', `/api/products/${testProductId}`, {
@@ -447,7 +447,7 @@ describe('DELETE /api/products/:productId — Soft Delete Product', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('31. Setelah delete, record masih ada di DB', async () => {
+  it('31. After delete, record still exists in DB', async () => {
     await makeAuthRequest('DELETE', `/api/products/${testProductId}`);
     const product = await db.select().from(products).where(eq(products.productId, testProductId));
     expect(product.length).toBe(1);
@@ -465,14 +465,14 @@ describe('DELETE /api/products/:productId — Soft Delete Product', () => {
     expect(inactiveRes.json.data.some((p: any) => p.productId === testProductId)).toBe(true);
   });
 
-  it('33. Delete dua kali pada `productId` yang sama', async () => {
+  it('33. Delete twice on the same `productId`', async () => {
     const res1 = await makeAuthRequest('DELETE', `/api/products/${testProductId}`);
     const res2 = await makeAuthRequest('DELETE', `/api/products/${testProductId}`);
     expect(res1.status).toBe(200);
     expect(res2.status).toBe(200);
   });
 
-  it('34. `productId` tidak ada di DB', async () => {
+  it('34. `productId` does not exist in DB', async () => {
     const res = await makeAuthRequest('DELETE', '/api/products/99999');
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Product tidak ditemukan' });

@@ -116,7 +116,7 @@ describe('Redis Cache for Sessions', () => {
     expect(cachedUserId).toMatch(/^\d+$/); // Should be user ID
   });
 
-  it('2. GET /api/users/current kedua kali → dilayani dari Redis (tidak hit MySQL)', async () => {
+  it('2. GET /api/users/current twice → served from Redis (no MySQL hit)', async () => {
     if (!redisAvailable) {
       console.log('Skipping Redis test - Redis not available');
       return;
@@ -178,7 +178,7 @@ describe('Redis Cache for Sessions', () => {
     expect(cachedUserIdAfter).toBeNull();
   });
 
-  it('4. GET /api/users/current setelah logout → cache miss, query MySQL, hasilnya 401', async () => {
+  it('4. GET /api/users/current after logout → cache miss, query MySQL, returns 401', async () => {
     // Register and login
     await makeRequest('POST', '/api/users', {
       name: testName,
@@ -204,7 +204,7 @@ describe('Redis Cache for Sessions', () => {
     expect(res.json.error).toBe('Unauthorized');
   });
 
-  it('5. Cache miss (key tidak ada di Redis) → fallback ke MySQL, data dikembalikan benar', async () => {
+  it('5. Cache miss (key not in Redis) → fallback to MySQL, data returned correctly', async () => {
     // Register and login
     await makeRequest('POST', '/api/users', {
       name: testName,
@@ -231,7 +231,7 @@ describe('Redis Cache for Sessions', () => {
     expect(res.json.data.name).toBe(testName);
   });
 
-  it('6. Redis down / tidak tersedia → aplikasi tetap berjalan menggunakan MySQL (graceful degradation)', async () => {
+  it('6. Redis down / unavailable → app continues using MySQL (graceful degradation)', async () => {
     // Mock redis to always throw error
     const originalRedis = { ...redis };
     redis.get = async () => { throw new Error('Redis down'); };

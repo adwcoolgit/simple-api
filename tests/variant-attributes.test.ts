@@ -170,7 +170,7 @@ async function makeRequest(
 }
 
 describe('POST /api/variant-attributes', () => {
-  it('1. Semua field valid, token valid', async () => {
+  it('1. All fields valid, valid token', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/variant-attributes', {
       variant_id: testVariantId,
@@ -184,7 +184,7 @@ describe('POST /api/variant-attributes', () => {
     expect(res.json.data.attributeValue).toBe('Red');
   });
 
-  it('2. Buat dua attribute berbeda pada variant yang sama', async () => {
+  it('2. Create two different attributes on the same variant', async () => {
     if (!dbAvailable) return;
     const res1 = await makeAuthRequest('POST', '/api/variant-attributes', {
       variant_id: testVariantId,
@@ -200,7 +200,7 @@ describe('POST /api/variant-attributes', () => {
     expect(res2.status).toBe(201);
   });
 
-  it('3. variant_id tidak ada di product_variants', async () => {
+  it('3. variant_id does not exist in product_variants', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/variant-attributes', {
       variant_id: 99999,
@@ -208,10 +208,10 @@ describe('POST /api/variant-attributes', () => {
       attribute_value: 'Test Val',
     });
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Variant tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Variant not found' });
   });
 
-  it('4. Token tidak ada di header', async () => {
+  it('4. Token not present in header', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest('POST', '/api/variant-attributes', {
       variant_id: testVariantId,
@@ -222,7 +222,7 @@ describe('POST /api/variant-attributes', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('5. Token tidak valid', async () => {
+  it('5. Invalid token', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'POST',
@@ -245,7 +245,7 @@ describe('POST /api/variant-attributes', () => {
     }
   });
 
-  it('6. variant_id tidak dikirim', async () => {
+  it('6. variant_id not provided', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/variant-attributes', {
       attribute_name: 'Test Attr',
@@ -254,7 +254,7 @@ describe('POST /api/variant-attributes', () => {
     expect(res.status).toBe(422);
   });
 
-  it('7. attribute_name tidak dikirim', async () => {
+  it('7. attribute_name not provided', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/variant-attributes', {
       variant_id: testVariantId,
@@ -263,7 +263,7 @@ describe('POST /api/variant-attributes', () => {
     expect(res.status).toBe(422);
   });
 
-  it('8. attribute_value tidak dikirim', async () => {
+  it('8. attribute_value not provided', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/variant-attributes', {
       variant_id: testVariantId,
@@ -272,7 +272,7 @@ describe('POST /api/variant-attributes', () => {
     expect(res.status).toBe(422);
   });
 
-  it('9. Body kosong', async () => {
+  it('9. Empty body', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/variant-attributes', {});
     expect(res.status).toBe(422);
@@ -296,7 +296,7 @@ describe('GET /api/variant-attributes/:variantId', () => {
     ]);
   });
 
-  it('10. Variant ada dan memiliki attribute', async () => {
+  it('10. Variant exists and has attributes', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'GET',
@@ -307,7 +307,7 @@ describe('GET /api/variant-attributes/:variantId', () => {
     expect(res.json.data.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('11. Variant ada tapi belum punya attribute', async () => {
+  it('11. Variant exists but has no attributes yet', async () => {
     if (!dbAvailable) return;
     // Create another variant without attributes
     const [otherVariant] = await db
@@ -327,14 +327,14 @@ describe('GET /api/variant-attributes/:variantId', () => {
     expect(res.json.data).toEqual([]);
   });
 
-  it('12. variantId tidak ada di product_variants', async () => {
+  it('12. variantId does not exist in product_variants', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest('GET', '/api/variant-attributes/99999');
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Variant tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Variant not found' });
   });
 
-  it('13. Tanpa token pun bisa diakses', async () => {
+  it('13. Accessible without token', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'GET',
@@ -344,7 +344,7 @@ describe('GET /api/variant-attributes/:variantId', () => {
     expect(Array.isArray(res.json.data)).toBe(true);
   });
 
-  it('14. Data yang dikembalikan hanya milik variant yang diminta', async () => {
+  it('14. Returned data belongs only to the requested variant', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'GET',
@@ -372,7 +372,7 @@ describe('GET /api/variant-attributes/detail/:id', () => {
     testAttributeId = attribute!.id;
   });
 
-  it('15. id valid dan ada', async () => {
+  it('15. Valid id and exists', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'GET',
@@ -383,17 +383,17 @@ describe('GET /api/variant-attributes/detail/:id', () => {
     expect(res.json.data.attributeName).toBe('Test Detail Attr');
   });
 
-  it('16. id tidak ditemukan', async () => {
+  it('16. id not found', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'GET',
       '/api/variant-attributes/detail/99999'
     );
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Attribute tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Attribute not found' });
   });
 
-  it('17. Tanpa token pun bisa diakses', async () => {
+  it('17. Accessible without token', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'GET',
@@ -419,7 +419,7 @@ describe('PATCH /api/variant-attributes/:id', () => {
     testAttributeId = attribute!.id;
   });
 
-  it('18. Update attribute_name saja', async () => {
+  it('18. Update attribute_name only', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'PATCH',
@@ -433,7 +433,7 @@ describe('PATCH /api/variant-attributes/:id', () => {
     expect(res.json.data.attributeValue).toBe('Original Value');
   });
 
-  it('19. Update attribute_value saja', async () => {
+  it('19. Update attribute_value only', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'PATCH',
@@ -446,7 +446,7 @@ describe('PATCH /api/variant-attributes/:id', () => {
     expect(res.json.data.attributeValue).toBe('Updated Value');
   });
 
-  it('20. Update kedua field sekaligus', async () => {
+  it('20. Update both fields at once', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'PATCH',
@@ -461,7 +461,7 @@ describe('PATCH /api/variant-attributes/:id', () => {
     expect(res.json.data.attributeValue).toBe('Updated Value');
   });
 
-  it('21. id tidak ditemukan', async () => {
+  it('21. id not found', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'PATCH',
@@ -471,10 +471,10 @@ describe('PATCH /api/variant-attributes/:id', () => {
       }
     );
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Attribute tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Attribute not found' });
   });
 
-  it('22. Token tidak ada', async () => {
+  it('22. Token not present', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'PATCH',
@@ -487,7 +487,7 @@ describe('PATCH /api/variant-attributes/:id', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('23. Token tidak valid', async () => {
+  it('23. Invalid token', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'PATCH',
@@ -509,7 +509,7 @@ describe('PATCH /api/variant-attributes/:id', () => {
     }
   });
 
-  it('24. Body kosong', async () => {
+  it('24. Empty body', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'PATCH',
@@ -520,7 +520,7 @@ describe('PATCH /api/variant-attributes/:id', () => {
     expect(res.json).toEqual({ error: 'At least one field must be provided' });
   });
 
-  it('25. Nilai di DB benar-benar berubah setelah update', async () => {
+  it('25. Value in DB actually changes after update', async () => {
     if (!dbAvailable) return;
     await makeAuthRequest(
       'PATCH',
@@ -553,7 +553,7 @@ describe('DELETE /api/variant-attributes/:id', () => {
     testAttributeId = attribute!.id;
   });
 
-  it('26. id valid, token valid', async () => {
+  it('26. Valid id, valid token', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'DELETE',
@@ -563,7 +563,7 @@ describe('DELETE /api/variant-attributes/:id', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('27. Record benar-benar terhapus dari DB', async () => {
+  it('27. Record is actually deleted from DB', async () => {
     if (!dbAvailable) return;
     await makeAuthRequest(
       'DELETE',
@@ -576,7 +576,7 @@ describe('DELETE /api/variant-attributes/:id', () => {
     expect(deletedAttr.length).toBe(0);
   });
 
-  it('28. GET detail setelah delete → tidak ditemukan', async () => {
+  it('28. GET detail after delete → not found', async () => {
     if (!dbAvailable) return;
     await makeAuthRequest(
       'DELETE',
@@ -589,7 +589,7 @@ describe('DELETE /api/variant-attributes/:id', () => {
     expect(getRes.status).toBe(404);
   });
 
-  it('29. Delete dua kali dengan id yang sama', async () => {
+  it('29. Delete twice with the same id', async () => {
     if (!dbAvailable) return;
     const res1 = await makeAuthRequest(
       'DELETE',
@@ -603,17 +603,17 @@ describe('DELETE /api/variant-attributes/:id', () => {
     expect(res2.status).toBe(404);
   });
 
-  it('30. id tidak ditemukan', async () => {
+  it('30. id not found', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'DELETE',
       '/api/variant-attributes/99999'
     );
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Attribute tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Attribute not found' });
   });
 
-  it('31. Token tidak ada', async () => {
+  it('31. Token not present', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'DELETE',
@@ -623,7 +623,7 @@ describe('DELETE /api/variant-attributes/:id', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('32. Token tidak valid', async () => {
+  it('32. Invalid token', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'DELETE',

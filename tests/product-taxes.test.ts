@@ -120,7 +120,7 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
   return { status: res.status, json };
 }
 
-describe('POST /api/product-taxes — Tambah Konfigurasi Pajak', () => {
+describe('POST /api/product-taxes — Add Tax Configuration', () => {
   if (!isDbAvailable()) return;
 
   it('1. Data lengkap dan valid (tax_code + is_inclusive)', async () => {
@@ -158,7 +158,7 @@ describe('POST /api/product-taxes — Tambah Konfigurasi Pajak', () => {
     expect(res.json.data.is_inclusive).toBe(false); // default value
   });
 
-  it('4. variant_id tidak ada di tabel product_variants', async () => {
+  it('4. variant_id does not exist in product_variants table', async () => {
     const res = await makeAuthRequest('POST', '/api/product-taxes', {
       variant_id: 99999,
       tax_code: 'PPN-11',
@@ -167,7 +167,7 @@ describe('POST /api/product-taxes — Tambah Konfigurasi Pajak', () => {
     expect(res.json).toEqual({ error: 'Variant tidak ditemukan' });
   });
 
-  it('5. variant_id sudah punya konfigurasi pajak', async () => {
+  it('5. variant_id already has tax configuration', async () => {
     // Create first tax configuration
     await makeAuthRequest('POST', '/api/product-taxes', {
       variant_id: testVariantId,
@@ -183,14 +183,14 @@ describe('POST /api/product-taxes — Tambah Konfigurasi Pajak', () => {
     expect(res.json).toEqual({ error: 'Variant sudah memiliki konfigurasi pajak' });
   });
 
-  it('6. Field variant_id tidak dikirim', async () => {
+  it('6. variant_id field not provided', async () => {
     const res = await makeAuthRequest('POST', '/api/product-taxes', {
       tax_code: 'PPN-11',
     });
     expect(res.status).toBe(422);
   });
 
-  it('7. tax_code melebihi 20 karakter', async () => {
+  it('7. tax_code exceeds 20 characters', async () => {
     const res = await makeAuthRequest('POST', '/api/product-taxes', {
       variant_id: testVariantId,
       tax_code: 'A'.repeat(21),
@@ -215,7 +215,7 @@ describe('POST /api/product-taxes — Tambah Konfigurasi Pajak', () => {
     expect(res.status).toBe(422);
   });
 
-  it('10. Token tidak valid', async () => {
+  it('10. Invalid token', async () => {
     const res = await makeRequest('POST', '/api/product-taxes', {
       variant_id: testVariantId,
       tax_code: 'PPN-11',
@@ -236,10 +236,10 @@ describe('POST /api/product-taxes — Tambah Konfigurasi Pajak', () => {
   });
 });
 
-describe('GET /api/product-taxes/:variantId — Ambil Pajak by Variant', () => {
+describe('GET /api/product-taxes/:variantId — Get Tax by Variant', () => {
   if (!isDbAvailable()) return;
 
-  it('1. variantId valid dan memiliki konfigurasi pajak', async () => {
+  it('1. variantId valid and has tax configuration', async () => {
     // Create tax configuration first
     await makeAuthRequest('POST', '/api/product-taxes', {
       variant_id: testVariantId,
@@ -254,13 +254,13 @@ describe('GET /api/product-taxes/:variantId — Ambil Pajak by Variant', () => {
     expect(res.json.data.is_inclusive).toBe(false);
   });
 
-  it('2. variantId valid tapi belum punya konfigurasi pajak', async () => {
+  it('2. variantId valid but has no tax configuration yet', async () => {
     const res = await makeAuthRequest('GET', `/api/product-taxes/${testVariantId}`);
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Konfigurasi pajak tidak ditemukan' });
   });
 
-  it('3. variantId tidak ada di product_variants', async () => {
+  it('3. variantId does not exist in product_variants', async () => {
     const res = await makeAuthRequest('GET', '/api/product-taxes/99999');
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Konfigurasi pajak tidak ditemukan' });
@@ -271,7 +271,7 @@ describe('GET /api/product-taxes/:variantId — Ambil Pajak by Variant', () => {
     expect(res.status).toBe(422);
   });
 
-  it('5. Token tidak valid', async () => {
+  it('5. Invalid token', async () => {
     const res = await makeRequest('GET', `/api/product-taxes/${testVariantId}`, undefined, {
       'Authorization': 'Bearer invalid-token',
     });
@@ -285,7 +285,7 @@ describe('GET /api/product-taxes/:variantId — Ambil Pajak by Variant', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('7. Data yang dikembalikan sesuai dengan yang dibuat', async () => {
+  it('7. Returned data matches the created one', async () => {
     await makeAuthRequest('POST', '/api/product-taxes', {
       variant_id: testVariantId,
       tax_code: 'PPN-12',
@@ -300,7 +300,7 @@ describe('GET /api/product-taxes/:variantId — Ambil Pajak by Variant', () => {
   });
 });
 
-describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
+describe('PATCH /api/product-taxes/:id — Update Tax Configuration', () => {
   if (!isDbAvailable()) return;
 
   let testTaxId: number;
@@ -314,7 +314,7 @@ describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
     testTaxId = res.json.data.id;
   });
 
-  it('1. Update tax_code saja', async () => {
+  it('1. Update tax_code only', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-taxes/${testTaxId}`, {
       tax_code: 'PPN-12',
     });
@@ -323,7 +323,7 @@ describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
     expect(res.json.data.is_inclusive).toBe(false); // unchanged
   });
 
-  it('2. Update is_inclusive saja', async () => {
+  it('2. Update is_inclusive only', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-taxes/${testTaxId}`, {
       is_inclusive: true,
     });
@@ -332,7 +332,7 @@ describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
     expect(res.json.data.is_inclusive).toBe(true);
   });
 
-  it('3. Update kedua field sekaligus', async () => {
+  it('3. Update both fields at once', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-taxes/${testTaxId}`, {
       tax_code: 'PPN-13',
       is_inclusive: true,
@@ -342,7 +342,7 @@ describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
     expect(res.json.data.is_inclusive).toBe(true);
   });
 
-  it('4. Update tax_code menjadi null (hapus kode pajak)', async () => {
+  it('4. Update tax_code to null (remove tax code)', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-taxes/${testTaxId}`, {
       tax_code: null,
     });
@@ -350,7 +350,7 @@ describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
     expect(res.json.data.tax_code).toBeNull();
   });
 
-  it('5. id tidak ditemukan', async () => {
+  it('5. id not found', async () => {
     const res = await makeAuthRequest('PATCH', '/api/product-taxes/99999', {
       tax_code: 'PPN-12',
     });
@@ -358,12 +358,12 @@ describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
     expect(res.json).toEqual({ error: 'Konfigurasi pajak tidak ditemukan' });
   });
 
-  it('6. Body kosong', async () => {
+  it('6. Empty body', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-taxes/${testTaxId}`, {});
     expect(res.status).toBe(422);
   });
 
-  it('7. tax_code melebihi 20 karakter', async () => {
+  it('7. tax_code exceeds 20 characters', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-taxes/${testTaxId}`, {
       tax_code: 'A'.repeat(21),
     });
@@ -377,7 +377,7 @@ describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
     expect(res.status).toBe(422);
   });
 
-  it('9. Token tidak valid', async () => {
+  it('9. Invalid token', async () => {
     const res = await makeRequest('PATCH', `/api/product-taxes/${testTaxId}`, {
       tax_code: 'PPN-12',
     }, {
@@ -396,7 +396,7 @@ describe('PATCH /api/product-taxes/:id — Update Konfigurasi Pajak', () => {
   });
 });
 
-describe('DELETE /api/product-taxes/:id — Hapus Konfigurasi Pajak', () => {
+describe('DELETE /api/product-taxes/:id — Delete Tax Configuration', () => {
   if (!isDbAvailable()) return;
 
   let testTaxId: number;
@@ -416,26 +416,26 @@ describe('DELETE /api/product-taxes/:id — Hapus Konfigurasi Pajak', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('2. Record benar-benar terhapus dari DB setelah delete', async () => {
+  it('2. Record is actually deleted from DB after delete', async () => {
     await makeAuthRequest('DELETE', `/api/product-taxes/${testTaxId}`);
     const tax = await db.select().from(productTaxes).where(eq(productTaxes.id, testTaxId));
     expect(tax.length).toBe(0);
   });
 
-  it('3. GET /api/product-taxes/:variantId setelah delete → 404', async () => {
+  it('3. GET /api/product-taxes/:variantId after delete → 404', async () => {
     await makeAuthRequest('DELETE', `/api/product-taxes/${testTaxId}`);
     const getRes = await makeAuthRequest('GET', `/api/product-taxes/${testVariantId}`);
     expect(getRes.status).toBe(404);
   });
 
-  it('4. Delete dua kali dengan id yang sama', async () => {
+  it('4. Delete twice with the same id', async () => {
     const res1 = await makeAuthRequest('DELETE', `/api/product-taxes/${testTaxId}`);
     const res2 = await makeAuthRequest('DELETE', `/api/product-taxes/${testTaxId}`);
     expect(res1.status).toBe(200);
     expect(res2.status).toBe(404);
   });
 
-  it('5. id tidak ditemukan', async () => {
+  it('5. id not found', async () => {
     const res = await makeAuthRequest('DELETE', '/api/product-taxes/99999');
     expect(res.status).toBe(404);
     expect(res.json).toEqual({ error: 'Konfigurasi pajak tidak ditemukan' });
@@ -446,7 +446,7 @@ describe('DELETE /api/product-taxes/:id — Hapus Konfigurasi Pajak', () => {
     expect(res.status).toBe(422);
   });
 
-  it('7. Token tidak valid', async () => {
+  it('7. Invalid token', async () => {
     const res = await makeRequest('DELETE', `/api/product-taxes/${testTaxId}`, undefined, {
       'Authorization': 'Bearer invalid-token',
     });

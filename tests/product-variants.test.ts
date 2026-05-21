@@ -224,7 +224,7 @@ describe('POST /api/product-variants', () => {
     expect(res.json.data.isSellable).toBe(true);
   });
 
-  it('3. SKU sudah digunakan variant lain', async () => {
+  it('3. SKU already used by another variant', async () => {
     // Create first variant
     await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
@@ -236,33 +236,33 @@ describe('POST /api/product-variants', () => {
       sku: 'Test-Duplicate-SKU',
     });
     expect(res.status).toBe(409);
-    expect(res.json).toEqual({ error: 'SKU sudah digunakan' });
+    expect(res.json).toEqual({ error: 'SKU is already in use' });
   });
 
-  it('4. product_id tidak ada di tabel products', async () => {
+  it('4. product_id does not exist in products table', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: 99999,
       sku: 'Test-Invalid-Product',
     });
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Product tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Product not found' });
   });
 
-  it('5. Field product_id tidak dikirim', async () => {
+  it('5. product_id field not provided', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       sku: 'Test-No-Product-ID',
     });
     expect(res.status).toBe(422);
   });
 
-  it('6. Field sku tidak dikirim', async () => {
+  it('6. sku field not provided', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
     });
     expect(res.status).toBe(422);
   });
 
-  it('7. sku melebihi 50 karakter', async () => {
+  it('7. sku exceeds 50 characters', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
       sku: 'A'.repeat(51),
@@ -270,7 +270,7 @@ describe('POST /api/product-variants', () => {
     expect(res.status).toBe(422);
   });
 
-  it('8. variant_name melebihi 100 karakter', async () => {
+  it('8. variant_name exceeds 100 characters', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
       sku: 'Test-Long-Name',
@@ -279,7 +279,7 @@ describe('POST /api/product-variants', () => {
     expect(res.status).toBe(422);
   });
 
-  it('9. uom melebihi 10 karakter', async () => {
+  it('9. uom exceeds 10 characters', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
       sku: 'Test-Long-UOM',
@@ -288,7 +288,7 @@ describe('POST /api/product-variants', () => {
     expect(res.status).toBe(422);
   });
 
-  it('10. is_active bukan boolean', async () => {
+  it('10. is_active is not boolean', async () => {
     const res = await makeAuthRequest('POST', '/api/product-variants', {
       product_id: testProductId,
       sku: 'Test-Invalid-Active',
@@ -297,7 +297,7 @@ describe('POST /api/product-variants', () => {
     expect(res.status).toBe(422);
   });
 
-  it('11. Tanpa header Authorization', async () => {
+  it('11. Without Authorization header', async () => {
     const res = await makeRequest('POST', '/api/product-variants', {
       product_id: testProductId,
       sku: 'Test-No-Auth',
@@ -306,7 +306,7 @@ describe('POST /api/product-variants', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('12. Token tidak valid', async () => {
+  it('12. Invalid token', async () => {
     const res = await makeRequest(
       'POST',
       '/api/product-variants',
@@ -351,7 +351,7 @@ describe('GET /api/product-variants?product_id=', () => {
     ]);
   });
 
-  it('1. Product memiliki beberapa variant', async () => {
+  it('1. Product has multiple variants', async () => {
     const res = await makeAuthRequest(
       'GET',
       `/api/product-variants?product_id=${testProductId}`
@@ -361,7 +361,7 @@ describe('GET /api/product-variants?product_id=', () => {
     expect(res.json.data.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('2. Product tidak memiliki variant', async () => {
+  it('2. Product does not have variants', async () => {
     // Create another product without variants
     const [otherProduct] = await db
       .insert(products)
@@ -378,12 +378,12 @@ describe('GET /api/product-variants?product_id=', () => {
     expect(res.json.data).toEqual([]);
   });
 
-  it('3. product_id tidak dikirim sebagai query param', async () => {
+  it('3. product_id not provided as query param', async () => {
     const res = await makeAuthRequest('GET', '/api/product-variants');
     expect(res.status).toBe(422);
   });
 
-  it('4. product_id bukan angka', async () => {
+  it('4. product_id is not a number', async () => {
     const res = await makeAuthRequest(
       'GET',
       '/api/product-variants?product_id=abc'
@@ -391,7 +391,7 @@ describe('GET /api/product-variants?product_id=', () => {
     expect(res.status).toBe(422);
   });
 
-  it('5. Tanpa header Authorization', async () => {
+  it('5. Without Authorization header', async () => {
     const res = await makeRequest(
       'GET',
       `/api/product-variants?product_id=${testProductId}`
@@ -400,7 +400,7 @@ describe('GET /api/product-variants?product_id=', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('6. Token tidak valid', async () => {
+  it('6. Invalid token', async () => {
     const res = await makeRequest(
       'GET',
       `/api/product-variants?product_id=${testProductId}`,
@@ -439,7 +439,7 @@ describe('GET /api/product-variants/:id', () => {
     testVariantId = variant!.id;
   });
 
-  it('1. ID valid dan variant ada', async () => {
+  it('1. Valid ID and variant exists', async () => {
     const res = await makeAuthRequest(
       'GET',
       `/api/product-variants/${testVariantId}`
@@ -449,18 +449,18 @@ describe('GET /api/product-variants/:id', () => {
     expect(res.json.data.sku).toBe(`Test-Detail-SKU-${uniqueId}`);
   });
 
-  it('2. ID tidak ditemukan', async () => {
+  it('2. ID not found', async () => {
     const res = await makeAuthRequest('GET', '/api/product-variants/99999');
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Product variant tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Product variant not found' });
   });
 
-  it('3. ID bukan angka (misal string "abc")', async () => {
+  it('3. ID is not a number (e.g. string "abc")', async () => {
     const res = await makeAuthRequest('GET', '/api/product-variants/abc');
     expect(res.status).toBe(422);
   });
 
-  it('4. Tanpa header Authorization', async () => {
+  it('4. Without Authorization header', async () => {
     const res = await makeRequest(
       'GET',
       `/api/product-variants/${testVariantId}`
@@ -469,7 +469,7 @@ describe('GET /api/product-variants/:id', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('5. Token tidak valid', async () => {
+  it('5. Invalid token', async () => {
     const res = await makeRequest(
       'GET',
       `/api/product-variants/${testVariantId}`,
@@ -508,7 +508,7 @@ describe('PATCH /api/product-variants/:id', () => {
     testVariantId = variant!.id;
   });
 
-  it('1. Update sku saja', async () => {
+  it('1. Update sku only', async () => {
     const res = await makeAuthRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -520,7 +520,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('2. Update variant_name saja', async () => {
+  it('2. Update variant_name only', async () => {
     const res = await makeAuthRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -532,7 +532,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('3. Update is_active menjadi false', async () => {
+  it('3. Update is_active to false', async () => {
     const res = await makeAuthRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -544,7 +544,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('4. Update is_sellable menjadi false', async () => {
+  it('4. Update is_sellable to false', async () => {
     const res = await makeAuthRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -556,7 +556,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('5. Update semua field sekaligus', async () => {
+  it('5. Update all fields at once', async () => {
     const res = await makeAuthRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -572,7 +572,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('6. Update sku dengan nilai yang sama (milik sendiri)', async () => {
+  it('6. Update sku with same value (own)', async () => {
     const res = await makeAuthRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -584,7 +584,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('7. Update sku dengan SKU milik variant lain', async () => {
+  it('7. Update sku to SKU owned by another variant', async () => {
     // Create another variant
     await db.insert(productVariants).values({
       productId: testProductId,
@@ -601,15 +601,15 @@ describe('PATCH /api/product-variants/:id', () => {
       }
     );
     expect(res.status).toBe(409);
-    expect(res.json).toEqual({ error: 'SKU sudah digunakan' });
+    expect(res.json).toEqual({ error: 'SKU is already in use' });
   });
 
-  it('8. ID tidak ditemukan', async () => {
+  it('8. ID not found', async () => {
     const res = await makeAuthRequest('PATCH', '/api/product-variants/99999', {
       sku: 'Test-Nonexistent',
     });
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Product variant tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Product variant not found' });
   });
 
   it('9. Body kosong', async () => {
@@ -622,7 +622,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ error: 'At least one field must be provided' });
   });
 
-  it('10. sku melebihi 50 karakter', async () => {
+  it('10. sku exceeds 50 characters', async () => {
     const res = await makeAuthRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -633,7 +633,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.status).toBe(422);
   });
 
-  it('11. Tanpa header Authorization', async () => {
+  it('11. Without Authorization header', async () => {
     const res = await makeRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -645,7 +645,7 @@ describe('PATCH /api/product-variants/:id', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('12. Token tidak valid', async () => {
+  it('12. Invalid token', async () => {
     const res = await makeRequest(
       'PATCH',
       `/api/product-variants/${testVariantId}`,
@@ -694,7 +694,7 @@ describe('DELETE /api/product-variants/:id', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('2. Data benar-benar terhapus dari DB', async () => {
+  it('2. Data is actually deleted from DB', async () => {
     await makeAuthRequest('DELETE', `/api/product-variants/${testVariantId}`);
     const variant = await db
       .select()
@@ -709,7 +709,7 @@ describe('DELETE /api/product-variants/:id', () => {
     expect(getRes.status).toBe(404);
   });
 
-  it('3. Delete dua kali dengan ID yang sama', async () => {
+  it('3. Delete twice with the same ID', async () => {
     const res1 = await makeAuthRequest(
       'DELETE',
       `/api/product-variants/${testVariantId}`
@@ -722,10 +722,10 @@ describe('DELETE /api/product-variants/:id', () => {
     expect(res2.status).toBe(404);
   });
 
-  it('4. ID tidak ditemukan', async () => {
+  it('4. ID not found', async () => {
     const res = await makeAuthRequest('DELETE', '/api/product-variants/99999');
     expect(res.status).toBe(404);
-    expect(res.json).toEqual({ error: 'Product variant tidak ditemukan' });
+    expect(res.json).toEqual({ error: 'Product variant not found' });
   });
 
   it('5. ID bukan angka', async () => {
@@ -733,7 +733,7 @@ describe('DELETE /api/product-variants/:id', () => {
     expect(res.status).toBe(422);
   });
 
-  it('6. Tanpa header Authorization', async () => {
+  it('6. Without Authorization header', async () => {
     const res = await makeRequest(
       'DELETE',
       `/api/product-variants/${testVariantId}`
@@ -742,7 +742,7 @@ describe('DELETE /api/product-variants/:id', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('7. Token tidak valid', async () => {
+  it('7. Invalid token', async () => {
     const res = await makeRequest(
       'DELETE',
       `/api/product-variants/${testVariantId}`,

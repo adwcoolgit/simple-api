@@ -127,7 +127,7 @@ async function makeRequest(method: string, path: string, body?: any, headers?: R
   return { status: res.status, json };
 }
 
-describe('POST /api/product-prices — Tambah Harga', () => {
+describe('POST /api/product-prices — Add Price', () => {
   if (!isDbAvailable()) return;
 
   it('1. Semua field valid termasuk tanggal', async () => {
@@ -144,7 +144,7 @@ describe('POST /api/product-prices — Tambah Harga', () => {
     expect(res.json.data.price_type).toBe('retail');
   });
 
-  it('11. Variant + type sama tapi rentang tanggal tidak overlap', async () => {
+  it('11. Same variant + type but date range does not overlap', async () => {
     // Create first price
     await makeAuthRequest('POST', '/api/product-prices', {
       variant_id: testVariantId,
@@ -195,7 +195,7 @@ describe('POST /api/product-prices — Tambah Harga', () => {
     expect(res.status).toBe(401);
   });
 
-  it('14. Token tidak valid', async () => {
+  it('14. Invalid token', async () => {
     const res = await makeRequest('POST', '/api/product-prices', {
       variant_id: testVariantId,
       price_type: 'retail',
@@ -207,7 +207,7 @@ describe('POST /api/product-prices — Tambah Harga', () => {
     expect(res.status).toBe(401);
   });
 
-  it('15. Field required tidak dikirim', async () => {
+  it('15. Required field not provided', async () => {
     const res = await makeAuthRequest('POST', '/api/product-prices', {
       variant_id: testVariantId,
       price_type: 'retail',
@@ -217,7 +217,7 @@ describe('POST /api/product-prices — Tambah Harga', () => {
   });
 });
 
-describe('GET /api/product-prices — List Harga', () => {
+describe('GET /api/product-prices — List Prices', () => {
   if (!isDbAvailable()) return;
 
   beforeEach(async () => {
@@ -273,12 +273,12 @@ describe('GET /api/product-prices — List Harga', () => {
     expect(res.json.meta.limit).toBe(5);
   });
 
-  it('21. limit melebihi 100', async () => {
+  it('21. limit exceeds 100', async () => {
     const res = await makeRequest('GET', '/api/product-prices?limit=150');
     expect(res.status).toBe(422);
   });
 
-  it('22. Tidak ada data (tabel kosong)', async () => {
+  it('22. No data (empty table)', async () => {
     await db.delete(productPrices).where(sql`1=1`);
     const res = await makeRequest('GET', '/api/product-prices');
     expect(res.status).toBe(200);
@@ -287,7 +287,7 @@ describe('GET /api/product-prices — List Harga', () => {
   });
 });
 
-describe('GET /api/product-prices/:id — Detail Harga', () => {
+describe('GET /api/product-prices/:id — Price Details', () => {
   if (!isDbAvailable()) return;
 
   let testPriceId: number;
@@ -309,7 +309,7 @@ describe('GET /api/product-prices/:id — Detail Harga', () => {
     expect(res.json.data.id).toBe(testPriceId);
   });
 
-  it('24. ID tidak ada', async () => {
+  it('24. ID does not exist', async () => {
     const res = await makeRequest('GET', '/api/product-prices/99999');
     expect(res.json).toEqual({ error: 'Harga tidak ditemukan' });
   });
@@ -383,13 +383,13 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
     // Should include retail and member, but not reseller (future start)
   });
 
-  it('27. Harga permanen (kedua tanggal null) muncul di hasil', async () => {
+  it('27. Permanent prices (both dates null) appear in results', async () => {
     const res = await makeRequest('GET', '/api/product-prices-active');
     expect(res.status).toBe(200);
     expect(res.json.data.some((p: any) => p.price_type === 'member')).toBe(true);
   });
 
-  it('28. Harga yang sudah expired tidak muncul', async () => {
+  it('28. Expired prices do not appear', async () => {
     const now = new Date();
     const past = new Date(now.getTime() - 86400000 * 30); // 30 days ago
 
@@ -406,20 +406,20 @@ describe('GET /api/product-prices/active — Harga Aktif Saat Ini', () => {
     expect(res.json.data.every((p: any) => p.price !== '50000.00')).toBe(true);
   });
 
-  it('29. Harga yang belum mulai tidak muncul', async () => {
+  it('29. Prices not yet started do not appear', async () => {
     const res = await makeRequest('GET', '/api/product-prices-active');
     expect(res.status).toBe(200);
     expect(res.json.data.every((p: any) => p.price_type !== 'reseller')).toBe(true);
   });
 
-  it('30. Filter price_type pada harga aktif', async () => {
+  it('30. Filter price_type on active prices', async () => {
     const res = await makeRequest('GET', '/api/product-prices-active?price_type=member', undefined);
     expect(res.status).toBe(200);
     expect(res.json.data.every((p: any) => p.price_type === 'member')).toBe(true);
   });
 });
 
-describe('PATCH /api/product-prices/:id — Update Harga', () => {
+describe('PATCH /api/product-prices/:id — Update Price', () => {
   if (!isDbAvailable()) return;
 
   let testPriceId: number;
@@ -435,7 +435,7 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
     testPriceId = price!.id;
   });
 
-  it('31. Update price saja', async () => {
+  it('31. Update price only', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-prices/${testPriceId}`, {
       price: 175000.0,
     });
@@ -443,7 +443,7 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('32. Update start_date dan end_date', async () => {
+  it('32. Update start_date and end_date', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-prices/${testPriceId}`, {
       start_date: '2026-06-01T00:00:00Z',
       end_date: '2026-12-31T23:59:59Z',
@@ -451,7 +451,7 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
     expect(res.status).toBe(200);
   });
 
-  it('33. Update menyebabkan overlap', async () => {
+  it('33. Update causes overlap', async () => {
     // Create another price
     await db.insert(productPrices).values({
       variant_id: testVariantId,
@@ -468,7 +468,7 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
     });
   });
 
-  it('34. Update tanggal ke nilai yang sama (tidak overlap dengan diri sendiri)', async () => {
+  it('34. Update date to same value (no self-overlap)', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-prices/${testPriceId}`, {
       start_date: '2026-01-01T00:00:00Z',
       end_date: '2026-12-31T23:59:59Z',
@@ -476,13 +476,13 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
     expect(res.status).toBe(200);
   });
 
-  it('35. ID tidak ada', async () => {
+  it('35. ID does not exist', async () => {
     const res = await makeAuthRequest('PATCH', '/api/product-prices/99999', {
       price: 200000.0,
     });
   });
 
-  it('36. Body kosong', async () => {
+  it('36. Empty body', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-prices/${testPriceId}`, {});
   });
 
@@ -493,7 +493,7 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
     expect(res.status).toBe(422);
   });
 
-  it('38. start_date > end_date setelah update', async () => {
+  it('38. start_date > end_date after update', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-prices/${testPriceId}`, {
       start_date: '2026-12-31T23:59:59Z',
       end_date: '2026-01-01T00:00:00Z',
@@ -507,7 +507,7 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
     expect(res.status).toBe(401);
   });
 
-  it('40. Coba update price_type (tidak diizinkan)', async () => {
+  it('40. Attempt to update price_type (not allowed)', async () => {
     const res = await makeAuthRequest('PATCH', `/api/product-prices/${testPriceId}`, {
       price_type: 'member', // Should be ignored or error
     });
@@ -515,7 +515,7 @@ describe('PATCH /api/product-prices/:id — Update Harga', () => {
   });
 });
 
-describe('DELETE /api/product-prices/:id — Hapus Harga', () => {
+describe('DELETE /api/product-prices/:id — Delete Price', () => {
   if (!isDbAvailable()) return;
 
   let testPriceId: number;
@@ -537,17 +537,17 @@ describe('DELETE /api/product-prices/:id — Hapus Harga', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('42. Record benar-benar terhapus dari DB', async () => {
+  it('42. Record is actually deleted from DB', async () => {
     await makeAuthRequest('DELETE', `/api/product-prices/${testPriceId}`);
     const prices = await db.select().from(productPrices).where(eq(productPrices.id, testPriceId));
     expect(prices.length).toBe(0);
   });
 
-  it('43. ID tidak ada', async () => {
+  it('43. ID does not exist', async () => {
     const res = await makeAuthRequest('DELETE', '/api/product-prices/99999');
   });
 
-  it('44. Hapus dua kali dengan ID sama', async () => {
+  it('44. Delete twice with the same ID', async () => {
     const res1 = await makeAuthRequest('DELETE', `/api/product-prices/${testPriceId}`);
     const res2 = await makeAuthRequest('DELETE', `/api/product-prices/${testPriceId}`);
     expect(res1.status).toBe(200);
