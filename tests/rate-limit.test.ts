@@ -53,7 +53,7 @@ describe('Rate Limiting Middleware', () => {
     expect(res.json).toEqual({ data: 'Success' });
   });
 
-  it('2. Request melebihi limit → 429', async () => {
+  it('2. Request exceeds limit → 429', async () => {
     // This test assumes Redis is available and configured
     // In a real test environment, we would make 11 requests to /api/users quickly
     // For now, we'll assume the middleware is working if the first request succeeds

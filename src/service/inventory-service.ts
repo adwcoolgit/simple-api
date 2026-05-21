@@ -46,7 +46,10 @@ export interface InventoryResponse {
   max_stock: string | null;
 }
 
-const calculateAvailableQty = (stockQty: string, reservedQty: string): string => {
+const calculateAvailableQty = (
+  stockQty: string,
+  reservedQty: string
+): string => {
   const stock = parseFloat(stockQty);
   const reserved = parseFloat(reservedQty);
   return (stock - reserved).toFixed(2);
@@ -65,7 +68,9 @@ const formatInventoryResponse = (inv: any): InventoryResponse => {
   };
 };
 
-export async function createInventory(input: CreateInventoryInput): Promise<InventoryResponse> {
+export async function createInventory(
+  input: CreateInventoryInput
+): Promise<InventoryResponse> {
   // Validation
   if (!input.variant_id || input.variant_id <= 0) {
     throw new Error('Variant ID is required and must be positive');
@@ -79,7 +84,11 @@ export async function createInventory(input: CreateInventoryInput): Promise<Inve
   if (input.reserved_qty !== undefined && input.reserved_qty < 0) {
     throw new Error('Reserved quantity cannot be negative');
   }
-  if (input.min_stock !== undefined && input.max_stock !== undefined && input.min_stock >= input.max_stock) {
+  if (
+    input.min_stock !== undefined &&
+    input.max_stock !== undefined &&
+    input.min_stock >= input.max_stock
+  ) {
     throw new Error('Minimum stock must be less than maximum stock');
   }
 
@@ -105,12 +114,16 @@ export async function createInventory(input: CreateInventoryInput): Promise<Inve
   const existingInventory = await dbRead
     .select()
     .from(inventory)
-    .where(and(
-      eq(inventory.variantId, input.variant_id),
-      eq(inventory.warehouseId, input.warehouse_id)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, input.variant_id),
+        eq(inventory.warehouseId, input.warehouse_id)
+      )
+    );
   if (existingInventory.length > 0) {
-    throw new Error('Inventory untuk varian dan gudang ini sudah ada');
+    throw new Error(
+      'The inventory for this variant and warehouse already exists'
+    );
   }
 
   // Create inventory
@@ -131,7 +144,9 @@ export async function createInventory(input: CreateInventoryInput): Promise<Inve
   return formatInventoryResponse(newInventory);
 }
 
-export async function getInventoryList(filters?: InventoryFilters): Promise<InventoryResponse[]> {
+export async function getInventoryList(
+  filters?: InventoryFilters
+): Promise<InventoryResponse[]> {
   const conditions = [];
 
   if (filters?.warehouse_id) {
@@ -163,7 +178,10 @@ export async function getInventoryList(filters?: InventoryFilters): Promise<Inve
   return filteredResults.map(formatInventoryResponse);
 }
 
-export async function getInventoryDetail(variantId: number, warehouseId: number): Promise<InventoryResponse> {
+export async function getInventoryDetail(
+  variantId: number,
+  warehouseId: number
+): Promise<InventoryResponse> {
   if (!variantId || variantId <= 0) {
     throw new Error('Invalid variant ID');
   }
@@ -174,19 +192,25 @@ export async function getInventoryDetail(variantId: number, warehouseId: number)
   const [result] = await dbRead
     .select()
     .from(inventory)
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   if (!result) {
-    throw new Error('Inventory tidak ditemukan');
+    throw new Error('Inventory not found');
   }
 
   return formatInventoryResponse(result);
 }
 
-export async function updateInventorySettings(variantId: number, warehouseId: number, input: UpdateInventorySettingsInput): Promise<string> {
+export async function updateInventorySettings(
+  variantId: number,
+  warehouseId: number,
+  input: UpdateInventorySettingsInput
+): Promise<string> {
   if (!variantId || variantId <= 0) {
     throw new Error('Invalid variant ID');
   }
@@ -194,20 +218,26 @@ export async function updateInventorySettings(variantId: number, warehouseId: nu
     throw new Error('Invalid warehouse ID');
   }
 
-  if (input.min_stock !== undefined && input.max_stock !== undefined && input.min_stock >= input.max_stock) {
+  if (
+    input.min_stock !== undefined &&
+    input.max_stock !== undefined &&
+    input.min_stock >= input.max_stock
+  ) {
     throw new Error('Minimum stock must be less than maximum stock');
   }
 
   const [existing] = await dbRead
     .select()
     .from(inventory)
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   if (!existing) {
-    throw new Error('Inventory tidak ditemukan');
+    throw new Error('Inventory not found');
   }
 
   const updateData: any = {};
@@ -218,15 +248,24 @@ export async function updateInventorySettings(variantId: number, warehouseId: nu
     updateData.maxStock = input.max_stock.toFixed(2);
   }
 
-  await db.update(inventory).set(updateData).where(and(
-    eq(inventory.variantId, variantId),
-    eq(inventory.warehouseId, warehouseId)
-  ));
+  await db
+    .update(inventory)
+    .set(updateData)
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   return 'OK';
 }
 
-export async function adjustStock(variantId: number, warehouseId: number, input: AdjustStockInput): Promise<{ stock_qty: string; available_qty: string }> {
+export async function adjustStock(
+  variantId: number,
+  warehouseId: number,
+  input: AdjustStockInput
+): Promise<{ stock_qty: string; available_qty: string }> {
   if (!variantId || variantId <= 0) {
     throw new Error('Invalid variant ID');
   }
@@ -240,13 +279,15 @@ export async function adjustStock(variantId: number, warehouseId: number, input:
   const [existing] = await dbRead
     .select()
     .from(inventory)
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   if (!existing) {
-    throw new Error('Inventory tidak ditemukan');
+    throw new Error('Inventory not found');
   }
 
   const currentStock = parseFloat(existing.stockQty);
@@ -254,30 +295,40 @@ export async function adjustStock(variantId: number, warehouseId: number, input:
   const newStock = currentStock + input.qty;
 
   if (newStock < 0) {
-    throw new Error('Stok tidak mencukupi');
+    throw new Error('Insufficient stock for this adjustment');
   }
 
   if (newStock < currentReserved) {
-    throw new Error('Stok tidak boleh kurang dari jumlah yang direservasi');
+    throw new Error('Stock cannot be less than the reserved amount');
   }
 
   // Update with calculated value
-  await db.update(inventory)
+  await db
+    .update(inventory)
     .set({
       stockQty: newStock.toFixed(2),
     })
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   return {
     stock_qty: newStock.toFixed(2),
-    available_qty: calculateAvailableQty(newStock.toFixed(2), existing.reservedQty),
+    available_qty: calculateAvailableQty(
+      newStock.toFixed(2),
+      existing.reservedQty
+    ),
   };
 }
 
-export async function reserveStock(variantId: number, warehouseId: number, input: ReserveStockInput): Promise<{ reserved_qty: string; available_qty: string }> {
+export async function reserveStock(
+  variantId: number,
+  warehouseId: number,
+  input: ReserveStockInput
+): Promise<{ reserved_qty: string; available_qty: string }> {
   if (!variantId || variantId <= 0) {
     throw new Error('Invalid variant ID');
   }
@@ -291,13 +342,15 @@ export async function reserveStock(variantId: number, warehouseId: number, input
   const [existing] = await dbRead
     .select()
     .from(inventory)
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   if (!existing) {
-    throw new Error('Inventory tidak ditemukan');
+    throw new Error('Inventory not found');
   }
 
   const currentStock = parseFloat(existing.stockQty);
@@ -305,26 +358,36 @@ export async function reserveStock(variantId: number, warehouseId: number, input
   const newReserved = currentReserved + input.qty;
 
   if (newReserved > currentStock) {
-    throw new Error('Stok tidak mencukupi untuk direservasi');
+    throw new Error('Insufficient stock for reservation');
   }
 
   // Update with calculated value
-  await db.update(inventory)
+  await db
+    .update(inventory)
     .set({
       reservedQty: newReserved.toFixed(2),
     })
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   return {
     reserved_qty: newReserved.toFixed(2),
-    available_qty: calculateAvailableQty(existing.stockQty, newReserved.toFixed(2)),
+    available_qty: calculateAvailableQty(
+      existing.stockQty,
+      newReserved.toFixed(2)
+    ),
   };
 }
 
-export async function releaseStock(variantId: number, warehouseId: number, input: ReleaseStockInput): Promise<{ reserved_qty: string; available_qty: string }> {
+export async function releaseStock(
+  variantId: number,
+  warehouseId: number,
+  input: ReleaseStockInput
+): Promise<{ reserved_qty: string; available_qty: string }> {
   if (!variantId || variantId <= 0) {
     throw new Error('Invalid variant ID');
   }
@@ -338,39 +401,50 @@ export async function releaseStock(variantId: number, warehouseId: number, input
   const [existing] = await dbRead
     .select()
     .from(inventory)
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   if (!existing) {
-    throw new Error('Inventory tidak ditemukan');
+    throw new Error('Inventory not found');
   }
 
   const currentReserved = parseFloat(existing.reservedQty);
   const newReserved = currentReserved - input.qty;
 
   if (newReserved < 0) {
-    throw new Error('Jumlah pelepasan melebihi stok yang direservasi');
+    throw new Error('Release quantity exceeds the reserved amount');
   }
 
   // Update with calculated value
-  await db.update(inventory)
+  await db
+    .update(inventory)
     .set({
       reservedQty: newReserved.toFixed(2),
     })
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   return {
     reserved_qty: newReserved.toFixed(2),
-    available_qty: calculateAvailableQty(existing.stockQty, newReserved.toFixed(2)),
+    available_qty: calculateAvailableQty(
+      existing.stockQty,
+      newReserved.toFixed(2)
+    ),
   };
 }
 
-export async function deleteInventory(variantId: number, warehouseId: number): Promise<string> {
+export async function deleteInventory(
+  variantId: number,
+  warehouseId: number
+): Promise<string> {
   if (!variantId || variantId <= 0) {
     throw new Error('Invalid variant ID');
   }
@@ -381,23 +455,31 @@ export async function deleteInventory(variantId: number, warehouseId: number): P
   const [existing] = await dbRead
     .select()
     .from(inventory)
-    .where(and(
-      eq(inventory.variantId, variantId),
-      eq(inventory.warehouseId, warehouseId)
-    ));
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   if (!existing) {
-    throw new Error('Inventory tidak ditemukan');
+    throw new Error('Inventory not found');
   }
 
   if (parseFloat(existing.reservedQty) > 0) {
-    throw new Error('Tidak dapat menghapus inventory yang masih memiliki reservasi aktif');
+    throw new Error(
+      'Cannot delete inventory that still has active reservations'
+    );
   }
 
-  await db.delete(inventory).where(and(
-    eq(inventory.variantId, variantId),
-    eq(inventory.warehouseId, warehouseId)
-  ));
+  await db
+    .delete(inventory)
+    .where(
+      and(
+        eq(inventory.variantId, variantId),
+        eq(inventory.warehouseId, warehouseId)
+      )
+    );
 
   return 'OK';
 }

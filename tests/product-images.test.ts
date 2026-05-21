@@ -153,7 +153,7 @@ async function makeRequest(
   return { status: res.status, json };
 }
 
-describe('POST /api/product-images — Tambah Gambar Produk', () => {
+describe('POST /api/product-images — Add Product Images', () => {
   let testProductId: number;
   let testVariantId: number;
 
@@ -183,7 +183,7 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
     testVariantId = variant!.id;
   });
 
-  it('1. Tambah satu gambar dengan is_primary true', async () => {
+  it('1. Add one image with is_primary true', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/product-images', {
       variant_id: testVariantId,
@@ -197,7 +197,7 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
     expect(res.json.data[0].is_primary).toBe(true);
   });
 
-  it('2. Tambah tiga gambar, satu primary', async () => {
+  it('2. Add three images, one primary', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/product-images', {
       variant_id: testVariantId,
@@ -215,7 +215,7 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
     expect(primaryCount).toBe(1);
   });
 
-  it('3. Variant tidak ditemukan', async () => {
+  it('3. Variant not found', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/product-images', {
       variant_id: 99999,
@@ -224,7 +224,7 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
       ],
     });
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Variant tidak ditemukan');
+    expect(res.json.error).toBe('Variant not found');
   });
 
   it('4. Tanpa field variant_id', async () => {
@@ -245,7 +245,7 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
     expect(res.status).toBe(422);
   });
 
-  it('6. Array images kosong', async () => {
+  it('6. Empty images array', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('POST', '/api/product-images', {
       variant_id: testVariantId,
@@ -254,7 +254,7 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
     expect(res.status).toBe(422);
   });
 
-  it('7. Tanpa header Authorization', async () => {
+  it('7. Without Authorization header', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest('POST', '/api/product-images', {
       variant_id: testVariantId,
@@ -267,7 +267,7 @@ describe('POST /api/product-images — Tambah Gambar Produk', () => {
   });
 });
 
-describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
+describe('GET /api/product-images/:variantId — List Variant Images', () => {
   let testProductId: number;
   let testVariantId: number;
 
@@ -311,7 +311,7 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
     ]);
   });
 
-  it('8. Variant memiliki gambar', async () => {
+  it('8. Variant has images', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'GET',
@@ -325,7 +325,7 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
     expect(res.json.data[0]).toHaveProperty('is_primary');
   });
 
-  it('9. Gambar primary di urutan pertama', async () => {
+  it('9. Primary image first in order', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'GET',
@@ -335,7 +335,7 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
     expect(res.json.data[0].is_primary).toBe(true);
   });
 
-  it('10. Variant belum memiliki gambar', async () => {
+  it('10. Variant has no images yet', async () => {
     if (!dbAvailable) return;
     // Delete images
     await db.execute(
@@ -349,14 +349,14 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
     expect(res.json.data).toEqual([]);
   });
 
-  it('11. Variant tidak ditemukan', async () => {
+  it('11. Variant not found', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('GET', '/api/product-images/99999');
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Variant tidak ditemukan');
+    expect(res.json.error).toBe('Variant not found');
   });
 
-  it('12. Tanpa header Authorization', async () => {
+  it('12. Without Authorization header', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'GET',
@@ -367,7 +367,7 @@ describe('GET /api/product-images/:variantId — List Gambar Variant', () => {
   });
 });
 
-describe('GET /api/product-images/:variantId/current — Gambar Primary Variant', () => {
+describe('GET /api/product-images/:variantId/current — Get Variant Primary Image', () => {
   let testProductId: number;
   let testVariantId: number;
 
@@ -417,7 +417,7 @@ describe('GET /api/product-images/:variantId/current — Gambar Primary Variant'
     expect(res.json.data.is_primary).toBe(true);
   });
 
-  it('14. Variant tidak memiliki gambar primary', async () => {
+  it('14. Variant does not have primary image', async () => {
     if (!dbAvailable) return;
     // Delete primary image
     await db.execute(
@@ -428,20 +428,20 @@ describe('GET /api/product-images/:variantId/current — Gambar Primary Variant'
       `/api/product-images/${testVariantId}/current`
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Gambar primary tidak ditemukan');
+    expect(res.json.error).toBe('Primary image not found');
   });
 
-  it('15. Variant tidak ditemukan', async () => {
+  it('15. Variant not found', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'GET',
       '/api/product-images/99999/current'
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Variant tidak ditemukan');
+    expect(res.json.error).toBe('Variant not found');
   });
 
-  it('16. Tanpa header Authorization', async () => {
+  it('16. Without Authorization header', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'GET',
@@ -452,7 +452,7 @@ describe('GET /api/product-images/:variantId/current — Gambar Primary Variant'
   });
 });
 
-describe('PATCH /api/product-images/:imageId/primary — Set Gambar Primary', () => {
+describe('PATCH /api/product-images/:imageId/primary — Set Primary Image', () => {
   let testProductId: number;
   let testVariantId: number;
   let testImageId: number;
@@ -501,7 +501,7 @@ describe('PATCH /api/product-images/:imageId/primary — Set Gambar Primary', ()
     testImageId = imageIds[0]!.id;
   });
 
-  it('17. Set gambar non-primary menjadi primary', async () => {
+  it('17. Set non-primary image as primary', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'PATCH',
@@ -514,7 +514,7 @@ describe('PATCH /api/product-images/:imageId/primary — Set Gambar Primary', ()
     expect(res.json.data).toBe('OK');
   });
 
-  it('18. Hanya satu gambar primary setelah set', async () => {
+  it('18. Only one primary image after set', async () => {
     if (!dbAvailable) return;
     await makeAuthRequest(
       'PATCH',
@@ -531,7 +531,7 @@ describe('PATCH /api/product-images/:imageId/primary — Set Gambar Primary', ()
     expect(primaryCount).toBe(1);
   });
 
-  it('19. Image ID tidak ditemukan', async () => {
+  it('19. Image ID not found', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'PATCH',
@@ -541,10 +541,10 @@ describe('PATCH /api/product-images/:imageId/primary — Set Gambar Primary', ()
       }
     );
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Gambar tidak ditemukan');
+    expect(res.json.error).toBe('Image not found');
   });
 
-  it('20. Tanpa header Authorization', async () => {
+  it('20. Without Authorization header', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'PATCH',
@@ -558,7 +558,7 @@ describe('PATCH /api/product-images/:imageId/primary — Set Gambar Primary', ()
   });
 });
 
-describe('DELETE /api/product-images/:imageId — Hapus Gambar Produk', () => {
+describe('DELETE /api/product-images/:imageId — Delete Product Image', () => {
   let testProductId: number;
   let testVariantId: number;
   let testImageId: number;
@@ -600,7 +600,7 @@ describe('DELETE /api/product-images/:imageId — Hapus Gambar Produk', () => {
     testImageId = image!.id;
   });
 
-  it('21. Hapus gambar yang ada', async () => {
+  it('21. Delete existing image', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest(
       'DELETE',
@@ -610,7 +610,7 @@ describe('DELETE /api/product-images/:imageId — Hapus Gambar Produk', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it('22. Record benar-benar terhapus dari DB', async () => {
+  it('22. Record is actually deleted from DB', async () => {
     if (!dbAvailable) return;
     await makeAuthRequest('DELETE', `/api/product-images/${testImageId}`);
     const images = await db
@@ -620,14 +620,14 @@ describe('DELETE /api/product-images/:imageId — Hapus Gambar Produk', () => {
     expect(images.length).toBe(0);
   });
 
-  it('23. Image ID tidak ditemukan', async () => {
+  it('23. Image ID not found', async () => {
     if (!dbAvailable) return;
     const res = await makeAuthRequest('DELETE', '/api/product-images/99999');
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Gambar tidak ditemukan');
+    expect(res.json.error).toBe('Image not found');
   });
 
-  it('24. Tanpa header Authorization', async () => {
+  it('24. Without Authorization header', async () => {
     if (!dbAvailable) return;
     const res = await makeRequest(
       'DELETE',

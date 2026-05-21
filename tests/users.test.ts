@@ -52,7 +52,7 @@ describe('POST /api/users — Registrasi', () => {
     expect(res.json).toEqual({ data: 'Success' });
   });
 
-  it('2. Email sudah terdaftar', async () => {
+  it('2. Email already registered', async () => {
     // First register
     await makeRequest('POST', '/api/users', {
       name: testName,
@@ -66,10 +66,10 @@ describe('POST /api/users — Registrasi', () => {
       password: 'anotherpass123',
     });
     expect(res.status).toBe(409);
-    expect(res.json).toEqual({ error: 'Email sudah terdaftar' });
+    expect(res.json).toEqual({ error: 'Email already registered' });
   });
 
-  it('3. Field `email` tidak dikirim', async () => {
+  it('3. `email` field not provided', async () => {
     const res = await makeRequest('POST', '/api/users', {
       name: testName,
       password: testPassword,
@@ -77,7 +77,7 @@ describe('POST /api/users — Registrasi', () => {
     expect(res.status).toBe(422);
   });
 
-  it('4. Field `password` tidak dikirim', async () => {
+  it('4. `password` field not provided', async () => {
     const res = await makeRequest('POST', '/api/users', {
       name: testName,
       email: testEmail,
@@ -85,7 +85,7 @@ describe('POST /api/users — Registrasi', () => {
     expect(res.status).toBe(422);
   });
 
-  it('5. Field `name` tidak dikirim', async () => {
+  it('5. `name` field not provided', async () => {
     const res = await makeRequest('POST', '/api/users', {
       email: testEmail,
       password: testPassword,
@@ -93,7 +93,7 @@ describe('POST /api/users — Registrasi', () => {
     expect(res.status).toBe(422);
   });
 
-  it('6. Format `email` tidak valid (bukan format email)', async () => {
+  it('6. `email` format invalid (not email format)', async () => {
     const res = await makeRequest('POST', '/api/users', {
       name: testName,
       email: 'invalidemail',
@@ -111,12 +111,12 @@ describe('POST /api/users — Registrasi', () => {
     expect(res.status).toBe(422);
   });
 
-  it('8. Request body kosong', async () => {
+  it('8. Empty request body', async () => {
     const res = await makeRequest('POST', '/api/users');
     expect(res.status).toBe(422);
   });
 
-  it('9. Field dikirim tapi nilainya string kosong ""', async () => {
+  it('9. Field provided but value is empty string ""', async () => {
     const res = await makeRequest('POST', '/api/users', {
       name: '',
       email: '',
@@ -125,7 +125,7 @@ describe('POST /api/users — Registrasi', () => {
     expect(res.status).toBe(422);
   });
 
-  it('10. Field dikirim tapi nilainya `null`', async () => {
+  it('10. Field provided but value is `null`', async () => {
     const res = await makeRequest('POST', '/api/users', {
       name: null,
       email: null,
@@ -145,7 +145,7 @@ describe('POST /api/users/login — Login', () => {
     });
   });
 
-  it('1. Email dan password benar', async () => {
+  it('1. Email and password correct', async () => {
     const res = await makeRequest('POST', '/api/users/login', {
       email: testEmail,
       password: testPassword,
@@ -155,39 +155,39 @@ describe('POST /api/users/login — Login', () => {
     expect(res.json.data.token).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i); // UUID v4 regex
   });
 
-  it('2. Email terdaftar tapi password salah', async () => {
+  it('2. Email registered but password wrong', async () => {
     const res = await makeRequest('POST', '/api/users/login', {
       email: testEmail,
       password: 'wrongpassword',
     });
     expect(res.status).toBe(401);
-    expect(res.json).toEqual({ error: 'Email atau password salah' });
+    expect(res.json).toEqual({ error: 'Email or password is incorrect' });
   });
 
-  it('3. Email tidak terdaftar', async () => {
+  it('3. Email not registered', async () => {
     const res = await makeRequest('POST', '/api/users/login', {
       email: 'nonexistent@example.com',
       password: testPassword,
     });
     expect(res.status).toBe(401);
-    expect(res.json).toEqual({ error: 'Email atau password salah' });
+    expect(res.json).toEqual({ error: 'Email or password is incorrect' });
   });
 
-  it('4. Field `email` tidak dikirim', async () => {
+  it('4. `email` field not provided', async () => {
     const res = await makeRequest('POST', '/api/users/login', {
       password: testPassword,
     });
     expect(res.status).toBe(422);
   });
 
-  it('5. Field `password` tidak dikirim', async () => {
+  it('5. `password` field not provided', async () => {
     const res = await makeRequest('POST', '/api/users/login', {
       email: testEmail,
     });
     expect(res.status).toBe(422);
   });
 
-  it('6. Format `email` tidak valid', async () => {
+  it('6. `email` format invalid', async () => {
     const res = await makeRequest('POST', '/api/users/login', {
       email: 'invalidemail',
       password: testPassword,
@@ -195,12 +195,12 @@ describe('POST /api/users/login — Login', () => {
     expect(res.status).toBe(422);
   });
 
-  it('7. Request body kosong', async () => {
+  it('7. Empty request body', async () => {
     const res = await makeRequest('POST', '/api/users/login');
     expect(res.status).toBe(422);
   });
 
-  it('8. Login dua kali dengan kredensial yang sama', async () => {
+  it('8. Login twice with the same credentials', async () => {
     const res1 = await makeRequest('POST', '/api/users/login', {
       email: testEmail,
       password: testPassword,
@@ -217,7 +217,7 @@ describe('POST /api/users/login — Login', () => {
     expect(sessionsCount.length).toBe(2);
   });
 
-  it('9. Password dikirim sebagai plain text yang identik dengan hash (edge case bcrypt)', async () => {
+  it('9. Password sent as plain text identical to hash (bcrypt edge case)', async () => {
     // Get the hashed password from DB
     const user = await db.select({ password: users.password }).from(users).where(eq(users.email, testEmail)).limit(1);
     const hashedPassword = user[0]!.password;
@@ -226,7 +226,7 @@ describe('POST /api/users/login — Login', () => {
       password: hashedPassword, // Send hash as plain text
     });
     expect(res.status).toBe(401);
-    expect(res.json).toEqual({ error: 'Email atau password salah' });
+    expect(res.json).toEqual({ error: 'Email or password is incorrect' });
   });
 });
 
@@ -261,7 +261,7 @@ describe('GET /api/users/current — Get User Login', () => {
     expect(res.json.data).toHaveProperty('createdAt');
   });
 
-  it('2. Response tidak mengandung field `password`', async () => {
+  it('2. Response does not contain `password` field', async () => {
     const res = await makeRequest('GET', '/api/users/current', undefined, {
       'Authorization': `Bearer ${token}`,
     });
@@ -269,13 +269,13 @@ describe('GET /api/users/current — Get User Login', () => {
     expect(res.json.data).not.toHaveProperty('password');
   });
 
-  it('3. Header `Authorization` tidak dikirim', async () => {
+  it('3. `Authorization` header not sent', async () => {
     const res = await makeRequest('GET', '/api/users/current');
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('4. Header dikirim tapi token tidak ada di tabel `sessions` (token random)', async () => {
+  it('4. Header sent but token not in `sessions` table (random token)', async () => {
     const res = await makeRequest('GET', '/api/users/current', undefined, {
       'Authorization': 'Bearer random-invalid-token',
     });
@@ -283,7 +283,7 @@ describe('GET /api/users/current — Get User Login', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('5. Format header salah — tidak diawali `"Bearer "`', async () => {
+  it('5. Header format wrong — does not start with "Bearer "', async () => {
     const res = await makeRequest('GET', '/api/users/current', undefined, {
       'Authorization': token,
     });
@@ -291,7 +291,7 @@ describe('GET /api/users/current — Get User Login', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('6. Token dikirim tapi nilai setelah `"Bearer "` adalah string kosong', async () => {
+  it('6. Token sent but value after `"Bearer "` is empty string', async () => {
     const res = await makeRequest('GET', '/api/users/current', undefined, {
       'Authorization': 'Bearer ',
     });
@@ -299,7 +299,7 @@ describe('GET /api/users/current — Get User Login', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('7. Token adalah UUID valid tapi sudah pernah dihapus (expired/logout)', async () => {
+  it('7. Token is valid UUID but previously deleted (expired/logout)', async () => {
     // Delete the session
     await dbRead.execute(sql`DELETE FROM sessions WHERE token = ${token}`);
     const res = await makeRequest('GET', '/api/users/current', undefined, {
@@ -309,7 +309,7 @@ describe('GET /api/users/current — Get User Login', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('8. Data yang dikembalikan sesuai dengan data user yang login (bukan user lain)', async () => {
+  it('8. Returned data matches the logged-in user (not another user)', async () => {
     const res = await makeRequest('GET', '/api/users/current', undefined, {
       'Authorization': `Bearer ${token}`,
     });
@@ -346,7 +346,7 @@ describe('DELETE /api/users/logout — Logout', () => {
     expect(res.json).toEqual({ data: 'OK' });
   });
 
-  it('2. Setelah logout, session benar-benar terhapus dari tabel `sessions`', async () => {
+  it('2. After logout, session is actually deleted from `sessions` table', async () => {
     await makeRequest('DELETE', '/api/users/logout', undefined, {
       'Authorization': `Bearer ${token}`,
     });
@@ -354,7 +354,7 @@ describe('DELETE /api/users/logout — Logout', () => {
     expect(session.length).toBe(0);
   });
 
-  it('3. Setelah logout, token yang sama tidak bisa digunakan di `GET /api/users/current`', async () => {
+  it('3. After logout, same token cannot be used in `GET /api/users/current`', async () => {
     await makeRequest('DELETE', '/api/users/logout', undefined, {
       'Authorization': `Bearer ${token}`,
     });
@@ -364,13 +364,13 @@ describe('DELETE /api/users/logout — Logout', () => {
     expect(res.status).toBe(401);
   });
 
-  it('4. Header `Authorization` tidak dikirim', async () => {
+  it('4. `Authorization` header not sent', async () => {
     const res = await makeRequest('DELETE', '/api/users/logout');
     expect(res.status).toBe(401);
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('5. Token tidak ada di tabel `sessions`', async () => {
+  it('5. Token not in `sessions` table', async () => {
     const res = await makeRequest('DELETE', '/api/users/logout', undefined, {
       'Authorization': 'Bearer nonexistent-token',
     });
@@ -378,7 +378,7 @@ describe('DELETE /api/users/logout — Logout', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('6. Format header salah — tidak diawali `"Bearer "`', async () => {
+  it('6. Header format wrong — does not start with "Bearer "', async () => {
     const res = await makeRequest('DELETE', '/api/users/logout', undefined, {
       'Authorization': token,
     });
@@ -386,7 +386,7 @@ describe('DELETE /api/users/logout — Logout', () => {
     expect(res.json).toEqual({ error: 'Unauthorized' });
   });
 
-  it('7. Logout dua kali dengan token yang sama', async () => {
+  it('7. Logout twice with the same token', async () => {
     const res1 = await makeRequest('DELETE', '/api/users/logout', undefined, {
       'Authorization': `Bearer ${token}`,
     });
@@ -397,7 +397,7 @@ describe('DELETE /api/users/logout — Logout', () => {
     expect(res2.status).toBe(401);
   });
 
-  it('8. Token milik user lain tidak bisa digunakan untuk logout user ini', async () => {
+  it('8. Token belonging to another user cannot be used to logout this user', async () => {
     // Create another user
     await makeRequest('POST', '/api/users', {
       name: 'Other User',

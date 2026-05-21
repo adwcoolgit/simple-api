@@ -46,11 +46,11 @@ export const productTaxesRoute = new Elysia({
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Variant tidak ditemukan') {
+        if (error.message === 'Variant not found') {
           set.status = 404;
           return { error: error.message };
         }
-        if (error.message === 'Variant sudah memiliki konfigurasi pajak') {
+        if (error.message === 'Variant already has a tax configuration') {
           set.status = 409;
           return { error: error.message };
         }
@@ -110,7 +110,7 @@ export const productTaxesRoute = new Elysia({
             content: {
               'application/json': {
                 example: {
-                  error: 'Variant tidak ditemukan',
+                  error: 'Variant not found',
                 },
               },
             },
@@ -120,7 +120,7 @@ export const productTaxesRoute = new Elysia({
             content: {
               'application/json': {
                 example: {
-                  error: 'Variant sudah memiliki konfigurasi pajak',
+                  error: 'Variant already has tax configuration',
                 },
               },
             },
@@ -162,7 +162,11 @@ export const productTaxesRoute = new Elysia({
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Konfigurasi pajak tidak ditemukan') {
+        if (error.message === 'Variant not found') {
+          set.status = 404;
+          return { error: error.message };
+        }
+        if (error.message === 'Tax configuration not found for this variant') {
           set.status = 404;
           return { error: error.message };
         }
@@ -208,7 +212,7 @@ export const productTaxesRoute = new Elysia({
             content: {
               'application/json': {
                 example: {
-                  error: 'Konfigurasi pajak tidak ditemukan',
+                  error: 'Tax configuration not found',
                 },
               },
             },
@@ -259,7 +263,7 @@ export const productTaxesRoute = new Elysia({
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Konfigurasi pajak tidak ditemukan') {
+        if (error.message === 'Tax configuration not found for this variant') {
           set.status = 404;
           return { error: error.message };
         }
@@ -320,7 +324,7 @@ export const productTaxesRoute = new Elysia({
             content: {
               'application/json': {
                 example: {
-                  error: 'Konfigurasi pajak tidak ditemukan',
+                  error: 'Tax configuration not found',
                 },
               },
             },
@@ -362,7 +366,7 @@ export const productTaxesRoute = new Elysia({
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Konfigurasi pajak tidak ditemukan') {
+        if (error.message === 'Tax configuration not found for this variant') {
           set.status = 404;
           return { error: error.message };
         }
@@ -403,7 +407,7 @@ export const productTaxesRoute = new Elysia({
             content: {
               'application/json': {
                 example: {
-                  error: 'Konfigurasi pajak tidak ditemukan',
+                  error: 'Tax configuration not found',
                 },
               },
             },

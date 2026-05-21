@@ -51,7 +51,7 @@ describe('Observability: Logging & Metrics', () => {
     expect(typeof res.json).toBe('object');
   });
 
-  it('3. GET /metrics mengembalikan data request count yang akurat', async () => {
+  it('3. GET /metrics returns accurate request count data', async () => {
     // Make some requests
     await makeRequest('GET', '/health');
     await makeRequest('GET', '/health');

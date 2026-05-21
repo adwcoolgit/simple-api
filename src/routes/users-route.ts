@@ -21,9 +21,9 @@ const registerRoute = new Elysia()
         const user = await registerUser(body);
         return { data: 'Success' };
       } catch (err: any) {
-        if (err.message === 'Email sudah terdaftar') {
+        if (err.message === 'Email already registered') {
           set.status = 409;
-          return { error: 'Email sudah terdaftar' };
+          return { error: 'Email already registered' };
         }
         throw err;
       }
@@ -53,7 +53,7 @@ const registerRoute = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Email sudah terdaftar',
+                  error: 'Email is already registered',
                 },
               },
             },
@@ -77,11 +77,11 @@ const loginRoute = new Elysia()
       } catch (err: any) {
         if (err.message === 'Unauthorized') {
           set.status = 401;
-          return { error: 'Email atau password salah' };
+          return { error: 'Email or password is incorrect' };
         }
-        if (err.message === 'Email atau password salah') {
+        if (err.message === 'Email or password is incorrect') {
           set.status = 401;
-          return { error: 'Email atau password salah' };
+          return { error: 'Email or password is incorrect' };
         }
         throw err;
       }
@@ -112,7 +112,7 @@ const loginRoute = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Email atau password salah',
+                  error: 'Email or password is incorrect',
                 },
               },
             },
@@ -259,9 +259,9 @@ const updateRoute = new Elysia()
         const result = await updateUser(userId, body);
         return { data: result };
       } catch (err: any) {
-        if (err.message === 'Email sudah digunakan') {
+        if (err.message === 'Email is already registered') {
           set.status = 409;
-          return { error: 'Email sudah digunakan' };
+          return { error: 'Email is already registered' };
         }
         if (err.message === 'Unauthorized') {
           set.status = 401;
@@ -306,7 +306,7 @@ const updateRoute = new Elysia()
             content: {
               'application/json': {
                 example: {
-                  error: 'Email sudah digunakan',
+                  error: 'Email is already registered',
                 },
               },
             },

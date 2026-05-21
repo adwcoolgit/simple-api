@@ -42,9 +42,9 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Variant tidak ditemukan') {
+        if (error.message === 'Variant not found') {
           set.status = 404;
-          return { error: 'Variant tidak ditemukan' };
+          return { error: 'Variant not found' };
         }
         throw error;
       }
@@ -121,7 +121,7 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
             content: {
               'application/json': {
                 example: {
-                  error: 'Variant tidak ditemukan',
+                  error: 'Variant not found',
                 },
               },
             },
@@ -163,9 +163,9 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Variant tidak ditemukan') {
+        if (error.message === 'Variant not found') {
           set.status = 404;
-          return { error: 'Variant tidak ditemukan' };
+          return { error: 'Variant not found' };
         }
         throw error;
       }
@@ -212,7 +212,7 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
             content: {
               'application/json': {
                 example: {
-                  error: 'Variant tidak ditemukan',
+                  error: 'Variant not found',
                 },
               },
             },
@@ -244,13 +244,13 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Variant tidak ditemukan') {
+        if (error.message === 'Variant not found') {
           set.status = 404;
-          return { error: 'Variant tidak ditemukan' };
+          return { error: 'Variant not found' };
         }
-        if (error.message === 'Harga pokok aktif tidak ditemukan') {
+        if (error.message === 'Current cost not found') {
           set.status = 404;
-          return { error: 'Harga pokok aktif tidak ditemukan' };
+          return { error: 'Current cost not found' };
         }
         throw error;
       }
@@ -295,7 +295,7 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
             content: {
               'application/json': {
                 example: {
-                  error: 'Harga pokok aktif tidak ditemukan',
+                  error: 'Current active cost not found',
                 },
               },
             },
@@ -336,9 +336,9 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Data tidak ditemukan') {
+        if (error.message === 'Data not found') {
           set.status = 404;
-          return { error: 'Data tidak ditemukan' };
+          return { error: 'Data not found' };
         }
         throw error;
       }
@@ -404,7 +404,7 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
             content: {
               'application/json': {
                 example: {
-                  error: 'Data tidak ditemukan',
+                  error: 'Data not found',
                 },
               },
             },
@@ -447,9 +447,9 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Data tidak ditemukan') {
+        if (error.message === 'Data not found') {
           set.status = 404;
-          return { error: 'Data tidak ditemukan' };
+          return { error: 'Data not found' };
         }
         throw error;
       }
@@ -488,7 +488,7 @@ export const productCostsRoute = new Elysia({ prefix: '/api' })
             content: {
               'application/json': {
                 example: {
-                  error: 'Data tidak ditemukan',
+                  error: 'Data not found',
                 },
               },
             },

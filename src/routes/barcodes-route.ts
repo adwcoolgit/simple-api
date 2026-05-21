@@ -40,11 +40,11 @@ export const barcodesRoute = new Elysia({ prefix: '/api', tags: ['Barcodes'] })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Variant tidak ditemukan') {
+        if (error.message === 'Variant not found') {
           set.status = 404;
           return { error: error.message };
         }
-        if (error.message === 'Barcode sudah digunakan') {
+        if (error.message === 'Barcode already in use') {
           set.status = 409;
           return { error: error.message };
         }
@@ -85,7 +85,7 @@ export const barcodesRoute = new Elysia({ prefix: '/api', tags: ['Barcodes'] })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Variant tidak ditemukan') {
+        if (error.message === 'Variant not found') {
           set.status = 404;
           return { error: error.message };
         }
@@ -125,7 +125,7 @@ export const barcodesRoute = new Elysia({ prefix: '/api', tags: ['Barcodes'] })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Barcode tidak ditemukan') {
+        if (error.message === 'Barcode not found') {
           set.status = 404;
           return { error: error.message };
         }
@@ -165,7 +165,7 @@ export const barcodesRoute = new Elysia({ prefix: '/api', tags: ['Barcodes'] })
           set.status = 401;
           return { error: 'Unauthorized' };
         }
-        if (error.message === 'Barcode tidak ditemukan') {
+        if (error.message === 'Barcode not found') {
           set.status = 404;
           return { error: error.message };
         }

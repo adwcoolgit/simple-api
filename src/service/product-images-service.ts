@@ -42,7 +42,7 @@ export async function addProductImages(
       .limit(1);
 
     if (!existingVariant.length) {
-      throw new Error('Variant tidak ditemukan');
+      throw new Error('Variant not found');
     }
   }
 
@@ -105,7 +105,7 @@ export async function getImagesByVariant(
     .limit(1);
 
   if (!existingVariant.length) {
-    throw new Error('Variant tidak ditemukan');
+    throw new Error('Variant not found');
   }
 
   // Get all images, ordered by is_primary DESC
@@ -140,7 +140,7 @@ export async function setPrimaryImage(
     .limit(1);
 
   if (!existingImage.length) {
-    throw new Error('Gambar tidak ditemukan');
+    throw new Error('Image not found for the specified variant');
   }
 
   // Run in transaction
@@ -175,7 +175,7 @@ export async function getPrimaryImage(
     .limit(1);
 
   if (!existingVariant.length) {
-    throw new Error('Variant tidak ditemukan');
+    throw new Error('Variant not found');
   }
 
   // Get the primary image
@@ -191,7 +191,7 @@ export async function getPrimaryImage(
     .limit(1);
 
   if (!primaryImage) {
-    throw new Error('Gambar primary tidak ditemukan');
+    throw new Error('Primary image not found');
   }
 
   return {
@@ -214,7 +214,7 @@ export async function deleteProductImage(imageId: number): Promise<string> {
     .limit(1);
 
   if (!existingImage.length) {
-    throw new Error('Gambar tidak ditemukan');
+    throw new Error('Image not found');
   }
 
   // Delete the image

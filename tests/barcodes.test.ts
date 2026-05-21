@@ -203,8 +203,8 @@ function makeRequest(
   );
 }
 
-describe('POST /api/barcodes — Tambah Barcode', () => {
-  it('1. Data valid, variant ada', async () => {
+describe('POST /api/barcodes — Add Barcode', () => {
+  it('1. Valid data, variant exists', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/barcodes', {
@@ -219,7 +219,7 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
     expect(res.json.data.barcode).toBe('8991234567890');
   });
 
-  it('2. Barcode sama didaftarkan dua kali', async () => {
+  it('2. Same barcode registered twice', async () => {
     if (!dbAvailable) return;
 
     // Create first barcode
@@ -234,10 +234,10 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
       barcode: '8991234567890',
     });
     expect(res.status).toBe(409);
-    expect(res.json.error).toBe('Barcode sudah digunakan');
+    expect(res.json.error).toBe('Barcode already in use');
   });
 
-  it('3. variant_id tidak ada di tabel product_variants', async () => {
+  it('3. variant_id does not exist in product_variants table', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/barcodes', {
@@ -245,10 +245,10 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
       barcode: '8991234567890',
     });
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Variant tidak ditemukan');
+    expect(res.json.error).toBe('Variant not found');
   });
 
-  it('4. Field barcode tidak dikirim', async () => {
+  it('4. barcode field not provided', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/barcodes', {
@@ -257,7 +257,7 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
     expect(res.status).toBe(422);
   });
 
-  it('5. Field variant_id tidak dikirim', async () => {
+  it('5. variant_id field not provided', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/barcodes', {
@@ -266,7 +266,7 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
     expect(res.status).toBe(422);
   });
 
-  it('6. barcode melebihi 50 karakter', async () => {
+  it('6. barcode exceeds 50 characters', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/barcodes', {
@@ -276,7 +276,7 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
     expect(res.status).toBe(422);
   });
 
-  it('7. variant_id bukan integer (string, negatif, nol)', async () => {
+  it('7. variant_id is not an integer (string, negative, zero)', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('POST', '/api/barcodes', {
@@ -286,7 +286,7 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
     expect(res.status).toBe(422);
   });
 
-  it('8. Tanpa header Authorization', async () => {
+  it('8. Without Authorization header', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('POST', '/api/barcodes', {
@@ -297,7 +297,7 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
     expect(res.json.error).toBe('Unauthorized');
   });
 
-  it('9. Token tidak valid', async () => {
+  it('9. Invalid token', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest(
@@ -315,7 +315,7 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
     expect(res.json.error).toBe('Unauthorized');
   });
 
-  it('10. Dua barcode berbeda untuk variant yang sama', async () => {
+  it('10. Two different barcodes for the same variant', async () => {
     if (!dbAvailable) return;
 
     const res1 = await makeAuthRequest('POST', '/api/barcodes', {
@@ -332,8 +332,8 @@ describe('POST /api/barcodes — Tambah Barcode', () => {
   });
 });
 
-describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', () => {
-  it('11. Variant ada dan punya barcode', async () => {
+describe('GET /api/barcodes/variant/:variantId — Get Barcode by Variant', () => {
+  it('11. Variant exists and has barcode', async () => {
     if (!dbAvailable) return;
 
     // Create a barcode first
@@ -354,7 +354,7 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
     expect(res.json.data[0]).toHaveProperty('barcode');
   });
 
-  it('12. Variant ada tapi belum punya barcode', async () => {
+  it('12. Variant exists but does not have barcode yet', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest(
@@ -365,22 +365,22 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
     expect(res.json.data).toEqual([]);
   });
 
-  it('13. variantId tidak ada di product_variants', async () => {
+  it('13. variantId does not exist in product_variants', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('GET', '/api/barcodes/variant/99999');
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Variant tidak ditemukan');
+    expect(res.json.error).toBe('Variant not found');
   });
 
-  it('14. variantId bukan integer (huruf, desimal)', async () => {
+  it('14. variantId is not an integer (letters, decimal)', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('GET', '/api/barcodes/variant/abc');
     expect(res.status).toBe(422);
   });
 
-  it('15. Tanpa header Authorization', async () => {
+  it('15. Without Authorization header', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest(
@@ -391,7 +391,7 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
     expect(res.json.error).toBe('Unauthorized');
   });
 
-  it('16. Token tidak valid', async () => {
+  it('16. Invalid token', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest(
@@ -406,7 +406,7 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
     expect(res.json.error).toBe('Unauthorized');
   });
 
-  it('17. Data yang dikembalikan hanya milik variant yang diminta', async () => {
+  it('17. Returned data belongs only to the requested variant', async () => {
     if (!dbAvailable) return;
 
     // Create another variant
@@ -442,7 +442,7 @@ describe('GET /api/barcodes/variant/:variantId — Ambil Barcode by Variant', ()
   });
 });
 
-describe('GET /api/barcodes/:id — Ambil Barcode by ID', () => {
+describe('GET /api/barcodes/:id — Get Barcode by ID', () => {
   let testBarcodeId: number;
 
   beforeEach(async () => {
@@ -456,7 +456,7 @@ describe('GET /api/barcodes/:id — Ambil Barcode by ID', () => {
     testBarcodeId = res.json.data.id;
   });
 
-  it('18. ID valid dan barcode ada', async () => {
+  it('18. Valid ID and barcode exists', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('GET', `/api/barcodes/${testBarcodeId}`);
@@ -467,22 +467,22 @@ describe('GET /api/barcodes/:id — Ambil Barcode by ID', () => {
     expect(res.json.data.id).toBe(testBarcodeId);
   });
 
-  it('19. ID tidak ada di tabel', async () => {
+  it('19. ID does not exist in table', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('GET', '/api/barcodes/99999');
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Barcode tidak ditemukan');
+    expect(res.json.error).toBe('Barcode not found');
   });
 
-  it('20. id bukan integer (huruf, negatif, nol)', async () => {
+  it('20. id is not an integer (letters, negative, zero)', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('GET', '/api/barcodes/abc');
     expect(res.status).toBe(422);
   });
 
-  it('21. Tanpa header Authorization', async () => {
+  it('21. Without Authorization header', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('GET', `/api/barcodes/${testBarcodeId}`);
@@ -490,7 +490,7 @@ describe('GET /api/barcodes/:id — Ambil Barcode by ID', () => {
     expect(res.json.error).toBe('Unauthorized');
   });
 
-  it('22. Token tidak valid', async () => {
+  it('22. Invalid token', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest(
@@ -506,7 +506,7 @@ describe('GET /api/barcodes/:id — Ambil Barcode by ID', () => {
   });
 });
 
-describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
+describe('DELETE /api/barcodes/:id — Delete Barcode', () => {
   let testBarcodeId: number;
 
   beforeEach(async () => {
@@ -520,7 +520,7 @@ describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
     testBarcodeId = res.json.data.id;
   });
 
-  it('23. ID valid', async () => {
+  it('23. Valid ID', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest(
@@ -531,7 +531,7 @@ describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
     expect(res.json.data).toBe('OK');
   });
 
-  it('24. Record benar-benar terhapus dari DB setelah delete', async () => {
+  it('24. Record is actually deleted from DB after delete', async () => {
     if (!dbAvailable) return;
 
     await makeAuthRequest('DELETE', `/api/barcodes/${testBarcodeId}`);
@@ -543,7 +543,7 @@ describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
     expect(barcodesInDb.length).toBe(0);
   });
 
-  it('25. Hapus dua kali dengan ID yang sama', async () => {
+  it('25. Delete twice with the same ID', async () => {
     if (!dbAvailable) return;
 
     const res1 = await makeAuthRequest(
@@ -557,25 +557,25 @@ describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
       `/api/barcodes/${testBarcodeId}`
     );
     expect(res2.status).toBe(404);
-    expect(res2.json.error).toBe('Barcode tidak ditemukan');
+    expect(res2.json.error).toBe('Barcode not found');
   });
 
-  it('26. ID tidak ada di tabel', async () => {
+  it('26. ID does not exist in table', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('DELETE', '/api/barcodes/99999');
     expect(res.status).toBe(404);
-    expect(res.json.error).toBe('Barcode tidak ditemukan');
+    expect(res.json.error).toBe('Barcode not found');
   });
 
-  it('27. id bukan integer', async () => {
+  it('27. id is not an integer', async () => {
     if (!dbAvailable) return;
 
     const res = await makeAuthRequest('DELETE', '/api/barcodes/abc');
     expect(res.status).toBe(422);
   });
 
-  it('28. Tanpa header Authorization', async () => {
+  it('28. Without Authorization header', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest('DELETE', `/api/barcodes/${testBarcodeId}`);
@@ -583,7 +583,7 @@ describe('DELETE /api/barcodes/:id — Hapus Barcode', () => {
     expect(res.json.error).toBe('Unauthorized');
   });
 
-  it('29. Token tidak valid', async () => {
+  it('29. Invalid token', async () => {
     if (!dbAvailable) return;
 
     const res = await makeRequest(

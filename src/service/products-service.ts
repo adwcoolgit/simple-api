@@ -49,10 +49,12 @@ export async function createProduct(input: CreateProductInput) {
     throw new Error('name is required');
   }
   if (input.name.length > 255) {
-    throw new Error('name terlalu panjang, maksimal 255 karakter');
+    throw new Error('The name is too long, with a maximum of 255 characters');
   }
   if (input.description && input.description.length > 255) {
-    throw new Error('description terlalu panjang, maksimal 255 karakter');
+    throw new Error(
+      'The description is too long, with a maximum of 255 characters'
+    );
   }
 
   try {
@@ -92,10 +94,10 @@ export async function createProduct(input: CreateProductInput) {
       error?.code === 'ER_DATA_TOO_LONG' ||
       error?.message?.includes('Data too long')
     ) {
-      throw new Error('Input terlalu panjang, maksimal 255 karakter');
+      throw new Error('Input is too long, maximum 255 characters');
     }
 
-    throw new Error('Gagal membuat product');
+    throw new Error('Failed to create product');
   }
 }
 
@@ -149,7 +151,7 @@ export async function getProducts(filters: GetProductsFilters = {}) {
     };
   } catch (error: any) {
     console.error('Get products error:', error);
-    throw new Error('Gagal mengambil data products');
+    throw new Error('Failed to retrieve products');
   }
 }
 
@@ -160,8 +162,8 @@ export async function getProductByProductId(productId: number) {
       .from(products)
       .where(eq(products.productId, productId));
 
-    if (!product) throw new Error('Product tidak ditemukan');
-    if (product.isActive === false) throw new Error('Product tidak ditemukan');
+    if (!product) throw new Error('Product not found');
+    if (product.isActive === false) throw new Error('Product not found');
 
     // Fetch variants with full details
     const variants = await dbRead
@@ -237,9 +239,9 @@ export async function getProductByProductId(productId: number) {
     return { ...product, variants: variantsWithDetails };
   } catch (error: any) {
     console.error('Get product by product ID error:', error);
-    if (error instanceof Error && error.message === 'Product tidak ditemukan')
+    if (error instanceof Error && error.message === 'Product not found')
       throw error;
-    throw new Error('Gagal mengambil data product');
+    throw new Error('Failed to retrieve product');
   }
 }
 
@@ -253,11 +255,11 @@ export async function updateProduct(
       throw new Error('name is required');
     }
     if (input.name.length > 255) {
-      throw new Error('name terlalu panjang, maksimal 255 karakter');
+      throw new Error('name is too long, maximum 255 characters');
     }
   }
   if (input.description !== undefined && input.description.length > 255) {
-    throw new Error('description terlalu panjang, maksimal 255 karakter');
+    throw new Error('description is too long, maximum 255 characters');
   }
 
   try {
@@ -268,7 +270,7 @@ export async function updateProduct(
       .where(eq(products.productId, productId));
 
     if (!existingProduct) {
-      throw new Error('Product tidak ditemukan');
+      throw new Error('Product not found');
     }
 
     // Prepare update data
@@ -323,14 +325,14 @@ export async function updateProduct(
       error?.code === 'ER_DATA_TOO_LONG' ||
       error?.message?.includes('Data too long')
     ) {
-      throw new Error('Input terlalu panjang, maksimal 255 karakter');
+      throw new Error('Input is too long, maximum 255 characters');
     }
 
-    if (error instanceof Error && error.message === 'Product tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Product not found') {
       throw error;
     }
 
-    throw new Error('Gagal memperbarui product');
+    throw new Error('Failed to update product');
   }
 }
 
@@ -343,7 +345,7 @@ export async function deleteProduct(productId: number) {
       .where(eq(products.productId, productId));
 
     if (!existingProduct) {
-      throw new Error('Product tidak ditemukan');
+      throw new Error('Product not found');
     }
 
     // Soft delete - set is_active to false
@@ -358,10 +360,10 @@ export async function deleteProduct(productId: number) {
   } catch (error: any) {
     console.error('Delete product error:', error);
 
-    if (error instanceof Error && error.message === 'Product tidak ditemukan') {
+    if (error instanceof Error && error.message === 'Product not found') {
       throw error;
     }
 
-    throw new Error('Gagal menghapus product');
+    throw new Error('Failed to delete product');
   }
 }
