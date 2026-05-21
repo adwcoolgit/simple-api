@@ -536,7 +536,7 @@ const releaseStockRoute = new Elysia().post(
         set.status = 404;
         return { error: err.message };
       }
-      if (err.message.includes('Release quantity exceeds reserved stock')) {
+      if (err.message.includes('Release quantity exceeds the reserved amount')) {
         set.status = 422;
         return { error: err.message };
       }
